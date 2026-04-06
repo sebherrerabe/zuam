@@ -1,0 +1,32 @@
+---
+id: focus-sessions
+title: Focus Sessions Backend Tests
+status: draft
+phase: 2
+owners:
+  - Backend Engineer
+depends_on:
+  - core-data-model-crud
+source_of_truth: PRD_Zuam_v0.3.md
+parallel_group: phase-2-focus
+last_updated: 2026-04-04
+---
+
+# Backend Test Specs
+
+## `BE-UNIT-FCS-001`
+- Covers `FCS-REQ-1`.
+- Assert only one active session can exist and repeated starts are rejected or idempotent.
+
+## `BE-UNIT-FCS-002`
+- Covers `FCS-REQ-3`.
+- Assert session completion computes logged minutes, extra minutes, and task rollups correctly.
+
+## `BE-E2E-FCS-001`
+- Covers `FCS-REQ-3`.
+- Assert session end persists history records and updates the linked task's tracked time.
+
+## `BE-E2E-FCS-002`
+- Covers `FCS-REQ-4`.
+- Assert pause/break transitions survive reconnect and resume from persisted state.
+
