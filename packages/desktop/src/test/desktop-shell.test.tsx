@@ -59,6 +59,7 @@ describe("desktop shell layout", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Today (Sun)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Approve Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /google tasks sync/i })).toBeInTheDocument();
   });
 
   it("FE-UNIT-DSK-004: input-bar trigger and shortcut both open the same quick-capture surface", () => {
@@ -78,5 +79,17 @@ describe("desktop shell layout", () => {
     fireEvent.keyDown(window, { key: "k", ctrlKey: true });
     expect(screen.getByRole("dialog", { name: /quick capture/i })).toBeInTheDocument();
     expect(screen.getByText(/use explicit tokens only/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-DSK-005: mounts the sync status card and nudge surfaces inside the shell", () => {
+    renderShell();
+
+    expect(screen.getByRole("region", { name: /google tasks sync/i })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: /notification permission required/i })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /ship nudge engine v1/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /acknowledge/i }));
+
+    expect(screen.queryByRole("dialog", { name: /ship nudge engine v1/i })).not.toBeInTheDocument();
   });
 });

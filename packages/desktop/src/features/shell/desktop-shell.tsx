@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
+import type { NudgeEvent } from "@zuam/shared";
 
 import { useShellStore } from "../../lib/state/shell-store";
+import { NudgeBlockingModal, NudgeNotificationSurface } from "../nudges";
+import { SyncStatusCard, type SyncStatusSnapshot } from "../system";
 import { TaskDetailPanel } from "../tasks/task-detail-panel";
 import { parseQuickCapturePreviews } from "./quick-capture";
 import {
+  blockingNudge,
   chatMessages,
+  initialSyncSnapshot,
+  notificationNudge,
   planCards,
   planStats,
   reviewTabs,
@@ -74,10 +80,16 @@ export function DesktopShell() {
   const commandPaletteOpen = useShellStore((state) => state.commandPaletteOpen);
   const quickCaptureOpen = useShellStore((state) => state.quickCaptureOpen);
   const selectedTaskId = useShellStore((state) => state.selectedTaskId);
+  const setSelectedTaskId = useShellStore((state) => state.setSelectedTaskId);
   const openQuickCapture = useShellStore((state) => state.openQuickCapture);
   const closeQuickCapture = useShellStore((state) => state.closeQuickCapture);
   const closeCommandPalette = useShellStore((state) => state.closeCommandPalette);
   const [activeTab, setActiveTab] = useState<ReviewTab>("summary");
+  const [syncSnapshot, setSyncSnapshot] = useState<SyncStatusSnapshot>(initialSyncSnapshot);
+  const [notificationVisible, setNotificationVisible] = useState(true);
+  const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false);
+  const [activeBlockingNudge, setActiveBlockingNudge] = useState<NudgeEvent | null>(blockingNudge);
+  const syncTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -90,6 +102,44 @@ export function DesktopShell() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [openQuickCapture]);
+
+  useEffect(() => {
+    return () => {
+      if (syncTimerRef.current) {
+        window.clearTimeout(syncTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openTaskFromNudge(taskId: string) {
+    setSelectedTaskId(taskId);
+  }
+
+  async function handleRefreshSync() {
+    setSyncSnapshot((current) => ({
+      ...current,
+      status: "syncing",
+      pendingTaskCount: Math.max(current.pendingTaskCount, 2),
+      eventRevision: current.eventRevision + 1,
+      taskRows: current.taskRows.map((row, index) =>
+        index === 0 ? { ...row, pending: true } : row
+      )
+    }));
+
+    await new Promise<void>((resolve) => {
+      syncTimerRef.current = window.setTimeout(() => {
+        setSyncSnapshot((current) => ({
+          ...current,
+          status: "ready",
+          lastSyncAt: "2026-04-07T16:12:00.000Z",
+          pendingTaskCount: 0,
+          eventRevision: current.eventRevision + 1,
+          taskRows: current.taskRows.map((row) => ({ ...row, pending: false }))
+        }));
+        resolve();
+      }, 180);
+    });
+  }
 
   return (
     <main className="planning-workspace">
@@ -200,6 +250,22 @@ export function DesktopShell() {
                   Reject
                 </button>
               </div>
+
+              <div className="review-utility-stack">
+                <SyncStatusCard
+                  snapshot={syncSnapshot}
+                  onRefresh={handleRefreshSync}
+                  onRetry={handleRefreshSync}
+                  onDismissError={() =>
+                    setSyncSnapshot((current) => ({
+                      ...current,
+                      status: "ready",
+                      lastError: null,
+                      eventRevision: current.eventRevision + 1
+                    }))
+                  }
+                />
+              </div>
             </>
           ) : (
             <section className="placeholder-panel">
@@ -220,6 +286,34 @@ export function DesktopShell() {
           }}
         />
       )}
+
+      {notificationVisible ? (
+        <div className="nudge-notification-dock">
+          <NudgeNotificationSurface
+            event={notificationNudge}
+            deliveryState={notificationPermissionGranted ? "ready" : "permission-denied"}
+            onRequestPermission={() => setNotificationPermissionGranted(true)}
+            onOpenTask={({ event }) => {
+              openTaskFromNudge(event.taskId);
+              setNotificationVisible(false);
+            }}
+            onSnooze={() => setNotificationVisible(false)}
+            onAcknowledge={() => setNotificationVisible(false)}
+          />
+        </div>
+      ) : null}
+
+      {activeBlockingNudge ? (
+        <NudgeBlockingModal
+          event={activeBlockingNudge}
+          onOpenTask={({ event }) => {
+            openTaskFromNudge(event.taskId);
+            setActiveBlockingNudge(null);
+          }}
+          onSnooze={() => setActiveBlockingNudge(null)}
+          onAcknowledge={() => setActiveBlockingNudge(null)}
+        />
+      ) : null}
     </main>
   );
 }

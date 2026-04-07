@@ -1,3 +1,7 @@
+import type { NudgeEvent } from "@zuam/shared";
+
+import type { SyncStatusSnapshot } from "../system";
+
 export type ChatMessage = {
   id: string;
   speaker: "user" | "zuamy";
@@ -75,3 +79,73 @@ export const understandingCopy =
   "You have 3 priorities this week: investor update (due Thu), nudge engine shipping (needs deep-work blocks), and daily survival tasks. The dentist appointment Tue 2-3:30 PM is protected. I'm front-loading the highest-leverage item and routing deep work around calendar blocks.";
 
 export const planStats = "7 actions | 3 focus blocks | 6h 30m deep work | 0 conflicts";
+
+export const initialSyncSnapshot: SyncStatusSnapshot = {
+  connection: "connected",
+  status: "ready",
+  lastSyncAt: "2026-04-07T16:05:00.000Z",
+  lastError: null,
+  listCount: 5,
+  taskCount: 19,
+  pendingTaskCount: 1,
+  eventRevision: 12,
+  taskRows: [
+    { id: "task-1", title: "Ship nudge engine v1 (Level 0-2)", listName: "Platform", pending: true },
+    { id: "task-2", title: "Review onboarding invite copy", listName: "Jiholabo V2" },
+    { id: "task-3", title: "Pull Q1 metrics data", listName: "Platform" }
+  ]
+};
+
+export const notificationNudge: NudgeEvent = {
+  id: "nudge-l1-1",
+  userId: "user-1",
+  taskId: "task-2",
+  kind: "trigger",
+  taskTitle: "Review onboarding invite copy",
+  copyId: "mild-l1-next-step",
+  message: "Pick the next clear step for Review onboarding invite copy.",
+  level: 1,
+  resistance: "mild",
+  urgency: "medium",
+  estimateMinutes: 25,
+  reason: "This task is due soon and is still waiting on a concrete next step.",
+  scheduledAt: "2026-04-07T17:20:00.000+02:00",
+  deliveredAt: "2026-04-07T17:21:00.000+02:00",
+  acknowledgedAt: null,
+  snoozedUntil: null,
+  state: "delivered",
+  requiresExplicitDismissal: false,
+  canAutoDismiss: true,
+  blocking: false,
+  autoDismissAfter: null,
+  frequencyMin: 60,
+  timesPostponed: 0,
+  timesNudged: 1
+};
+
+export const blockingNudge: NudgeEvent = {
+  id: "nudge-l2-1",
+  userId: "user-1",
+  taskId: "task-1",
+  kind: "trigger",
+  taskTitle: "Ship nudge engine v1 (Level 0-2)",
+  copyId: "high-l2-blocking-choice",
+  message: "Choose how to move Ship nudge engine v1 (Level 0-2) forward now.",
+  level: 2,
+  resistance: "high",
+  urgency: "high",
+  estimateMinutes: 45,
+  reason: "This task has been postponed and now needs an explicit next action.",
+  scheduledAt: "2026-04-07T17:10:00.000+02:00",
+  deliveredAt: "2026-04-07T17:12:00.000+02:00",
+  acknowledgedAt: null,
+  snoozedUntil: null,
+  state: "delivered",
+  requiresExplicitDismissal: true,
+  canAutoDismiss: false,
+  blocking: true,
+  autoDismissAfter: null,
+  frequencyMin: 15,
+  timesPostponed: 2,
+  timesNudged: 5
+};

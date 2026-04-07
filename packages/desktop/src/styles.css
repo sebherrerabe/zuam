@@ -196,6 +196,12 @@ code {
   padding: 20px 24px;
 }
 
+.review-utility-stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 8px;
+}
+
 .task-detail-panel {
   display: grid;
   gap: 16px;
@@ -719,6 +725,14 @@ code {
   backdrop-filter: blur(8px);
 }
 
+.nudge-notification-dock {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 70;
+  width: min(420px, calc(100vw - 32px));
+}
+
 .modal-card {
   width: min(720px, 100%);
   border: 1px solid rgba(208, 139, 91, 0.22);
@@ -816,5 +830,11 @@ code {
 
   .plan-card-row {
     grid-template-columns: 1fr;
+  }
+
+  .nudge-notification-dock {
+    right: 16px;
+    bottom: 16px;
+    width: calc(100vw - 32px);
   }
 }
