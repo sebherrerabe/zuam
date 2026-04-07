@@ -11,16 +11,18 @@ depends_on:
 parallel_group: phase-4
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Phase 4 Advanced
 
 ## Goal
-Cover advanced capabilities such as habits, adaptive nudge copy, natural language quick-add, wearables, offline mode, linked tasks, and folders.
+Cover advanced capabilities such as AI companion assistance, habits, adaptive nudge copy, freeform natural-language quick-add beyond the deterministic capture grammar, wearables, offline mode, linked tasks, folders, and any higher-risk gamification experiments deferred from Phase 3.
 
 ## Included Modules
-- no dedicated module docs yet; future modules will be added here as Phase 4 scope is frozen
+- `ai-companion-orchestrator`
+- `ai-companion-runtime-governance`
+- `public-progression-profiles`
 
 ## Entry Dependencies
 - Earlier phases are stable enough that advanced feature work will not destabilize core product flows.
@@ -28,3 +30,11 @@ Cover advanced capabilities such as habits, adaptive nudge copy, natural languag
 ## Exit Criteria
 - Advanced features are decomposed into new modules with contracts and tests.
 - Any new cross-cutting data or sync rules are captured in the decision log before implementation.
+- AI companion behavior, runtime safety, and memory governance boundaries are split into separate module contracts.
+
+## Deferred From Phase 3
+- Punitive or loss-based progression mechanics.
+- Social or party-based reward systems and leaderboards.
+- Adaptive reward personalization.
+- High-salience randomized loot or retention mechanics.
+- Public progression profile URLs and privacy-gated profile pages.

@@ -10,7 +10,7 @@ depends_on:
   - task-views
 parallel_group: taxonomy
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Tags, Filters, and Smart Lists
@@ -21,7 +21,7 @@ This module defines the task taxonomy layer: tags, saved filters, and the built-
 - Tag semantics and assignment rules (`BE-UNIT-TF-001`).
 - Smart-list definitions for Today, Next 7 Days, Inbox, Completed, Won't Do, and Trash (`BE-UNIT-TF-002`).
 - Saved-filter model for multi-criteria queries (`BE-UNIT-TF-003`).
-- Sidebar count and filter state presentation (`FE-UNIT-TF-001`).
+- Sidebar count and filter state presentation, including first-class saved-filter affordances distinct from raw tag chips (`FE-UNIT-TF-001`).
 
 ## Scope Out
 - Tag color customization and advanced taxonomy tooling beyond the initial query model.

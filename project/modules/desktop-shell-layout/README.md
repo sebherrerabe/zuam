@@ -11,7 +11,7 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Desktop Shell Layout
@@ -24,6 +24,7 @@ Define the Electron + TanStack Start desktop shell that anchors the three-panel 
 - Left sidebar, main task list panel, and right detail panel layout.
 - Responsive desktop behavior and a mobile-safe collapsed state for narrow windows.
 - Global quick-capture trigger entry point and view switching chrome.
+- Lightweight quick-capture parsing feedback for explicit, documented capture tokens such as list, priority, tag, and common date shortcuts.
 
 ## Scope Out
 - Task sync logic, persistence, and scoring.
@@ -34,7 +35,7 @@ Define the Electron + TanStack Start desktop shell that anchors the three-panel 
 - `DSK-REQ-1`: The shell must render sidebar, list, and detail regions with a stable desktop layout. Tests: `FE-UNIT-DSK-001`, `FE-E2E-DSK-001`.
 - `DSK-REQ-2`: The shell must expose primary navigation for Today, Next 7 Days, Inbox, lists, and settings. Tests: `FE-UNIT-DSK-002`, `FE-E2E-DSK-002`.
 - `DSK-REQ-3`: The shell must support task selection and detail-panel open/close transitions without layout shift. Tests: `FE-UNIT-DSK-003`, `FE-E2E-DSK-003`.
-- `DSK-REQ-4`: The shell must support a global quick-capture entry point reachable from keyboard and tray/menu affordances. Tests: `FE-UNIT-DSK-004`, `FE-E2E-DSK-004`.
+- `DSK-REQ-4`: The shell must support a global quick-capture entry point reachable from keyboard and tray/menu affordances, including deterministic preview chips for the documented capture grammar without implying a freeform AI parser. Tests: `FE-UNIT-DSK-004`, `FE-E2E-DSK-004`.
 
 ## Dependency Notes
 - Consumes list/task bootstrap data from backend contracts defined in `core-data-model-crud` and `auth-invite-onboarding`.

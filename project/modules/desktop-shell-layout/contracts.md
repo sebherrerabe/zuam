@@ -10,7 +10,7 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Contracts
@@ -29,5 +29,6 @@ last_updated: 2026-04-04
 ## Integration Contracts
 - Shell bootstrap expects authenticated user info plus list counts, active preferences, and the selected start view.
 - Quick capture launches as a modal shell action and returns either `taskCreated` or `dismissed`.
+- Quick capture may expose deterministic parse previews for explicit capture grammar tokens such as `~list`, `!priority`, `#tag`, and documented date shortcuts, but it must not require freeform natural-language interpretation to succeed.
 - Shell-level errors must degrade to an inline recovery state rather than a blank screen.
 

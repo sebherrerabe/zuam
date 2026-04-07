@@ -11,7 +11,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - .agents/skills/project-management/SKILL.md
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Planning Personas
@@ -51,7 +51,11 @@ These personas define ownership boundaries for planning and implementation packe
 | task-views | Frontend Engineer | UX/UI Designer, Product Manager |
 | tags-filters-smart-lists | Product Manager | Frontend Engineer, Backend Engineer |
 | mobile-shell-core | Frontend Engineer | Product Manager, Infra / DevOps |
-| analytics-gamification | Product Manager | Backend Engineer, Frontend Engineer |
+| analytics-insights | Product Manager | Backend Engineer, Frontend Engineer |
+| player-progression-rewards | Product Manager | Frontend Engineer, Backend Engineer, UX/UI Designer |
+| ai-companion-orchestrator | Product Manager | Frontend Engineer, Backend Engineer, UX/UI Designer |
+| ai-companion-runtime-governance | Backend Engineer | Product Manager, Frontend Engineer, Infra / DevOps, QA / Validation |
+| public-progression-profiles | Product Manager | Backend Engineer, Frontend Engineer, QA / Validation |
 | infra-release-observability | Infra / DevOps | Backend Engineer, Frontend Engineer, QA / Validation |
 
 ## Handoff Rules

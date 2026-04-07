@@ -10,7 +10,7 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Task Detail Basic Editor
@@ -26,6 +26,7 @@ Define the right-panel task detail experience for Phase 1 using a plain-text edi
 ## Scope Out
 - TipTap block editor, slash commands, and attachment uploads.
 - Focus-session controls and advanced nudge configuration.
+- Dedicated focus-session, calendar-context, and progression modules may render adjacent contextual cards in later-phase design explorations, but they do not expand the Phase 1 editing obligations of this module.
 
 ## Requirements
 - `TDE-REQ-1`: Selecting a task opens the detail panel with title, metadata, and editable notes/body. Tests: `FE-UNIT-TDE-001`, `FE-E2E-TDE-001`.

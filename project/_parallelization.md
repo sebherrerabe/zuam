@@ -12,7 +12,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-07
 ---
 
 # Parallelization Strategy
@@ -59,7 +59,11 @@ The default unit of parallel execution is one module work packet. A module may b
 - `google-calendar-context`
 - `mobile-shell-core`
 - `tags-filters-smart-lists`
-- `analytics-gamification`
+- `analytics-insights`
+- `player-progression-rewards`
+- `ai-companion-orchestrator`
+- `ai-companion-runtime-governance`
+- `public-progression-profiles`
 
 ## Dependency Rules
 - A module may depend only on frozen upstream contracts, not on undocumented intent.
