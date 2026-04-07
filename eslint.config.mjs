@@ -27,7 +27,12 @@ export default tseslint.config(
     }
   },
   {
-    files: ["tooling/tests/**/*.cjs", "packages/**/jest.config.cjs", "packages/**/babel.config.js"],
+    files: [
+      "tooling/tests/**/*.cjs",
+      "tooling/release/**/*.cjs",
+      "packages/**/jest.config.cjs",
+      "packages/**/babel.config.js"
+    ],
     languageOptions: {
       globals: {
         ...globals.node,

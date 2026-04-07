@@ -47,6 +47,9 @@ importers:
       typescript-eslint:
         specifier: ^8.58.0
         version: 8.58.0(eslint@9.39.4)(typescript@5.9.3)
+      yaml:
+        specifier: ^2.8.3
+        version: 2.8.3
 
   packages/backend:
     dependencies:

@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lists     List[]
+  sections  Section[]
+  tasks     Task[]
+}
+
+model List {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String?
+  icon      String?
+  sortOrder Int
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections  Section[]
+  tasks     Task[]
+
+  @@index([userId, sortOrder])
+}
+
+model Section {
+  id         String   @id @default(cuid())
+  userId     String
+  listId     String
+  name       String
+  sortOrder  Int
+  isCollapsed Boolean @default(false)
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  list       List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  tasks      Task[]
+
+  @@index([userId, listId, sortOrder])
+}
+
+model Task {
+  id           String   @id @default(cuid())
+  userId       String
+  listId       String
+  sectionId    String?
+  parentTaskId String?
+  title        String
+  notes        String?
+  dueDate      DateTime?
+  completed    Boolean  @default(false)
+  completedAt  DateTime?
+  sortOrder    Int
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  list         List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  section      Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  parentTask   Task?    @relation("TaskParent", fields: [parentTaskId], references: [id], onDelete: SetNull)
+  childTasks   Task[]   @relation("TaskParent")
+
+  @@index([userId, listId, sortOrder])
+}

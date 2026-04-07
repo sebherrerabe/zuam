@@ -8,6 +8,7 @@
     "dev": "pnpm --filter @zuam/shared build && pnpm run dev:raw",
     "dev:raw": "vite dev --host 127.0.0.1 --port 3000",
     "build": "pnpm --filter @zuam/shared build && vite build && tsc -p tsconfig.electron.json",
+    "package:ci": "node ../../tooling/release/package-desktop-release.cjs",
     "typecheck": "pnpm --filter @zuam/shared build && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
     "lint": "eslint src electron vite.config.ts vitest.config.ts --ext .ts,.tsx",
     "test": "pnpm --filter @zuam/shared build && vitest run"

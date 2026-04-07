@@ -16,6 +16,10 @@
     "./tasks": {
       "types": "./dist/tasks/index.d.ts",
       "default": "./dist/tasks/index.js"
+    },
+    "./nudges": {
+      "types": "./dist/nudges/index.d.ts",
+      "default": "./dist/nudges/index.js"
     }
   },
   "scripts": {
