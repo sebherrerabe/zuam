@@ -43,6 +43,10 @@ last_updated: 2026-04-07
 | [\_parallelization.md](./_parallelization.md) | critical path, parallel streams, coordination rules |
 | [\_decision-log.md](./_decision-log.md) | ADR-style record of cross-cutting decisions |
 | [\_glossary.md](./_glossary.md) | shared terminology |
+| [\_backend-architecture.md](./_backend-architecture.md) | NestJS module shape, DAO boundary, transactions, backend library baseline |
+| [\_frontend-architecture.md](./_frontend-architecture.md) | desktop/mobile architecture, state boundaries, feature package defaults |
+| [\_ai-runtime-architecture.md](./_ai-runtime-architecture.md) | Zuamy runtime split, provider adapters, planner/validator/executor baseline |
+| [\_delivery-testing-architecture.md](./_delivery-testing-architecture.md) | local dev, CI, release, observability, and architecture QA gates |
 
 ## Phase Map
 | Phase | Status | Goal | Doc |

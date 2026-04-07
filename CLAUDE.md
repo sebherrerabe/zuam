@@ -16,9 +16,14 @@ Read sources in this order:
 
 1. `project/_index.md`
 2. Relevant `project/_*.md` shared planning docs
-3. Relevant `project/phases/*.md` phase doc
-4. Relevant `project/modules/<module>/` docs
-5. `PRD_Zuam_v0.3.md` for broader product context
+3. Relevant shared architecture docs:
+   - `project/_backend-architecture.md`
+   - `project/_frontend-architecture.md`
+   - `project/_ai-runtime-architecture.md`
+   - `project/_delivery-testing-architecture.md`
+4. Relevant `project/phases/*.md` phase doc
+5. Relevant `project/modules/<module>/` docs
+6. `PRD_Zuam_v0.3.md` for broader product context
 
 If `PRD_Zuam_v0.3.md` conflicts with `project/`, follow `project/` and record any new cross-cutting decision in `project/_decision-log.md`.
 
@@ -28,6 +33,10 @@ If `PRD_Zuam_v0.3.md` conflicts with `project/`, follow `project/` and record an
 project/
   _index.md
   _conventions.md
+  _backend-architecture.md
+  _frontend-architecture.md
+  _ai-runtime-architecture.md
+  _delivery-testing-architecture.md
   _personas.md
   _decision-log.md
   _parallelization.md
@@ -46,6 +55,16 @@ project/
 - `project/_parallelization.md`: critical path and safe parallel work rules
 - `project/_personas.md`: module ownership
 - `project/_decision-log.md`: ADR-style cross-cutting decisions
+- `project/_backend-architecture.md`: NestJS architecture baseline, DAO boundary, backend stack
+- `project/_frontend-architecture.md`: desktop/mobile architecture baseline and client-state boundaries
+- `project/_ai-runtime-architecture.md`: Zuamy runtime split, provider adapters, planner/validator/executor baseline
+- `project/_delivery-testing-architecture.md`: local dev, CI, release, observability, and architecture QA gates
+
+## Agent Conventions
+
+- Shared agent-specific implementation guidance lives in `.agents/conventions/README.md`.
+- `.claude/conventions/` should mirror `.agents/conventions/` via symlink or directory junction so the conventions are maintained once.
+- When adding new agent-facing conventions, update the shared conventions once and keep `AGENTS.md` / `CLAUDE.md` aligned.
 
 ### Module Contract
 Every module in `project/modules/<module>/` should contain:
@@ -61,13 +80,23 @@ Every module in `project/modules/<module>/` should contain:
 Before implementing any feature:
 
 1. Open `project/_index.md`.
-2. Identify the relevant phase and module.
-3. Read the module `README.md` for scope and requirements.
-4. Read `contracts.md` to freeze interfaces and invariants.
-5. Read `tests.backend.md` and `tests.frontend.md` to understand acceptance criteria.
-6. Read `work-packet.md` and start by materializing the first failing tests listed there.
+2. Read the relevant shared architecture baseline doc(s) for the package you will touch.
+3. Identify the relevant phase and module.
+4. Read the module `README.md` for scope and requirements.
+5. Read `contracts.md` to freeze interfaces and invariants.
+6. Read `tests.backend.md` and `tests.frontend.md` to understand acceptance criteria.
+7. Read `work-packet.md` and start by materializing the first failing tests listed there.
 
 Do not implement directly from the PRD if a module spec already exists.
+
+## Implementation Architecture Rules
+
+- Backend services must follow `controller => service => dao`.
+- No service may import Prisma, a database connection, or raw SQL directly.
+- All persistence access belongs inside DAO classes only.
+- Desktop server state belongs in TanStack Query; ephemeral shell/UI state belongs in a small client store such as Zustand.
+- Electron renderer code must use preload IPC for privileged access.
+- Zuamy integrations must follow the planner -> validator -> executor -> auditor model and must never bypass backend service/mutation boundaries.
 
 ## Test-First / Spec-Driven Rules
 

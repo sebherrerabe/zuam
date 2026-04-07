@@ -1,0 +1,33 @@
+{
+  "name": "zuam-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @zuam/shared build && concurrently -k -n shared,backend,desktop \"pnpm --filter @zuam/shared dev\" \"pnpm --filter @zuam/backend dev:raw\" \"pnpm --filter @zuam/desktop dev:raw\"",
+    "dev:backend": "pnpm --filter @zuam/backend dev",
+    "dev:desktop": "pnpm --filter @zuam/desktop dev",
+    "dev:mobile": "pnpm --filter @zuam/mobile dev",
+    "build": "pnpm -r --if-present build",
+    "test": "jest --config ./jest.config.cjs && pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "eslint . --max-warnings=0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.4.0",
+    "jest": "^29.7.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.58.0"
+  }
+}

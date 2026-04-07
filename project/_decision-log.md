@@ -217,3 +217,12 @@ last_updated: 2026-04-07
 - Consequences: Calendar-aware planning is allowed immediately, but broad scheduling autonomy is not. Approval, diffing, and conflict preview remain mandatory even for dedicated focus-calendar writes.
 - Supersedes: none
 - Superseded by: none
+
+## ADR-023: Services Reach Persistence Only Through DAOs
+- Status: accepted
+- Date: 2026-04-07
+- Context: Zuam's backend needs a stable architectural boundary that keeps domain logic testable, persistence interchangeable, and database access auditable as the module count grows.
+- Decision: The canonical NestJS backend flow is `controller -> service -> dao`. Services may orchestrate one or more DAOs, but no service may import Prisma, a database connection, raw SQL, or any direct persistence client. Only DAO classes may touch Prisma or other persistence drivers.
+- Consequences: Service tests mock DAO interfaces instead of database clients, DAO integration tests own persistence verification, and transaction helpers must live below the service boundary so services still coordinate DAOs rather than raw database handles.
+- Supersedes: none
+- Superseded by: none

@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Zuam",
+    "slug": "zuam",
+    "scheme": "zuam",
+    "plugins": ["expo-router"],
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
