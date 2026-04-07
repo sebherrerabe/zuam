@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import type { NudgeEvent } from "@zuam/shared";
 
+import { acknowledgeNudge, snoozeTask } from "../../lib/api/desktop-api";
 import { useShellStore } from "../../lib/state/shell-store";
 import { NudgeBlockingModal, NudgeNotificationSurface } from "../nudges";
-import { SyncStatusCard, type SyncStatusSnapshot } from "../system";
+import { SyncStatusCard, useSyncStatus } from "../system";
 import { TaskDetailPanel } from "../tasks/task-detail-panel";
 import { parseQuickCapturePreviews } from "./quick-capture";
 import {
@@ -85,11 +86,10 @@ export function DesktopShell() {
   const closeQuickCapture = useShellStore((state) => state.closeQuickCapture);
   const closeCommandPalette = useShellStore((state) => state.closeCommandPalette);
   const [activeTab, setActiveTab] = useState<ReviewTab>("summary");
-  const [syncSnapshot, setSyncSnapshot] = useState<SyncStatusSnapshot>(initialSyncSnapshot);
   const [notificationVisible, setNotificationVisible] = useState(true);
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false);
   const [activeBlockingNudge, setActiveBlockingNudge] = useState<NudgeEvent | null>(blockingNudge);
-  const syncTimerRef = useRef<number | null>(null);
+  const { snapshot: syncSnapshot, refresh: refreshSync, dismissError } = useSyncStatus(initialSyncSnapshot);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -103,42 +103,12 @@ export function DesktopShell() {
     return () => window.removeEventListener("keydown", handler);
   }, [openQuickCapture]);
 
-  useEffect(() => {
-    return () => {
-      if (syncTimerRef.current) {
-        window.clearTimeout(syncTimerRef.current);
-      }
-    };
-  }, []);
-
   function openTaskFromNudge(taskId: string) {
     setSelectedTaskId(taskId);
   }
 
   async function handleRefreshSync() {
-    setSyncSnapshot((current) => ({
-      ...current,
-      status: "syncing",
-      pendingTaskCount: Math.max(current.pendingTaskCount, 2),
-      eventRevision: current.eventRevision + 1,
-      taskRows: current.taskRows.map((row, index) =>
-        index === 0 ? { ...row, pending: true } : row
-      )
-    }));
-
-    await new Promise<void>((resolve) => {
-      syncTimerRef.current = window.setTimeout(() => {
-        setSyncSnapshot((current) => ({
-          ...current,
-          status: "ready",
-          lastSyncAt: "2026-04-07T16:12:00.000Z",
-          pendingTaskCount: 0,
-          eventRevision: current.eventRevision + 1,
-          taskRows: current.taskRows.map((row) => ({ ...row, pending: false }))
-        }));
-        resolve();
-      }, 180);
-    });
+    await refreshSync();
   }
 
   return (
@@ -256,14 +226,7 @@ export function DesktopShell() {
                   snapshot={syncSnapshot}
                   onRefresh={handleRefreshSync}
                   onRetry={handleRefreshSync}
-                  onDismissError={() =>
-                    setSyncSnapshot((current) => ({
-                      ...current,
-                      status: "ready",
-                      lastError: null,
-                      eventRevision: current.eventRevision + 1
-                    }))
-                  }
+                  onDismissError={dismissError}
                 />
               </div>
             </>
@@ -297,8 +260,14 @@ export function DesktopShell() {
               openTaskFromNudge(event.taskId);
               setNotificationVisible(false);
             }}
-            onSnooze={() => setNotificationVisible(false)}
-            onAcknowledge={() => setNotificationVisible(false)}
+            onSnooze={({ event, minutes }) => {
+              void snoozeTask(event.taskId, minutes).catch(() => undefined);
+              setNotificationVisible(false);
+            }}
+            onAcknowledge={({ event }) => {
+              void acknowledgeNudge(event.id).catch(() => undefined);
+              setNotificationVisible(false);
+            }}
           />
         </div>
       ) : null}
@@ -310,8 +279,14 @@ export function DesktopShell() {
             openTaskFromNudge(event.taskId);
             setActiveBlockingNudge(null);
           }}
-          onSnooze={() => setActiveBlockingNudge(null)}
-          onAcknowledge={() => setActiveBlockingNudge(null)}
+          onSnooze={({ event, minutes }) => {
+            void snoozeTask(event.taskId, minutes).catch(() => undefined);
+            setActiveBlockingNudge(null);
+          }}
+          onAcknowledge={({ event }) => {
+            void acknowledgeNudge(event.id).catch(() => undefined);
+            setActiveBlockingNudge(null);
+          }}
         />
       ) : null}
     </main>
