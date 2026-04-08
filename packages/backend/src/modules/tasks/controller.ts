@@ -35,6 +35,15 @@ export class TasksController {
     return this.tasksService.reorderTask(ensureUserId(userId), id, body);
   }
 
+  @Patch(":id/move")
+  move(
+    @Headers("x-zuam-user-id") userId: string | undefined,
+    @Param("id") id: string,
+    @Body() body: unknown
+  ) {
+    return this.tasksService.moveTask(ensureUserId(userId), id, body);
+  }
+
   @Post(":id/complete")
   complete(
     @Headers("x-zuam-user-id") userId: string | undefined,
@@ -42,6 +51,15 @@ export class TasksController {
     @Body() body: unknown
   ) {
     return this.tasksService.completeTask(ensureUserId(userId), id, body);
+  }
+
+  @Patch(":id/status")
+  setStatus(
+    @Headers("x-zuam-user-id") userId: string | undefined,
+    @Param("id") id: string,
+    @Body() body: unknown
+  ) {
+    return this.tasksService.setTaskStatus(ensureUserId(userId), id, body);
   }
 
   @Delete(":id")

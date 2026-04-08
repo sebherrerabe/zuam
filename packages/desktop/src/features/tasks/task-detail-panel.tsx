@@ -15,6 +15,15 @@ import type { TaskDetailModel, TaskDetailSaveState, TaskPriority } from "./task-
 
 type TaskDetailPanelProps = {
   taskId?: string | null;
+  focusCallToAction?: {
+    label: string;
+    helper: string;
+    onClick: () => void;
+  };
+  calendarHint?: {
+    title: string;
+    body: string;
+  } | null;
 };
 
 const saveStateLabels: Record<TaskDetailSaveState, string> = {
@@ -39,7 +48,7 @@ function createSubtaskId() {
   return `sub-${nextSubtaskId}`;
 }
 
-export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
+export function TaskDetailPanel({ taskId, focusCallToAction, calendarHint }: TaskDetailPanelProps) {
   const selectedTaskId = useShellStore((state) => state.selectedTaskId);
   const resolvedTaskId = taskId ?? selectedTaskId;
   const activeTaskId = resolvedTaskId ?? "task-1";
@@ -62,15 +71,27 @@ export function TaskDetailPanel({ taskId }: TaskDetailPanelProps) {
     return null;
   }
 
-  return <TaskDetailPanelContent key={resolvedTaskId} taskId={resolvedTaskId} initialTask={taskQuery.data} />;
+  return (
+    <TaskDetailPanelContent
+      key={resolvedTaskId}
+      taskId={resolvedTaskId}
+      initialTask={taskQuery.data}
+      focusCallToAction={focusCallToAction}
+      calendarHint={calendarHint}
+    />
+  );
 }
 
 function TaskDetailPanelContent({
   taskId,
-  initialTask
+  initialTask,
+  focusCallToAction,
+  calendarHint
 }: {
   taskId: string;
   initialTask: TaskDetailModel;
+  focusCallToAction?: TaskDetailPanelProps["focusCallToAction"];
+  calendarHint?: TaskDetailPanelProps["calendarHint"];
 }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<TaskDetailModel>(() => readTaskDetailDraft(taskId));
@@ -377,10 +398,19 @@ function TaskDetailPanelContent({
         </div>
       </section>
 
+      {calendarHint ? (
+        <section className="task-detail-calendar-hint" aria-label="calendar hints">
+          <p className="task-detail-section-kicker">Calendar context</p>
+          <strong>{calendarHint.title}</strong>
+          <p>{calendarHint.body}</p>
+        </section>
+      ) : null}
+
       <footer className="task-detail-footer">
-        <button type="button" className="task-detail-cta">
-          Start 25-min Focus Session
+        <button type="button" className="task-detail-cta" onClick={focusCallToAction?.onClick}>
+          {focusCallToAction?.label ?? "Start 25-min Focus Session"}
         </button>
+        <p className="task-detail-focus-helper">{focusCallToAction?.helper ?? "Start a focused sprint from this task."}</p>
       </footer>
     </section>
   );

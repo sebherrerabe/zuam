@@ -97,6 +97,7 @@ export class ListsDao {
       if (task.userId === userId && task.listId === id && !task.isDeleted) {
         const taskDeleted = {
           ...task,
+          status: "trash" as const,
           isDeleted: true,
           updatedAt: nowIso()
         };

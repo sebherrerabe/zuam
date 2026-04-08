@@ -1,16 +1,17 @@
 ---
 id: focus-sessions
 title: Focus Sessions Contracts
-status: draft
+status: ready
 phase: 2
 owners:
   - Frontend Engineer
   - Backend Engineer
 depends_on:
   - core-data-model-crud
+  - nudge-engine
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Contracts
@@ -19,12 +20,18 @@ last_updated: 2026-04-04
 - States: `idle`, `running`, `paused`, `break`, `completed`.
 - Only one `running` session may exist per user at a time.
 - Session transitions are explicit and must be recoverable after reconnect.
+- A blocking nudge never replaces an active `running` session surface; it is deferred until the session pauses or enters break mode.
 
 ## Event Contracts
 - Client to server: `focus:start`, `focus:pause`, `focus:end`.
 - Server to client: `focus:tick`, `focus:sync`, `focus:break-start`, `focus:break-end`.
+- `focus:start` payload includes `taskId`, `durationMinutes`, `breakDurationMinutes`, and the intended `startedAt`.
+- `focus:pause` payload includes `sessionId`, `pausedAt`, and `remainingSeconds`.
+- `focus:end` payload includes `sessionId`, `endedAt`, `actualWorkMinutes`, and `extraMinutes`.
+- `focus:sync` payload includes the server snapshot needed to resume after reconnect.
+- `focus:break-start` and `focus:break-end` carry the session id plus phase timestamps.
 
 ## Data Contracts
-- `FocusSession` includes `id`, `taskId`, `startedAt`, `endedAt`, `pausedAt`, `durationMinutes`, `breakDurationMinutes`, and `extraMinutes`.
-- `actualMinutes` on the task is updated from session completion totals.
-
+- `FocusSession` includes `id`, `userId`, `taskId`, `status`, `startedAt`, `pausedAt`, `resumedAt`, `endedAt`, `durationMinutes`, `breakDurationMinutes`, `elapsedWorkMinutes`, `elapsedBreakMinutes`, `extraMinutes`, and `lastSyncedAt`.
+- Ending a session updates the linked task with `actualMinutes`, `focusSessionCount`, and `lastFocusedAt`.
+- Deferred nudge delivery is tracked separately from the session record so reconnect can resume the timer without replaying dismissed overlays.

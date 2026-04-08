@@ -1,4 +1,35 @@
+import type { ListDto } from "@zuam/shared";
+
 import type { SyncStatusSnapshot } from "../../features/system";
+import {
+  fetchMockCalendarContext,
+  fetchMockCalendarSuggestions,
+  fetchMockFocusQueueRecommendation,
+  fetchMockFocusSessionSnapshot,
+  fetchMockTaskQuery,
+  fetchMockWorkspaceBootstrap,
+  moveMockTask,
+  pauseMockFocusSession,
+  resetDesktopApiMocks,
+  resumeMockFocusSession,
+  setMockTaskStatus,
+  startMockBreak,
+  startMockFocusSession,
+  endMockFocusSession
+} from "./desktop-api.mock";
+import type {
+  CalendarSuggestionsResponse,
+  DesktopWorkspaceBootstrap,
+  FocusQueueRecommendation,
+  FocusSessionSnapshot,
+  GoogleCalendarContextSnapshot,
+  StartFocusSessionInput,
+  TaskMoveInput,
+  TaskStatusInput,
+  TaskTaxonomyQueryInput,
+  TaskViewQueryResult,
+  TransitionFocusSessionInput
+} from "./desktop-api.types";
 
 const DEFAULT_USER_ID = "user-1";
 
@@ -10,7 +41,7 @@ type SyncStatusResponse = {
 };
 
 type RequestOptions = {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PATCH";
   body?: unknown;
 };
 
@@ -48,6 +79,152 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}) {
 
 export async function fetchGoogleSyncStatus() {
   return apiRequest<SyncStatusResponse>("/sync/status");
+}
+
+export async function fetchDesktopWorkspaceBootstrap() {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockWorkspaceBootstrap();
+  }
+
+  const [lists, sidebarCounts, tags, savedFilters] = await Promise.all([
+    apiRequest<ListDto[]>("/lists"),
+    apiRequest<DesktopWorkspaceBootstrap["sidebarCounts"]>("/taxonomy/sidebar-counts"),
+    apiRequest<DesktopWorkspaceBootstrap["tags"]>("/taxonomy/tags"),
+    apiRequest<DesktopWorkspaceBootstrap["savedFilters"]>("/taxonomy/saved-filters")
+  ]);
+
+  return {
+    lists,
+    sidebarCounts,
+    tags,
+    savedFilters
+  } satisfies DesktopWorkspaceBootstrap;
+}
+
+export async function fetchTaskViewQuery(input: TaskTaxonomyQueryInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockTaskQuery(input);
+  }
+
+  return apiRequest<TaskViewQueryResult>("/taxonomy/query", {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function fetchFocusQueueRecommendation(input: TaskTaxonomyQueryInput = {}) {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockFocusQueueRecommendation(input);
+  }
+
+  return apiRequest<FocusQueueRecommendation>("/taxonomy/focus-queue/recommendation", {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function moveTask(taskId: string, input: TaskMoveInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return moveMockTask(taskId, input);
+  }
+
+  return apiRequest(`/tasks/${taskId}/move`, {
+    method: "PATCH",
+    body: input
+  });
+}
+
+export async function setTaskStatus(taskId: string, input: TaskStatusInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return setMockTaskStatus(taskId, input);
+  }
+
+  return apiRequest(`/tasks/${taskId}/status`, {
+    method: "PATCH",
+    body: input
+  });
+}
+
+export async function fetchFocusSessionSnapshot() {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockFocusSessionSnapshot();
+  }
+
+  return apiRequest<FocusSessionSnapshot>("/focus-sessions/sync");
+}
+
+export async function startFocusSession(input: StartFocusSessionInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return startMockFocusSession(input);
+  }
+
+  return apiRequest("/focus-sessions/start", {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function pauseFocusSession(sessionId: string, input: TransitionFocusSessionInput = {}) {
+  if (!hasDesktopApiBaseUrl()) {
+    return pauseMockFocusSession(sessionId, input);
+  }
+
+  return apiRequest(`/focus-sessions/${sessionId}/pause`, {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function startFocusBreak(sessionId: string, input: TransitionFocusSessionInput = {}) {
+  if (!hasDesktopApiBaseUrl()) {
+    return startMockBreak(sessionId, input);
+  }
+
+  return apiRequest(`/focus-sessions/${sessionId}/break`, {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function resumeFocusSession(sessionId: string, input: TransitionFocusSessionInput = {}) {
+  if (!hasDesktopApiBaseUrl()) {
+    return resumeMockFocusSession(sessionId, input);
+  }
+
+  return apiRequest(`/focus-sessions/${sessionId}/resume`, {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function endFocusSession(sessionId: string, input: TransitionFocusSessionInput = {}) {
+  if (!hasDesktopApiBaseUrl()) {
+    return endMockFocusSession(sessionId, input);
+  }
+
+  return apiRequest(`/focus-sessions/${sessionId}/end`, {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function fetchCalendarContext() {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockCalendarContext();
+  }
+
+  return apiRequest<GoogleCalendarContextSnapshot>("/sync/google/calendar");
+}
+
+export async function fetchCalendarSuggestions(taskId: string) {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockCalendarSuggestions(taskId);
+  }
+
+  return apiRequest<CalendarSuggestionsResponse>("/sync/google/calendar/suggestions", {
+    method: "POST",
+    body: { taskId }
+  });
 }
 
 export async function triggerGoogleSync(scope: "full" | "incremental" = "incremental") {
@@ -89,3 +266,5 @@ export function mergeSyncStatusSnapshot(
     connection: response.googleTasksStatus === "failed" ? "connected" : baseSnapshot.connection
   };
 }
+
+export { resetDesktopApiMocks };

@@ -1,7 +1,7 @@
 ---
 id: task-views
 title: Task Views Frontend Tests
-status: draft
+status: ready
 phase: 2
 owners:
   - Frontend Engineer
@@ -9,7 +9,7 @@ depends_on:
   - desktop-shell-layout
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-views
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Frontend Test Specs

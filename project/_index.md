@@ -17,7 +17,7 @@ parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
   - AGENTS.md
-last_updated: 2026-04-07
+last_updated: 2026-04-08
 ---
 
 # Project Planning Index
@@ -67,11 +67,11 @@ last_updated: 2026-04-07
 | google-tasks-sync | Phase 1 | ready | Backend Engineer | [module](./modules/google-tasks-sync/README.md) |
 | nudge-engine | Phase 1 | ready | Backend Engineer | [module](./modules/nudge-engine/README.md) |
 | infra-release-observability | Phase 1 | ready | Infra / DevOps | [module](./modules/infra-release-observability/README.md) |
-| task-views | Phase 2 | draft | Frontend Engineer | [module](./modules/task-views/README.md) |
-| focus-sessions | Phase 2 | draft | Frontend Engineer | [module](./modules/focus-sessions/README.md) |
-| google-calendar-context | Phase 2 | draft | Backend Engineer | [module](./modules/google-calendar-context/README.md) |
+| task-views | Phase 2 | ready | Frontend Engineer | [module](./modules/task-views/README.md) |
+| focus-sessions | Phase 2 | ready | Frontend Engineer | [module](./modules/focus-sessions/README.md) |
+| google-calendar-context | Phase 2 | ready | Backend Engineer | [module](./modules/google-calendar-context/README.md) |
 | mobile-shell-core | Phase 2 | draft | Frontend Engineer | [module](./modules/mobile-shell-core/README.md) |
-| tags-filters-smart-lists | Phase 2 | draft | Product Manager | [module](./modules/tags-filters-smart-lists/README.md) |
+| tags-filters-smart-lists | Phase 2 | ready | Product Manager | [module](./modules/tags-filters-smart-lists/README.md) |
 | analytics-insights | Phase 3 | draft | Product Manager | [module](./modules/analytics-insights/README.md) |
 | player-progression-rewards | Phase 3 | draft | Product Manager | [module](./modules/player-progression-rewards/README.md) |
 | ai-companion-orchestrator | Phase 4 | draft | Product Manager | [module](./modules/ai-companion-orchestrator/README.md) |

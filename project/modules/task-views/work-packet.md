@@ -1,7 +1,7 @@
 ---
 id: task-views
 title: Task Views Work Packet
-status: draft
+status: ready
 phase: 2
 owners:
   - Frontend Engineer
@@ -9,9 +9,11 @@ depends_on:
   - desktop-shell-layout
   - core-data-model-crud
   - google-tasks-sync
+  - tags-filters-smart-lists
+  - google-calendar-context
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-views
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Work Packet
@@ -21,7 +23,7 @@ Implement the core browsing and prioritization views that turn the task store in
 
 ## Inputs
 - Selected list/filter/view state.
-- Query/filter/sort contract.
+- Resolved `TaskQueryFilter` and `TaskViewState`.
 - Recommendation rationale payload.
 
 ## Outputs

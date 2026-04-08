@@ -1,7 +1,7 @@
 ---
 id: focus-sessions
 title: Focus Sessions Frontend Tests
-status: draft
+status: ready
 phase: 2
 owners:
   - Frontend Engineer
@@ -9,7 +9,7 @@ depends_on:
   - task-detail-basic-editor
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Frontend Test Specs
@@ -31,3 +31,5 @@ last_updated: 2026-04-04
 ## `FE-E2E-FCS-003`
 - Manual pause and resume preserve elapsed time and do not reset streak metadata.
 
+## `FE-E2E-FCS-004`
+- A blocking nudge arriving during an active session is deferred until the timer is paused or the break overlay is shown.

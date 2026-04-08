@@ -1,7 +1,7 @@
 ---
 id: google-calendar-context-google-reference
 title: Google Calendar API Reference
-status: draft
+status: ready
 phase: 2
 owners:
   - Backend Engineer
@@ -11,7 +11,7 @@ parallel_group: calendar-context
 source_of_truth:
   - project/modules/google-calendar-context/README.md
   - PRD_Zuam_v0.3.md
-last_updated: "2026-04-05"
+last_updated: "2026-04-08"
 ---
 
 # Google Calendar API Reference
@@ -52,6 +52,7 @@ This is a deliberate Zuam choice based on the official scope docs plus the curre
   - "you are busy/free in this window"
   - candidate-slot generation
   - schedule conflict explanations at the interval level
+- Normalize the results into `BusyBlock` records and derive `FreeWindow` from user work hours plus those busy blocks.
 - Handle partial failure per calendar instead of failing the entire scheduling response.
 
 ### 4. If event sync is needed, use sync tokens correctly
@@ -105,7 +106,7 @@ Given Zuam's current phase plan, push should be treated as a later freshness opt
 1. Use `calendarList.list` to discover calendars the user is subscribed to.
 2. Filter calendars according to product rules and user settings.
 3. Use `freeBusy.query` over the chosen time window to derive busy blocks.
-4. Normalize those busy blocks into Zuam's `BusyWindow` and `FreeWindow` read models.
+4. Normalize those busy blocks into Zuam's `BusyBlock` and `FreeWindow` read models.
 
 ### Optional later detail path
 If event titles or event-type explanations are required:

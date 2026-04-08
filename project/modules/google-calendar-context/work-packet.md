@@ -1,7 +1,7 @@
 ---
 id: google-calendar-context
 title: Google Calendar Context Work Packet
-status: draft
+status: ready
 phase: 2
 owners:
   - Backend Engineer
@@ -10,7 +10,7 @@ depends_on:
   - google-tasks-sync
 parallel_group: calendar-context
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Work Packet
@@ -29,7 +29,7 @@ Define a deterministic calendar-context read model that downstream scheduling an
 
 ## Tests To Create First
 - `BE-UNIT-GCAL-001`, `BE-UNIT-GCAL-003`, `BE-UNIT-GCAL-004`.
-- `FE-UNIT-GCAL-001`, `FE-E2E-GCAL-001`.
+- `FE-UNIT-GCAL-001`, `FE-UNIT-GCAL-002`, `FE-E2E-GCAL-001`.
 
 ## Blockers / Dependencies
 - Needs the task model and sync ownership rules to already exist.

@@ -1,7 +1,7 @@
 ---
 id: google-calendar-context
 title: Google Calendar Context Frontend Tests
-status: draft
+status: ready
 phase: 2
 owners:
   - Backend Engineer
@@ -10,7 +10,7 @@ depends_on:
   - google-tasks-sync
 parallel_group: calendar-context
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Frontend Tests

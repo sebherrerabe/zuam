@@ -87,6 +87,7 @@ export class SectionsDao {
       if (task.userId === userId && task.sectionId === id && !task.isDeleted) {
         const taskDeleted = {
           ...task,
+          status: "trash" as const,
           isDeleted: true,
           updatedAt: nowIso()
         };

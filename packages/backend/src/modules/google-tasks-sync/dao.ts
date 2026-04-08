@@ -1,10 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 
-import type { ListDto, TaskDto } from "@zuam/shared/tasks";
+import type { ListDto } from "@zuam/shared/tasks";
 
 import { CoreDataEventBus, CoreDataStore } from "../core-data-store";
 import { maxSortOrder, nowIso, newId } from "../core-data-utils";
+import type { TaskRecord } from "../tasks/types";
 import type {
   GoogleTasksRemoteList,
   GoogleTasksRemoteTask,
@@ -188,7 +189,7 @@ export class GoogleTasksSyncDao {
     const localId = state.localTaskIdByRemoteId.get(remote.id) ?? newId("task");
     const current = this.store.tasks.get(localId) ?? null;
     const shouldCreate = !current;
-    const next: TaskDto = current
+    const next: TaskRecord = current
       ? {
           ...current,
           listId: input.localListId,
@@ -199,6 +200,7 @@ export class GoogleTasksSyncDao {
           completed: remote.completed,
           completedAt: remote.completedAt,
           isDeleted: remote.isDeleted,
+          status: remote.isDeleted ? "trash" : remote.completed ? "completed" : current.status,
           updatedAt: nowIso()
         }
       : {
@@ -215,7 +217,14 @@ export class GoogleTasksSyncDao {
           sortOrder: maxSortOrder(this.taskItemsForUserAndList(userId, input.localListId)) + 1,
           isDeleted: remote.isDeleted,
           createdAt: nowIso(),
-          updatedAt: nowIso()
+          updatedAt: nowIso(),
+          status: remote.isDeleted ? "trash" : remote.completed ? "completed" : "active",
+          priority: "none",
+          energyLevel: "MEDIUM",
+          resistance: "NONE",
+          kanbanColumn: "TODO",
+          matrixQuadrant: null,
+          tagSlugs: []
         };
 
     const changed =
@@ -285,4 +294,3 @@ export class GoogleTasksSyncDao {
     );
   }
 }
-

@@ -3,11 +3,15 @@ import { EventEmitter } from "node:events";
 
 import type { ListDto, SectionDto, TaskDto } from "@zuam/shared/tasks";
 
+import type { SavedFilterRecord, TagRecord, TaskRecord } from "./tasks/types";
+
 @Injectable()
 export class CoreDataStore {
   readonly lists = new Map<string, ListDto>();
   readonly sections = new Map<string, SectionDto>();
-  readonly tasks = new Map<string, TaskDto>();
+  readonly tasks = new Map<string, TaskRecord>();
+  readonly tags = new Map<string, TagRecord>();
+  readonly savedFilters = new Map<string, SavedFilterRecord>();
 }
 
 @Injectable()

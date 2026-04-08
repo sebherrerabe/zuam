@@ -1,16 +1,15 @@
 ---
 id: tags-filters-smart-lists
 title: Tags Filters and Smart Lists Frontend Tests
-status: draft
+status: ready
 phase: 2
 owners:
   - Product Manager
 depends_on:
   - core-data-model-crud
-  - task-views
 parallel_group: taxonomy
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Frontend Tests

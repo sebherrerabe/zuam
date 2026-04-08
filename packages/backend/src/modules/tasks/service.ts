@@ -6,9 +6,12 @@ import { TasksDao } from "./dao";
 import {
   completeTaskInputSchema,
   createTaskInputSchema,
+  moveTaskInputSchema,
   reorderTaskInputSchema,
+  setTaskStatusInputSchema,
   updateTaskInputSchema
 } from "./dto";
+import type { TaskLifecycleStatus, TaskRecord } from "./types";
 
 @Injectable()
 export class TasksService {
@@ -30,7 +33,7 @@ export class TasksService {
       throw new BadRequestException("Invalid task payload");
     }
 
-    const { listId, sectionId, parentTaskId, ...rest } = parsed.data;
+    const { listId, sectionId, parentTaskId, status, ...rest } = parsed.data;
     this.listsDao.getById(userId, listId);
 
     if (sectionId) {
@@ -49,8 +52,15 @@ export class TasksService {
       title: rest.title,
       notes: rest.notes ?? null,
       dueDate: rest.dueDate ?? null,
-      completed: false,
-      completedAt: null
+      completed: status === "completed",
+      completedAt: status === "completed" ? new Date().toISOString() : null,
+      status: status ?? "active",
+      priority: rest.priority ?? "none",
+      energyLevel: rest.energyLevel ?? "MEDIUM",
+      resistance: rest.resistance ?? "NONE",
+      kanbanColumn: rest.kanbanColumn ?? "TODO",
+      matrixQuadrant: rest.matrixQuadrant ?? null,
+      tagSlugs: rest.tagSlugs ?? []
     });
   }
 
@@ -77,6 +87,16 @@ export class TasksService {
 
     this.assertParentTaskConstraints(userId, nextListId, nextParentTaskId, id);
 
+    if (parsed.data.status === "trash") {
+      return this.deleteTask(userId, id);
+    }
+
+    const nextStatus = resolveNextStatus(current, parsed.data.status, parsed.data.completed);
+    let nextCompleted = parsed.data.completed ?? current.completed;
+    if (parsed.data.status) {
+      nextCompleted = parsed.data.status === "completed";
+    }
+
     return this.tasksDao.update(userId, id, {
       listId: nextListId,
       sectionId: nextSectionId,
@@ -84,13 +104,46 @@ export class TasksService {
       title: parsed.data.title ?? current.title,
       notes: parsed.data.notes === undefined ? current.notes : parsed.data.notes,
       dueDate: parsed.data.dueDate === undefined ? current.dueDate : parsed.data.dueDate,
-      completed: parsed.data.completed === undefined ? current.completed : parsed.data.completed,
+      completed: nextCompleted,
       completedAt:
-        parsed.data.completed === undefined
-          ? current.completedAt
-          : parsed.data.completed
-            ? current.completedAt ?? new Date().toISOString()
-            : null
+        nextStatus === "completed" ? current.completedAt ?? new Date().toISOString() : null,
+      status: nextStatus,
+      priority: parsed.data.priority ?? current.priority,
+      energyLevel: parsed.data.energyLevel ?? current.energyLevel,
+      resistance: parsed.data.resistance ?? current.resistance,
+      kanbanColumn: parsed.data.kanbanColumn ?? current.kanbanColumn,
+      matrixQuadrant: parsed.data.matrixQuadrant === undefined ? current.matrixQuadrant : parsed.data.matrixQuadrant,
+      tagSlugs: parsed.data.tagSlugs === undefined ? current.tagSlugs : parsed.data.tagSlugs
+    });
+  }
+
+  moveTask(userId: string, id: string, input: unknown) {
+    const parsed = moveTaskInputSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new BadRequestException("Invalid move payload");
+    }
+
+    const current = this.tasksDao.getById(userId, id);
+    const nextListId = parsed.data.listId ?? current.listId;
+    const nextSectionId = parsed.data.sectionId === undefined ? current.sectionId : parsed.data.sectionId;
+
+    this.listsDao.getById(userId, nextListId);
+
+    if (nextSectionId) {
+      const section = this.sectionsDao.getById(userId, nextSectionId);
+      if (section.listId !== nextListId) {
+        throw new BadRequestException("Section must belong to the same list as the task");
+      }
+    }
+
+    return this.tasksDao.update(userId, id, {
+      listId: nextListId,
+      sectionId: nextSectionId,
+      sortOrder: parsed.data.sortOrder ?? current.sortOrder,
+      kanbanColumn: parsed.data.kanbanColumn ?? current.kanbanColumn,
+      matrixQuadrant:
+        parsed.data.matrixQuadrant === undefined ? current.matrixQuadrant : parsed.data.matrixQuadrant,
+      tagSlugs: parsed.data.tagSlugs === undefined ? current.tagSlugs : parsed.data.tagSlugs
     });
   }
 
@@ -110,9 +163,27 @@ export class TasksService {
     }
 
     const current = this.tasksDao.getById(userId, id);
+    const nextStatus: TaskLifecycleStatus = parsed.data.completed ? "completed" : "active";
     return this.tasksDao.update(userId, id, {
       completed: parsed.data.completed,
-      completedAt: parsed.data.completed ? current.completedAt ?? new Date().toISOString() : null
+      completedAt: parsed.data.completed ? current.completedAt ?? new Date().toISOString() : null,
+      status: nextStatus
+    });
+  }
+
+  setTaskStatus(userId: string, id: string, input: unknown) {
+    const parsed = setTaskStatusInputSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new BadRequestException("Invalid task status payload");
+    }
+
+    if (parsed.data.status === "trash") {
+      return this.deleteTask(userId, id);
+    }
+
+    return this.updateTask(userId, id, {
+      status: parsed.data.status,
+      completed: parsed.data.status === "completed"
     });
   }
 
@@ -154,4 +225,20 @@ export class TasksService {
       throw new BadRequestException("Task nesting depth cannot exceed 3 levels");
     }
   }
+}
+
+function resolveNextStatus(
+  current: TaskRecord,
+  status: TaskLifecycleStatus | undefined,
+  completed: boolean | undefined
+): TaskLifecycleStatus {
+  if (status) {
+    return status;
+  }
+
+  if (completed !== undefined) {
+    return completed ? "completed" : "active";
+  }
+
+  return current.status;
 }

@@ -1,7 +1,7 @@
 ---
 id: focus-sessions
 title: Focus Sessions Backend Tests
-status: draft
+status: ready
 phase: 2
 owners:
   - Backend Engineer
@@ -9,7 +9,7 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Backend Test Specs
@@ -22,6 +22,10 @@ last_updated: 2026-04-04
 - Covers `FCS-REQ-3`.
 - Assert session completion computes logged minutes, extra minutes, and task rollups correctly.
 
+## `BE-UNIT-FCS-003`
+- Covers `FCS-REQ-5`.
+- Assert running sessions defer blocking nudges and keep non-blocking nudges out of the active timer surface.
+
 ## `BE-E2E-FCS-001`
 - Covers `FCS-REQ-3`.
 - Assert session end persists history records and updates the linked task's tracked time.
@@ -29,4 +33,3 @@ last_updated: 2026-04-04
 ## `BE-E2E-FCS-002`
 - Covers `FCS-REQ-4`.
 - Assert pause/break transitions survive reconnect and resume from persisted state.
-

@@ -1,7 +1,7 @@
 ---
 id: focus-sessions
 title: Focus Sessions Work Packet
-status: draft
+status: ready
 phase: 2
 owners:
   - Frontend Engineer
@@ -9,9 +9,10 @@ owners:
 depends_on:
   - task-detail-basic-editor
   - core-data-model-crud
+  - nudge-engine
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Work Packet
@@ -33,8 +34,9 @@ Ship a reliable focus timer flow that can survive pauses, breaks, and app relaun
 - `BE-UNIT-FCS-001`
 - `FE-UNIT-FCS-001`
 - `FE-E2E-FCS-001`
+- `BE-UNIT-FCS-003` if the nudge deferral path is being implemented in the same slice.
 
-## Blockers And Dependencies
+## Blockers / Dependencies
 - Needs session schema and task rollup fields.
 - Needs nudge overlay interaction rules to avoid competing modal surfaces.
 
@@ -53,4 +55,3 @@ Ship a reliable focus timer flow that can survive pauses, breaks, and app relaun
 ## Rollback / Risk Notes
 - Risk: duplicate session records if idempotency is not enforced.
 - Risk: overlay conflicts if nudge and break states are not mutually exclusive.
-

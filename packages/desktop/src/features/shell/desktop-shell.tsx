@@ -1,60 +1,81 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
+import type { SmartListId, TaskGroupBy, TaskSortBy } from "@zuam/shared";
 import type { NudgeEvent } from "@zuam/shared";
 
 import { acknowledgeNudge, snoozeTask } from "../../lib/api/desktop-api";
-import { useShellStore, type ShellView } from "../../lib/state/shell-store";
+import { useShellStore, type ShellPresentation, type ShellView } from "../../lib/state/shell-store";
 import { NudgeBlockingModal, NudgeNotificationSurface } from "../nudges";
+import { FocusBreakOverlay, FocusSessionPanel } from "../focus/focus-session-panel";
+import { useFocusSession } from "../focus/use-focus-session";
 import { useSyncStatus } from "../system";
 import { TaskDetailPanel } from "../tasks/task-detail-panel";
+import { TaskViews } from "../views/task-views";
+import { useTaskWorkspace } from "../views/use-task-workspace";
 import { parseQuickCapturePreviews } from "./quick-capture";
 import {
-  assignedSections,
   blockingNudge,
-  focusQueueSections,
-  inboxSections,
   initialSyncSnapshot,
-  listSections,
-  nextSevenDaysSections,
-  notificationNudge,
-  presentationTabs,
-  sidebarTags,
-  smartNavItems,
-  systemNavItems,
-  todaySections,
-  userLists,
-  type ShellTaskRow
+  notificationNudge
 } from "./shell-data";
 
-type PresentationTab = (typeof presentationTabs)[number]["id"];
+const smartNavItems: Array<{ id: ShellView; label: string; smartList?: SmartListId }> = [
+  { id: "today", label: "Today", smartList: "today" },
+  { id: "next7days", label: "Next 7 Days", smartList: "next7days" },
+  { id: "assigned", label: "Assigned to Me" },
+  { id: "inbox", label: "Inbox", smartList: "inbox" },
+  { id: "focusQueue", label: "Focus Queue" }
+];
 
-const rootViews = new Set<ShellView>(["today", "next7days", "assigned", "inbox", "focusQueue"]);
+const presentationTabs: ShellPresentation[] = ["list", "kanban", "matrix", "calendar"];
 
 export function DesktopShell() {
   const activeView = useShellStore((state) => state.activeView);
   const activeListId = useShellStore((state) => state.activeListId);
+  const activeTagSlug = useShellStore((state) => state.activeTagSlug);
+  const activeSavedFilterId = useShellStore((state) => state.activeSavedFilterId);
+  const activePresentation = useShellStore((state) => state.activePresentation);
+  const groupBy = useShellStore((state) => state.groupBy);
+  const sortBy = useShellStore((state) => state.sortBy);
   const selectedTaskId = useShellStore((state) => state.selectedTaskId);
   const sidebarCollapsed = useShellStore((state) => state.sidebarCollapsed);
   const commandPaletteOpen = useShellStore((state) => state.commandPaletteOpen);
   const quickCaptureOpen = useShellStore((state) => state.quickCaptureOpen);
   const setActiveView = useShellStore((state) => state.setActiveView);
   const setActiveListId = useShellStore((state) => state.setActiveListId);
+  const setActiveTagSlug = useShellStore((state) => state.setActiveTagSlug);
+  const setActiveSavedFilterId = useShellStore((state) => state.setActiveSavedFilterId);
+  const setActivePresentation = useShellStore((state) => state.setActivePresentation);
+  const setGroupBy = useShellStore((state) => state.setGroupBy);
+  const setSortBy = useShellStore((state) => state.setSortBy);
   const setSelectedTaskId = useShellStore((state) => state.setSelectedTaskId);
   const setSidebarCollapsed = useShellStore((state) => state.setSidebarCollapsed);
   const openQuickCapture = useShellStore((state) => state.openQuickCapture);
   const closeQuickCapture = useShellStore((state) => state.closeQuickCapture);
   const closeCommandPalette = useShellStore((state) => state.closeCommandPalette);
-  const [activePresentation, setActivePresentation] = useState<PresentationTab>("list");
   const [notificationVisible, setNotificationVisible] = useState(true);
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false);
   const [activeBlockingNudge, setActiveBlockingNudge] = useState<NudgeEvent | null>(blockingNudge);
   const { snapshot: syncSnapshot, refresh: refreshSync, dismissError } = useSyncStatus(initialSyncSnapshot);
 
+  const workspace = useTaskWorkspace({
+    activeView,
+    activePresentation,
+    activeListId,
+    activeTagSlug,
+    activeSavedFilterId,
+    groupBy,
+    sortBy,
+    selectedTaskId
+  });
+  const focus = useFocusSession(selectedTaskId);
+
   useEffect(() => {
-    if (!selectedTaskId) {
-      setSelectedTaskId("task-1");
+    const firstTaskId = workspace.taskQuery.data?.items[0]?.id ?? workspace.focusQueueQuery.data?.task?.id ?? null;
+    if (!selectedTaskId && firstTaskId) {
+      setSelectedTaskId(firstTaskId);
     }
-  }, [selectedTaskId, setSelectedTaskId]);
+  }, [selectedTaskId, setSelectedTaskId, workspace.focusQueueQuery.data?.task?.id, workspace.taskQuery.data?.items]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -68,24 +89,101 @@ export function DesktopShell() {
     return () => window.removeEventListener("keydown", handler);
   }, [openQuickCapture]);
 
-  const content = useMemo(() => getShellContent(activeView, activeListId), [activeListId, activeView]);
+  const sidebarCounts = workspace.bootstrapQuery.data?.sidebarCounts ?? [];
+  const lists = workspace.bootstrapQuery.data?.lists ?? [];
+  const tags = workspace.bootstrapQuery.data?.tags ?? [];
+  const savedFilters = workspace.bootstrapQuery.data?.savedFilters ?? [];
+  const heading = resolveHeading(activeView, activeListId, activeTagSlug, activeSavedFilterId, lists, savedFilters);
+  const subtitle = resolveSubtitle(activeView, workspace.taskQuery.data?.totalCount ?? 0, activePresentation, groupBy, sortBy);
 
-  function selectRootView(view: ShellView) {
-    if (!rootViews.has(view)) {
+  const focusCallToAction = (() => {
+    if (focus.currentSession && focus.currentSession.taskId === selectedTaskId) {
+      if (focus.runtimeState === "running") {
+        return {
+          label: `Pause focus - ${formatDuration(focus.remainingSeconds)}`,
+          helper: "A session is already running for this task.",
+          onClick: focus.pause
+        };
+      }
+
+      if (focus.runtimeState === "paused") {
+        return {
+          label: `Resume focus - ${formatDuration(focus.remainingSeconds)}`,
+          helper: "Resume the paused session and keep the timer anchored to this task.",
+          onClick: focus.resume
+        };
+      }
+
+      if (focus.runtimeState === "break") {
+        return {
+          label: `Resume after break - ${formatDuration(focus.remainingSeconds)}`,
+          helper: "Break mode is active. Resume when you are ready.",
+          onClick: focus.resume
+        };
+      }
+    }
+
+    return {
+      label: "Start 25-min Focus Session",
+      helper: focus.currentSession && focus.currentSession.taskId !== selectedTaskId
+        ? "Another task already owns the active session."
+        : "Start a focused sprint from this task.",
+      onClick: focus.start
+    };
+  })();
+
+  const primarySuggestion = workspace.calendarSuggestionsQuery.data?.suggestions[0] ?? null;
+  const calendarHint = primarySuggestion
+    ? {
+        title: `Best next slot: ${formatTimeRange(primarySuggestion.start, primarySuggestion.end)}`,
+        body: primarySuggestion.rationale
+      }
+    : workspace.calendarContextQuery.data
+      ? {
+          title: workspace.calendarContextQuery.data.stale ? "Calendar context is stale" : "Calendar context is available",
+          body: `Busy blocks: ${workspace.calendarContextQuery.data.busyBlocks.length}. Free windows: ${workspace.calendarContextQuery.data.freeWindows.length}.`
+        }
+      : null;
+
+  function selectSmartView(view: ShellView) {
+    setActiveView(view);
+    setActiveListId(null);
+    setActiveTagSlug(null);
+    setActiveSavedFilterId(null);
+    if (view === "focusQueue") {
+      setActivePresentation("list");
+      setGroupBy("none");
+      setSortBy("priority");
       return;
     }
 
-    setActiveListId(null);
-    setActiveView(view);
+    applyPresentationDefaults(activePresentation, setGroupBy, setSortBy);
   }
 
   function selectList(listId: string) {
     setActiveView("list");
     setActiveListId(listId);
+    setActiveTagSlug(null);
+    setActiveSavedFilterId(null);
   }
 
-  function openTaskFromNudge(taskId: string) {
-    setSelectedTaskId(taskId);
+  function selectTag(tagSlug: string) {
+    setActiveView("tag");
+    setActiveTagSlug(tagSlug);
+    setActiveListId(null);
+    setActiveSavedFilterId(null);
+  }
+
+  function selectSavedFilter(filterId: string) {
+    setActiveView("savedFilter");
+    setActiveSavedFilterId(filterId);
+    setActiveListId(null);
+    setActiveTagSlug(null);
+  }
+
+  function selectPresentation(presentation: ShellPresentation) {
+    setActivePresentation(presentation);
+    applyPresentationDefaults(presentation, setGroupBy, setSortBy);
   }
 
   async function handleRefreshSync() {
@@ -130,12 +228,11 @@ export function DesktopShell() {
             <button
               key={item.id}
               type="button"
-              className={`sidebar-nav-item${activeView === item.view ? " is-active" : ""}`}
-              onClick={() => selectRootView(item.view)}
+              className={`sidebar-nav-item${activeView === item.id ? " is-active" : ""}`}
+              onClick={() => selectSmartView(item.id)}
             >
-              <span className={`sidebar-nav-icon icon-${item.icon.toLowerCase()}`} aria-hidden="true" />
               <span className="sidebar-nav-label">{item.label}</span>
-              {item.count ? <span className="sidebar-nav-count">{item.count}</span> : null}
+              <span className="sidebar-nav-count">{sidebarCounts.find((row) => row.key === (item.smartList ?? item.id))?.count ?? 0}</span>
             </button>
           ))}
         </nav>
@@ -143,21 +240,17 @@ export function DesktopShell() {
         <section className="sidebar-group">
           <div className="sidebar-group-header">
             <p>Lists</p>
-            <button type="button" aria-label="Create list">
-              +
-            </button>
           </div>
           <div className="sidebar-list-stack">
-            {userLists.map((list) => (
+            {lists.map((list) => (
               <button
                 key={list.id}
                 type="button"
                 className={`sidebar-list-item${activeView === "list" && activeListId === list.id ? " is-active" : ""}`}
                 onClick={() => selectList(list.id)}
               >
-                <span className={`sidebar-list-dot ${list.colorClass}`} aria-hidden="true" />
-                <span className="sidebar-nav-label">{list.label}</span>
-                <span className="sidebar-nav-count">{list.count}</span>
+                <span className="sidebar-list-dot" aria-hidden="true" style={{ backgroundColor: list.color ?? "#7b8fa6" }} />
+                <span className="sidebar-nav-label">{list.name}</span>
               </button>
             ))}
           </div>
@@ -166,52 +259,63 @@ export function DesktopShell() {
         <section className="sidebar-group">
           <div className="sidebar-group-header">
             <p>Tags</p>
-            <button type="button" aria-label="Create tag">
-              +
-            </button>
           </div>
           <div className="sidebar-tag-stack">
-            {sidebarTags.map((tag) => (
-              <button key={tag} type="button" className="sidebar-tag-item">
-                {tag}
+            {tags.map((tag) => (
+              <button
+                key={tag.id}
+                type="button"
+                className="sidebar-tag-item"
+                onClick={() => selectTag(tag.slug)}
+              >
+                #{tag.slug}
               </button>
             ))}
           </div>
         </section>
 
-        <div className="sidebar-footer-nav" aria-label="System navigation">
-          {systemNavItems.map((item) => (
-            <button key={item.id} type="button" className="sidebar-nav-item is-muted">
-              <span className={`sidebar-nav-icon icon-${item.icon.toLowerCase()}`} aria-hidden="true" />
-              <span className="sidebar-nav-label">{item.label}</span>
-            </button>
-          ))}
-        </div>
+        <section className="sidebar-group">
+          <div className="sidebar-group-header">
+            <p>Filters</p>
+          </div>
+          <div className="sidebar-tag-stack">
+            {savedFilters.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                className="sidebar-tag-item"
+                onClick={() => selectSavedFilter(filter.id)}
+              >
+                {filter.name}
+              </button>
+            ))}
+          </div>
+        </section>
       </aside>
 
       <section className="desktop-main-panel" aria-label="Task list">
         <header className="desktop-main-header">
           <div className="desktop-main-title-group">
-            <h1>{content.title}</h1>
-            <p>{content.subtitle}</p>
+            <h1>{heading}</h1>
+            <p>{subtitle}</p>
           </div>
 
           <div className="desktop-main-header-actions">
             <div className="desktop-view-switcher" role="tablist" aria-label="View mode">
               {presentationTabs.map((tab) => (
                 <button
-                  key={tab.id}
+                  key={tab}
                   type="button"
-                  className={`desktop-view-chip${activePresentation === tab.id ? " is-active" : ""}`}
-                  onClick={() => setActivePresentation(tab.id)}
+                  className={`desktop-view-chip${activePresentation === tab ? " is-active" : ""}`}
+                  onClick={() => selectPresentation(tab)}
                 >
-                  {tab.label}
+                  {tab === "list" ? "List" : tab === "kanban" ? "Kanban" : tab === "matrix" ? "Matrix" : "Calendar"}
                 </button>
               ))}
             </div>
 
             <button type="button" className="desktop-main-more" aria-label="More actions">
-              •••
+              ...
             </button>
           </div>
         </header>
@@ -234,37 +338,18 @@ export function DesktopShell() {
         </div>
 
         <div className="desktop-main-content">
-          {activePresentation === "list" ? (
-            <div className="task-section-stack">
-              {content.sections.map((section) => (
-                <section key={section.id} className="task-section">
-                  <header className="task-section-header">
-                    <span className="task-section-label">{section.label}</span>
-                    <span className="task-section-count">{section.count}</span>
-                  </header>
-
-                  <div className="task-list">
-                    {section.tasks.map((task) => (
-                      <TaskListRow
-                        key={task.id}
-                        task={task}
-                        selected={selectedTaskId === task.id}
-                        onSelect={() => setSelectedTaskId(task.id)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
-          ) : (
-            <section className="desktop-placeholder-panel" aria-label={`${activePresentation} view placeholder`}>
-              <h2>{presentationTabs.find((tab) => tab.id === activePresentation)?.label}</h2>
-              <p>
-                The Phase 1 shell keeps the switcher chrome visible while richer {activePresentation} rendering is
-                phased in behind the same layout.
-              </p>
-            </section>
-          )}
+          <TaskViews
+            activeView={activeView}
+            activePresentation={activePresentation}
+            selectedTaskId={selectedTaskId}
+            taskQuery={workspace.taskQuery.data}
+            focusRecommendation={workspace.focusQueueQuery.data}
+            calendarContext={workspace.calendarContextQuery.data}
+            calendarSuggestions={workspace.calendarSuggestionsQuery.data?.suggestions ?? []}
+            onSelectTask={setSelectedTaskId}
+            onMoveTask={(taskId, input) => workspace.moveTask.mutate({ taskId, ...input })}
+            onSetTaskStatus={(taskId, status) => workspace.setTaskStatus.mutate({ taskId, status })}
+          />
         </div>
 
         <footer className="desktop-quick-add-wrap">
@@ -280,17 +365,23 @@ export function DesktopShell() {
       <div className="desktop-shell-divider" aria-hidden="true" />
 
       <div className="desktop-detail-column">
-        {selectedTaskId ? <TaskDetailPanel taskId={selectedTaskId} /> : null}
+        {selectedTaskId ? (
+          <TaskDetailPanel
+            taskId={selectedTaskId}
+            focusCallToAction={focusCallToAction}
+            calendarHint={calendarHint}
+          />
+        ) : null}
       </div>
 
-      {(commandPaletteOpen || quickCaptureOpen) && (
+      {commandPaletteOpen || quickCaptureOpen ? (
         <QuickCaptureDialog
           onClose={() => {
             closeQuickCapture();
             closeCommandPalette();
           }}
         />
-      )}
+      ) : null}
 
       {notificationVisible ? (
         <div className="nudge-notification-dock">
@@ -299,7 +390,7 @@ export function DesktopShell() {
             deliveryState={notificationPermissionGranted ? "ready" : "permission-denied"}
             onRequestPermission={() => setNotificationPermissionGranted(true)}
             onOpenTask={({ event }) => {
-              openTaskFromNudge(event.taskId);
+              setSelectedTaskId(event.taskId);
               setNotificationVisible(false);
             }}
             onSnooze={({ event, minutes }) => {
@@ -318,7 +409,7 @@ export function DesktopShell() {
         <NudgeBlockingModal
           event={activeBlockingNudge}
           onOpenTask={({ event }) => {
-            openTaskFromNudge(event.taskId);
+            setSelectedTaskId(event.taskId);
             setActiveBlockingNudge(null);
           }}
           onSnooze={({ event, minutes }) => {
@@ -331,47 +422,21 @@ export function DesktopShell() {
           }}
         />
       ) : null}
+
+      <FocusSessionPanel
+        snapshot={focus.focusQuery.data}
+        remainingSeconds={focus.remainingSeconds}
+        onPause={focus.pause}
+        onResume={focus.resume}
+        onTakeBreak={focus.takeBreak}
+        onEnd={focus.end}
+      />
+      <FocusBreakOverlay
+        visible={focus.runtimeState === "break"}
+        remainingSeconds={focus.remainingSeconds}
+        onResume={focus.resume}
+      />
     </main>
-  );
-}
-
-function TaskListRow({
-  task,
-  selected,
-  onSelect
-}: {
-  task: ShellTaskRow;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`task-list-row${selected ? " is-selected" : ""}`}
-      onClick={onSelect}
-      aria-pressed={selected}
-    >
-      <span className={`task-list-check is-${task.checkboxTone}`} aria-hidden="true" />
-
-      <div className="task-list-copy">
-        <div className="task-list-title-row">
-          <p>{task.title}</p>
-          {task.timeLabel ? <span className="task-list-time">{task.timeLabel}</span> : null}
-          {task.dueBadge ? <span className="task-list-due-badge">{task.dueBadge}</span> : null}
-        </div>
-
-        <div className="task-list-meta-row">
-          <span className={`task-list-dot ${task.listColorClass}`} aria-hidden="true" />
-          <span>{task.listName}</span>
-          {task.progressLabel ? <span>{task.progressLabel}</span> : null}
-          {task.estimate ? <span>{task.estimate}</span> : null}
-          {task.tag ? <span className={`task-list-tag is-${task.tagTone ?? "teal"}`}>{task.tag}</span> : null}
-          {task.priorityLabel ? (
-            <span className={`task-list-priority is-${task.priorityTone ?? "medium"}`}>{task.priorityLabel}</span>
-          ) : null}
-        </div>
-      </div>
-    </button>
   );
 }
 
@@ -400,11 +465,7 @@ function QuickCaptureDialog({ onClose }: { onClose: () => void }) {
 
         <label className="capture-input">
           <span>Task text</span>
-          <input
-            aria-label="Task text"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
+          <input aria-label="Task text" value={text} onChange={(event) => setText(event.target.value)} />
         </label>
 
         <p className="grammar-hint">
@@ -433,48 +494,72 @@ function QuickCaptureDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function getShellContent(activeView: ShellView, activeListId: string | null) {
-  if (activeView === "list" && activeListId) {
-    const selectedList = userLists.find((list) => list.id === activeListId);
-    return {
-      title: selectedList?.label ?? "List",
-      subtitle: `${selectedList?.count ?? 0} tasks synced from Google Tasks`,
-      sections: listSections[activeListId] ?? todaySections
-    };
-  }
-
+function resolveHeading(
+  activeView: ShellView,
+  activeListId: string | null,
+  activeTagSlug: string | null,
+  activeSavedFilterId: string | null,
+  lists: Array<{ id: string; name: string }>,
+  savedFilters: Array<{ id: string; name: string }>
+) {
   switch (activeView) {
     case "next7days":
-      return {
-        title: "Next 7 Days",
-        subtitle: "Upcoming commitments kept in the same persistent shell",
-        sections: nextSevenDaysSections
-      };
+      return "Next 7 Days";
     case "assigned":
-      return {
-        title: "Assigned to Me",
-        subtitle: "Tasks that still need a clear next move from you",
-        sections: assignedSections
-      };
+      return "Assigned to Me";
     case "inbox":
-      return {
-        title: "Inbox",
-        subtitle: "Captured work that still needs triage",
-        sections: inboxSections
-      };
+      return "Inbox";
+    case "list":
+      return lists.find((list) => list.id === activeListId)?.name ?? "List";
+    case "tag":
+      return activeTagSlug ? `#${activeTagSlug}` : "Tag";
+    case "savedFilter":
+      return savedFilters.find((filter) => filter.id === activeSavedFilterId)?.name ?? "Saved filter";
     case "focusQueue":
-      return {
-        title: "Focus Queue",
-        subtitle: "High-leverage work to pull into a focused session",
-        sections: focusQueueSections
-      };
+      return "Focus Queue";
     case "today":
     default:
-      return {
-        title: "Today",
-        subtitle: "Sunday, April 5 · 7 tasks · est 4h 50m",
-        sections: todaySections
-      };
+      return "Today";
+  }
+}
+
+function resolveSubtitle(
+  activeView: ShellView,
+  totalCount: number,
+  activePresentation: ShellPresentation,
+  groupBy: TaskGroupBy,
+  sortBy: TaskSortBy
+) {
+  if (activeView === "focusQueue") {
+    return `${totalCount} supporting tasks - recommendation-first queue - ${sortBy}`;
+  }
+
+  return `${totalCount} tasks - ${activePresentation} view - grouped by ${groupBy} - sorted by ${sortBy}`;
+}
+
+function applyPresentationDefaults(
+  presentation: ShellPresentation,
+  setGroupBy: (groupBy: TaskGroupBy) => void,
+  setSortBy: (sortBy: TaskSortBy) => void
+) {
+  switch (presentation) {
+    case "kanban":
+      setGroupBy("section");
+      setSortBy("manual");
+      break;
+    case "matrix":
+      setGroupBy("quadrant");
+      setSortBy("priority");
+      break;
+    case "calendar":
+      setGroupBy("date");
+      setSortBy("dueDate");
+      break;
+    case "list":
+    default:
+      setGroupBy("section");
+      setSortBy("manual");
+      break;
   }
 }
 
@@ -508,5 +593,17 @@ function renderSyncCopy(snapshot: typeof initialSyncSnapshot) {
     ? snapshot.lastSyncAt
     : syncTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-  return `Google Tasks connected · Last sync ${formattedTime} · ${snapshot.taskCount} tasks across ${snapshot.listCount} lists`;
+  return `Google Tasks connected - Last sync ${formattedTime} - ${snapshot.taskCount} tasks across ${snapshot.listCount} lists`;
+}
+
+function formatTimeRange(start: string, end: string) {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  return `${startDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}-${endDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+}
+
+function formatDuration(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }

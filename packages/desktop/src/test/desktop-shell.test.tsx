@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { DesktopShell } from "../features/shell/desktop-shell";
 import { resetTaskDetailCache } from "../features/tasks/task-detail-cache";
+import { resetDesktopApiMocks } from "../lib/api/desktop-api";
 import { useShellStore } from "../lib/state/shell-store";
 
 function renderShell() {
@@ -18,9 +19,15 @@ function renderShell() {
 describe("desktop shell layout", () => {
   beforeEach(() => {
     resetTaskDetailCache();
+    resetDesktopApiMocks();
     useShellStore.setState({
       activeView: "today",
       activeListId: null,
+      activeTagSlug: null,
+      activeSavedFilterId: null,
+      activePresentation: "list",
+      groupBy: "section",
+      sortBy: "manual",
       selectedTaskId: "task-1",
       sidebarCollapsed: false,
       commandPaletteOpen: false,
@@ -28,33 +35,33 @@ describe("desktop shell layout", () => {
     });
   });
 
-  it("FE-UNIT-DSK-001: renders the canonical three-panel shell instead of the planning workspace", () => {
+  it("FE-UNIT-DSK-001: renders the canonical three-panel shell instead of the planning workspace", async () => {
     renderShell();
 
     expect(screen.getByRole("navigation", { name: /smart lists/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Today" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /task detail/i })).toBeInTheDocument();
     expect(screen.queryByText(/planning workspace/i)).not.toBeInTheDocument();
   });
 
-  it("FE-UNIT-DSK-002: top-level list switching preserves the shell chrome", () => {
+  it("FE-UNIT-DSK-002: top-level list switching preserves the shell chrome", async () => {
     renderShell();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Platform/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /^Platform$/ }));
 
     expect(screen.getByRole("heading", { level: 1, name: "Platform" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /pull q1 metrics data/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /pull q1 metrics data/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
   });
 
-  it("FE-UNIT-DSK-003: selecting alternate presentation tabs preserves the shell layout", () => {
+  it("FE-UNIT-DSK-003: selecting alternate presentation tabs preserves the shell layout", async () => {
     renderShell();
 
     fireEvent.click(screen.getByRole("button", { name: "Calendar" }));
 
     expect(screen.getByRole("button", { name: "Calendar" })).toHaveClass("is-active");
-    expect(screen.getByRole("region", { name: /calendar view placeholder/i })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: /calendar task view/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /refresh/i })).toBeInTheDocument();
   });
 
@@ -86,5 +93,64 @@ describe("desktop shell layout", () => {
     fireEvent.click(screen.getByRole("button", { name: /acknowledge/i }));
 
     expect(screen.queryByRole("dialog", { name: /ship nudge engine v1/i })).not.toBeInTheDocument();
+  });
+
+  it("FE-UNIT-TASK-VIEWS-001: kanban and matrix views preserve task selection while switching surfaces", async () => {
+    renderShell();
+
+    const selectedTask = await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i });
+    fireEvent.click(selectedTask);
+    fireEvent.click(screen.getByRole("button", { name: "Kanban" }));
+    expect(await screen.findByRole("region", { name: /kanban view/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Matrix" }));
+    expect(await screen.findByRole("region", { name: /matrix view/i })).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/ship nudge engine v1 \(level 0-2\)/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-TASK-VIEWS-002: moving a task across kanban columns updates the visible board state", async () => {
+    renderShell();
+
+    fireEvent.click(screen.getByRole("button", { name: "Kanban" }));
+    const card = await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)high - high/i });
+    const todoColumn = screen.getByRole("region", { name: /review/i });
+
+    fireEvent.dragStart(card, {
+      dataTransfer: {
+        setData: () => undefined,
+        getData: () => "task-1"
+      }
+    });
+    fireEvent.drop(todoColumn, {
+      dataTransfer: {
+        getData: () => "task-1"
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: /review/i })).toHaveTextContent(/ship nudge engine v1/i);
+    });
+  });
+
+  it("FE-UNIT-FOCUS-001: focus timer lifecycle and break overlay stay attached to the selected task", async () => {
+    renderShell();
+
+    fireEvent.click(screen.getByRole("button", { name: /start 25-min focus session/i }));
+    expect(await screen.findByRole("complementary", { name: /focus session/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /break/i }));
+    expect(await screen.findByRole("dialog", { name: /break in progress/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /resume focus/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: /break in progress/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it("FE-UNIT-GCAL-001: task detail shows calendar-aware scheduling guidance", async () => {
+    renderShell();
+
+    await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i });
+    expect(await screen.findByText(/best next slot/i)).toBeInTheDocument();
   });
 });
