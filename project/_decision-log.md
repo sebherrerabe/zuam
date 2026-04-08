@@ -11,7 +11,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-07
+last_updated: 2026-04-08
 ---
 
 # Architectural Decision Log
@@ -224,5 +224,14 @@ last_updated: 2026-04-07
 - Context: Zuam's backend needs a stable architectural boundary that keeps domain logic testable, persistence interchangeable, and database access auditable as the module count grows.
 - Decision: The canonical NestJS backend flow is `controller -> service -> dao`. Services may orchestrate one or more DAOs, but no service may import Prisma, a database connection, raw SQL, or any direct persistence client. Only DAO classes may touch Prisma or other persistence drivers.
 - Consequences: Service tests mock DAO interfaces instead of database clients, DAO integration tests own persistence verification, and transaction helpers must live below the service boundary so services still coordinate DAOs rather than raw database handles.
+- Supersedes: none
+- Superseded by: none
+
+## ADR-024: Separate The Current Phase 1 Shell From The Zuamy Planning Workspace Mockup
+- Status: accepted
+- Date: 2026-04-08
+- Context: The active Figma file contains at least two distinct light-mode desktop surfaces: `1:19` `Desktop Shell — Today` and `198:2` `Zuamy Planning Workspace (light)`. Without an explicit decision, frontend agents can incorrectly treat the planning workspace as the replacement for the Phase 1 shell.
+- Decision: Treat `1:19` as the canonical Phase 1 desktop shell, `1:255` as the canonical Phase 1 task-detail panel, and `198:2` as a separate planning/AI workspace surface that is not in scope for `desktop-shell-layout` unless a later module explicitly adopts it.
+- Consequences: Frontend docs must name the authoritative node IDs for Figma-backed slices. Agents implementing shell or task-detail work must fetch `1:19` and `1:255`. Work against `198:2` belongs to a separate planning/AI workspace slice rather than the core shell.
 - Supersedes: none
 - Superseded by: none

@@ -11,7 +11,7 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-07
+last_updated: 2026-04-08
 ---
 
 # Desktop Shell Layout
@@ -40,4 +40,9 @@ Define the Electron + TanStack Start desktop shell that anchors the three-panel 
 ## Dependency Notes
 - Consumes list/task bootstrap data from backend contracts defined in `core-data-model-crud` and `auth-invite-onboarding`.
 - Shares layout state with `task-detail-basic-editor` and `task-views`.
+
+## Figma Reference
+- Fetch `1:19` `Desktop Shell — Today` via the Figma plugin before implementing or revising this module.
+- Use `get_design_context` for `1:19`, then `get_screenshot` to validate the actual proportions and chrome.
+- Do not substitute `198:2` `Zuamy Planning Workspace (light)` for this module; that is a separate planning/AI workspace surface.
 

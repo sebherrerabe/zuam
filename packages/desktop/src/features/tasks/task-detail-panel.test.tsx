@@ -68,7 +68,7 @@ describe("task detail basic editor", () => {
   it("FE-UNIT-TDE-003: subtask interactions stay scoped to the selected task and update progress", () => {
     const { rerender } = renderPanel("task-1");
 
-    expect(screen.getByText("3 / 7 | 43%")).toBeInTheDocument();
+    expect(screen.getByText("3 / 7 · 43%")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^\+ add$/i }));
     fireEvent.change(screen.getByRole("textbox", { name: /new subtask/i }), {
@@ -77,14 +77,14 @@ describe("task detail basic editor", () => {
     fireEvent.click(screen.getByRole("button", { name: /add subtask/i }));
 
     expect(screen.getByText("Wire keyboard shortcut state")).toBeInTheDocument();
-    expect(screen.getByText("3 / 8 | 38%")).toBeInTheDocument();
+    expect(screen.getByText("3 / 8 · 38%")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("checkbox", { name: /electron overlay window \(level 2\)/i }));
-    expect(screen.getByText("4 / 8 | 50%")).toBeInTheDocument();
+    expect(screen.getByText("4 / 8 · 50%")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /delete wire keyboard shortcut state/i }));
     expect(screen.queryByText("Wire keyboard shortcut state")).not.toBeInTheDocument();
-    expect(screen.getByText("4 / 7 | 57%")).toBeInTheDocument();
+    expect(screen.getByText("4 / 7 · 57%")).toBeInTheDocument();
 
     rerender(
       <QueryClientProvider client={new QueryClient()}>
@@ -93,7 +93,7 @@ describe("task detail basic editor", () => {
     );
 
     expect(screen.getByLabelText(/task title/i)).toHaveValue("Review onboarding invite copy");
-    expect(screen.getByText("0 / 2 | 0%")).toBeInTheDocument();
+    expect(screen.getByText("0 / 2 · 0%")).toBeInTheDocument();
     expect(screen.queryByText("Electron overlay window (Level 2)")).not.toBeInTheDocument();
   });
 });

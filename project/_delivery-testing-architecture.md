@@ -14,7 +14,7 @@ parallel_group: foundation
 source_of_truth:
   - AGENTS.md
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-07
+last_updated: 2026-04-08
 ---
 
 # Delivery, Testing, And Release Baseline
@@ -51,6 +51,8 @@ This document translates the shared testing strategy into a concrete delivery ba
 - DAO integration tests own persistence verification.
 - Any service importing Prisma or a database client fails architecture review.
 - Companion execution flows must produce audit traces in tests, not only success UI.
+- Figma-backed frontend slices must cite the exact node IDs used for implementation or explicitly document when styling is inferred from the nearest mockup.
+- A frontend slice is not design-complete on automated tests alone; it must also be checked against the fetched Figma screenshot before merge.
 
 ## CI Baseline
 Use GitHub Actions with separate concerns:

@@ -39,3 +39,8 @@ Deliver the Phase 1 reminder system: level 1 notifications plus level 2 full-scr
 ## Phase Mapping
 - This is a Phase 1 foundation module and desktop-only for the MVP.
 - Later escalation levels are intentionally out of scope here.
+
+## Figma Reference
+- This module has no dedicated frozen light-mode nudge modal frame in the current Figma file.
+- Fetch `1:19` `Desktop Shell — Today` and `1:255` `Detail` as the nearest visual references, then record the modal/notification treatment as an explicit inference.
+- Frontend work must still use the Figma plugin and compare against fetched screenshots, even when the exact nudge surface is inferred from the surrounding light-mode language.

@@ -1,95 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { useQuery } from "@tanstack/react-query";
 import type { NudgeEvent } from "@zuam/shared";
 
 import { acknowledgeNudge, snoozeTask } from "../../lib/api/desktop-api";
-import { useShellStore } from "../../lib/state/shell-store";
+import { useShellStore, type ShellView } from "../../lib/state/shell-store";
 import { NudgeBlockingModal, NudgeNotificationSurface } from "../nudges";
-import { SyncStatusCard, useSyncStatus } from "../system";
+import { useSyncStatus } from "../system";
 import { TaskDetailPanel } from "../tasks/task-detail-panel";
 import { parseQuickCapturePreviews } from "./quick-capture";
 import {
+  assignedSections,
   blockingNudge,
-  chatMessages,
+  focusQueueSections,
+  inboxSections,
   initialSyncSnapshot,
+  listSections,
+  nextSevenDaysSections,
   notificationNudge,
-  planCards,
-  planStats,
-  reviewTabs,
-  type ReviewTab,
-  understandingCopy
+  presentationTabs,
+  sidebarTags,
+  smartNavItems,
+  systemNavItems,
+  todaySections,
+  userLists,
+  type ShellTaskRow
 } from "./shell-data";
 
-const avatarCells = [
-  "hair",
-  "hair",
-  "hair",
-  "hair",
-  "hair",
-  "hair",
-  "hair",
-  "gold",
-  "hair",
-  "hair",
-  "skin",
-  "skin",
-  "skin",
-  "hair",
-  "hair",
-  "skin",
-  "eye",
-  "skin",
-  "hair",
-  "hair",
-  "skin",
-  "skin",
-  "skin",
-  "hair",
-  "hair",
-  "gold",
-  "gold",
-  "gold",
-  "hair",
-  "hair",
-  "gold",
-  "hair",
-  "hair",
-  "hair",
-  "hair",
-  "hair"
-] as const;
+type PresentationTab = (typeof presentationTabs)[number]["id"];
+
+const rootViews = new Set<ShellView>(["today", "next7days", "assigned", "inbox", "focusQueue"]);
 
 export function DesktopShell() {
-  const workspaceQuery = useQuery({
-    queryKey: ["zuamy-planning-workspace"],
-    queryFn: async () => ({
-      chatMessages,
-      planCards,
-      understandingCopy,
-      planStats
-    }),
-    initialData: {
-      chatMessages,
-      planCards,
-      understandingCopy,
-      planStats
-    },
-    staleTime: Number.POSITIVE_INFINITY
-  });
-
+  const activeView = useShellStore((state) => state.activeView);
+  const activeListId = useShellStore((state) => state.activeListId);
+  const selectedTaskId = useShellStore((state) => state.selectedTaskId);
+  const sidebarCollapsed = useShellStore((state) => state.sidebarCollapsed);
   const commandPaletteOpen = useShellStore((state) => state.commandPaletteOpen);
   const quickCaptureOpen = useShellStore((state) => state.quickCaptureOpen);
-  const selectedTaskId = useShellStore((state) => state.selectedTaskId);
+  const setActiveView = useShellStore((state) => state.setActiveView);
+  const setActiveListId = useShellStore((state) => state.setActiveListId);
   const setSelectedTaskId = useShellStore((state) => state.setSelectedTaskId);
+  const setSidebarCollapsed = useShellStore((state) => state.setSidebarCollapsed);
   const openQuickCapture = useShellStore((state) => state.openQuickCapture);
   const closeQuickCapture = useShellStore((state) => state.closeQuickCapture);
   const closeCommandPalette = useShellStore((state) => state.closeCommandPalette);
-  const [activeTab, setActiveTab] = useState<ReviewTab>("summary");
+  const [activePresentation, setActivePresentation] = useState<PresentationTab>("list");
   const [notificationVisible, setNotificationVisible] = useState(true);
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState(false);
   const [activeBlockingNudge, setActiveBlockingNudge] = useState<NudgeEvent | null>(blockingNudge);
   const { snapshot: syncSnapshot, refresh: refreshSync, dismissError } = useSyncStatus(initialSyncSnapshot);
+
+  useEffect(() => {
+    if (!selectedTaskId) {
+      setSelectedTaskId("task-1");
+    }
+  }, [selectedTaskId, setSelectedTaskId]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -103,6 +68,22 @@ export function DesktopShell() {
     return () => window.removeEventListener("keydown", handler);
   }, [openQuickCapture]);
 
+  const content = useMemo(() => getShellContent(activeView, activeListId), [activeListId, activeView]);
+
+  function selectRootView(view: ShellView) {
+    if (!rootViews.has(view)) {
+      return;
+    }
+
+    setActiveListId(null);
+    setActiveView(view);
+  }
+
+  function selectList(listId: string) {
+    setActiveView("list");
+    setActiveListId(listId);
+  }
+
   function openTaskFromNudge(taskId: string) {
     setSelectedTaskId(taskId);
   }
@@ -112,134 +93,195 @@ export function DesktopShell() {
   }
 
   return (
-    <main className="planning-workspace">
-      <section className="chat-panel" aria-label="Zuamy chat">
-        <header className="chat-header">
-          <div className="avatar avatar-large" aria-hidden="true">
-            {avatarCells.map((cell, index) => (
-              <span key={`${cell}-${index}`} className={`avatar-pixel tone-${cell}`} />
-            ))}
+    <main className={`desktop-shell${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
+      <aside className="desktop-sidebar" aria-label="Primary navigation">
+        <header className="sidebar-logo-row">
+          <div className="sidebar-logo-mark" aria-hidden="true">
+            Z
           </div>
-          <div className="chat-header-copy">
-            <h1>Zuamy</h1>
-            <p>Planning workspace</p>
-          </div>
+          <p className="sidebar-brand">Zuam</p>
+          <div className="sidebar-spacer" />
+          <button
+            type="button"
+            className="sidebar-utility-button"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          >
+            <span />
+          </button>
         </header>
 
-        <div className="chat-divider" />
-
-        <div className="chat-messages">
-          {workspaceQuery.data.chatMessages.map((message) => (
-            <article
-              key={message.id}
-              className={`message-row${message.speaker === "user" ? " is-user" : " is-zuamy"}`}
-            >
-              {message.speaker === "zuamy" ? (
-                <div className="avatar avatar-small" aria-hidden="true">
-                  {avatarCells.map((cell, index) => (
-                    <span key={`${message.id}-${cell}-${index}`} className={`avatar-pixel tone-${cell}`} />
-                  ))}
-                </div>
-              ) : null}
-              <div className={`message-bubble${message.speaker === "zuamy" ? " is-accented" : ""}`}>
-                {message.text.split("\n").map((line, index) => (
-                  <p key={`${message.id}-${index}`}>{line || "\u00A0"}</p>
-                ))}
-              </div>
-            </article>
-          ))}
+        <div className="sidebar-user-row">
+          <div className="sidebar-user-avatar" aria-hidden="true">
+            SB
+          </div>
+          <p>Seb H.</p>
         </div>
 
-        <footer className="chat-input-bar">
-          <button className="chat-input-trigger" type="button" onClick={openQuickCapture}>
-            Ask Zuamy...
+        <div className="sidebar-search-wrap">
+          <button type="button" className="sidebar-search-trigger" onClick={openQuickCapture}>
+            <span className="sidebar-search-icon" aria-hidden="true" />
+            <span>Quick capture - Ctrl/Cmd+K</span>
           </button>
-          <button
-            className="send-button"
-            type="button"
-            aria-label="Open quick capture"
-            onClick={openQuickCapture}
-          >
-            {"->"}
-          </button>
-        </footer>
-      </section>
+        </div>
 
-      <section className="review-panel" aria-label="Plan review">
-        <nav className="review-tabs" aria-label="Review tabs">
-          {reviewTabs.map((tab) => (
+        <nav className="sidebar-smart-nav" aria-label="Smart lists">
+          {smartNavItems.map((item) => (
             <button
-              key={tab.id}
+              key={item.id}
               type="button"
-              className={`review-tab${activeTab === tab.id ? " is-active" : ""}`}
-              onClick={() => setActiveTab(tab.id)}
+              className={`sidebar-nav-item${activeView === item.view ? " is-active" : ""}`}
+              onClick={() => selectRootView(item.view)}
             >
-              {tab.label}
+              <span className={`sidebar-nav-icon icon-${item.icon.toLowerCase()}`} aria-hidden="true" />
+              <span className="sidebar-nav-label">{item.label}</span>
+              {item.count ? <span className="sidebar-nav-count">{item.count}</span> : null}
             </button>
           ))}
         </nav>
 
-        <div className="chat-divider" />
+        <section className="sidebar-group">
+          <div className="sidebar-group-header">
+            <p>Lists</p>
+            <button type="button" aria-label="Create list">
+              +
+            </button>
+          </div>
+          <div className="sidebar-list-stack">
+            {userLists.map((list) => (
+              <button
+                key={list.id}
+                type="button"
+                className={`sidebar-list-item${activeView === "list" && activeListId === list.id ? " is-active" : ""}`}
+                onClick={() => selectList(list.id)}
+              >
+                <span className={`sidebar-list-dot ${list.colorClass}`} aria-hidden="true" />
+                <span className="sidebar-nav-label">{list.label}</span>
+                <span className="sidebar-nav-count">{list.count}</span>
+              </button>
+            ))}
+          </div>
+        </section>
 
-        <div className="review-content">
-          {activeTab === "summary" ? (
-            <>
-              <section className="understanding-card">
-                <h2>Understanding</h2>
-                <p>{workspaceQuery.data.understandingCopy}</p>
-              </section>
+        <section className="sidebar-group">
+          <div className="sidebar-group-header">
+            <p>Tags</p>
+            <button type="button" aria-label="Create tag">
+              +
+            </button>
+          </div>
+          <div className="sidebar-tag-stack">
+            {sidebarTags.map((tag) => (
+              <button key={tag} type="button" className="sidebar-tag-item">
+                {tag}
+              </button>
+            ))}
+          </div>
+        </section>
 
-              <section className="plan-section">
-                <h2>Proposed Plan</h2>
-                <div className="plan-card-row">
-                  {workspaceQuery.data.planCards.map((card) => (
-                    <article key={card.day} className="plan-day-card">
-                      <h3>{card.day}</h3>
-                      <ul>
-                        {card.items.map((item) => (
-                          <li key={`${card.day}-${item.time}`}>
-                            <span>{item.time}</span>
-                            <strong>{item.label}</strong>
-                          </li>
-                        ))}
-                      </ul>
-                    </article>
-                  ))}
-                </div>
-                <p className="plan-stats">{workspaceQuery.data.planStats}</p>
-              </section>
+        <div className="sidebar-footer-nav" aria-label="System navigation">
+          {systemNavItems.map((item) => (
+            <button key={item.id} type="button" className="sidebar-nav-item is-muted">
+              <span className={`sidebar-nav-icon icon-${item.icon.toLowerCase()}`} aria-hidden="true" />
+              <span className="sidebar-nav-label">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
 
-              <div className="review-actions">
-                <button className="approve-button" type="button">
-                  Approve Plan
+      <section className="desktop-main-panel" aria-label="Task list">
+        <header className="desktop-main-header">
+          <div className="desktop-main-title-group">
+            <h1>{content.title}</h1>
+            <p>{content.subtitle}</p>
+          </div>
+
+          <div className="desktop-main-header-actions">
+            <div className="desktop-view-switcher" role="tablist" aria-label="View mode">
+              {presentationTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`desktop-view-chip${activePresentation === tab.id ? " is-active" : ""}`}
+                  onClick={() => setActivePresentation(tab.id)}
+                >
+                  {tab.label}
                 </button>
-                <button className="text-button" type="button">
-                  Edit Plan
-                </button>
-                <button className="text-button text-button-danger" type="button">
-                  Reject
-                </button>
-              </div>
+              ))}
+            </div>
 
-              <div className="review-utility-stack">
-                <SyncStatusCard
-                  snapshot={syncSnapshot}
-                  onRefresh={handleRefreshSync}
-                  onRetry={handleRefreshSync}
-                  onDismissError={dismissError}
-                />
-              </div>
-            </>
+            <button type="button" className="desktop-main-more" aria-label="More actions">
+              •••
+            </button>
+          </div>
+        </header>
+
+        <div className="desktop-sync-strip" aria-label="Google Tasks sync status">
+          <div className="desktop-sync-copy">
+            <span className={`desktop-sync-pill is-${syncSnapshot.status}`}>{renderSyncLabel(syncSnapshot.status)}</span>
+            <p>{renderSyncCopy(syncSnapshot)}</p>
+          </div>
+          <div className="desktop-sync-actions">
+            <button type="button" className="desktop-sync-button" onClick={() => void handleRefreshSync()}>
+              Refresh
+            </button>
+            {syncSnapshot.status === "failed" ? (
+              <button type="button" className="desktop-sync-button is-ghost" onClick={dismissError}>
+                Dismiss
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="desktop-main-content">
+          {activePresentation === "list" ? (
+            <div className="task-section-stack">
+              {content.sections.map((section) => (
+                <section key={section.id} className="task-section">
+                  <header className="task-section-header">
+                    <span className="task-section-label">{section.label}</span>
+                    <span className="task-section-count">{section.count}</span>
+                  </header>
+
+                  <div className="task-list">
+                    {section.tasks.map((task) => (
+                      <TaskListRow
+                        key={task.id}
+                        task={task}
+                        selected={selectedTaskId === task.id}
+                        onSelect={() => setSelectedTaskId(task.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
           ) : (
-            <section className="placeholder-panel">
-              <h2>{reviewTabs.find((tab) => tab.id === activeTab)?.label}</h2>
-              <p>This panel is reserved for the layered review surface documented in the planning architecture.</p>
+            <section className="desktop-placeholder-panel" aria-label={`${activePresentation} view placeholder`}>
+              <h2>{presentationTabs.find((tab) => tab.id === activePresentation)?.label}</h2>
+              <p>
+                The Phase 1 shell keeps the switcher chrome visible while richer {activePresentation} rendering is
+                phased in behind the same layout.
+              </p>
             </section>
           )}
-
-          {selectedTaskId ? <TaskDetailPanel taskId={selectedTaskId} /> : null}
         </div>
+
+        <footer className="desktop-quick-add-wrap">
+          <button type="button" className="desktop-quick-add" onClick={openQuickCapture}>
+            <span className="desktop-quick-add-plus" aria-hidden="true">
+              +
+            </span>
+            <span>{`Add task... try "review design tomorrow 3pm ~platform !1 #work"`}</span>
+          </button>
+        </footer>
       </section>
+
+      <div className="desktop-shell-divider" aria-hidden="true" />
+
+      <div className="desktop-detail-column">
+        {selectedTaskId ? <TaskDetailPanel taskId={selectedTaskId} /> : null}
+      </div>
 
       {(commandPaletteOpen || quickCaptureOpen) && (
         <QuickCaptureDialog
@@ -290,6 +332,46 @@ export function DesktopShell() {
         />
       ) : null}
     </main>
+  );
+}
+
+function TaskListRow({
+  task,
+  selected,
+  onSelect
+}: {
+  task: ShellTaskRow;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`task-list-row${selected ? " is-selected" : ""}`}
+      onClick={onSelect}
+      aria-pressed={selected}
+    >
+      <span className={`task-list-check is-${task.checkboxTone}`} aria-hidden="true" />
+
+      <div className="task-list-copy">
+        <div className="task-list-title-row">
+          <p>{task.title}</p>
+          {task.timeLabel ? <span className="task-list-time">{task.timeLabel}</span> : null}
+          {task.dueBadge ? <span className="task-list-due-badge">{task.dueBadge}</span> : null}
+        </div>
+
+        <div className="task-list-meta-row">
+          <span className={`task-list-dot ${task.listColorClass}`} aria-hidden="true" />
+          <span>{task.listName}</span>
+          {task.progressLabel ? <span>{task.progressLabel}</span> : null}
+          {task.estimate ? <span>{task.estimate}</span> : null}
+          {task.tag ? <span className={`task-list-tag is-${task.tagTone ?? "teal"}`}>{task.tag}</span> : null}
+          {task.priorityLabel ? (
+            <span className={`task-list-priority is-${task.priorityTone ?? "medium"}`}>{task.priorityLabel}</span>
+          ) : null}
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -349,4 +431,82 @@ function QuickCaptureDialog({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
+}
+
+function getShellContent(activeView: ShellView, activeListId: string | null) {
+  if (activeView === "list" && activeListId) {
+    const selectedList = userLists.find((list) => list.id === activeListId);
+    return {
+      title: selectedList?.label ?? "List",
+      subtitle: `${selectedList?.count ?? 0} tasks synced from Google Tasks`,
+      sections: listSections[activeListId] ?? todaySections
+    };
+  }
+
+  switch (activeView) {
+    case "next7days":
+      return {
+        title: "Next 7 Days",
+        subtitle: "Upcoming commitments kept in the same persistent shell",
+        sections: nextSevenDaysSections
+      };
+    case "assigned":
+      return {
+        title: "Assigned to Me",
+        subtitle: "Tasks that still need a clear next move from you",
+        sections: assignedSections
+      };
+    case "inbox":
+      return {
+        title: "Inbox",
+        subtitle: "Captured work that still needs triage",
+        sections: inboxSections
+      };
+    case "focusQueue":
+      return {
+        title: "Focus Queue",
+        subtitle: "High-leverage work to pull into a focused session",
+        sections: focusQueueSections
+      };
+    case "today":
+    default:
+      return {
+        title: "Today",
+        subtitle: "Sunday, April 5 · 7 tasks · est 4h 50m",
+        sections: todaySections
+      };
+  }
+}
+
+function renderSyncLabel(status: "loading" | "idle" | "syncing" | "ready" | "failed") {
+  switch (status) {
+    case "loading":
+      return "Loading";
+    case "idle":
+      return "Idle";
+    case "syncing":
+      return "Syncing";
+    case "failed":
+      return "Attention";
+    case "ready":
+    default:
+      return "Synced";
+  }
+}
+
+function renderSyncCopy(snapshot: typeof initialSyncSnapshot) {
+  if (snapshot.status === "failed") {
+    return snapshot.lastError ?? "Google Tasks reported a sync error.";
+  }
+
+  if (!snapshot.lastSyncAt) {
+    return "Google Tasks connected. Waiting for the first completed import.";
+  }
+
+  const syncTime = new Date(snapshot.lastSyncAt);
+  const formattedTime = Number.isNaN(syncTime.getTime())
+    ? snapshot.lastSyncAt
+    : syncTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  return `Google Tasks connected · Last sync ${formattedTime} · ${snapshot.taskCount} tasks across ${snapshot.listCount} lists`;
 }

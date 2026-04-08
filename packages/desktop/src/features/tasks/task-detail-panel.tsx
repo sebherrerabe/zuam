@@ -97,6 +97,17 @@ function TaskDetailPanelContent({
   const totalCount = draft?.subtasks.length ?? 0;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const currentDraft = draft ?? initialTask;
+  const noteSections = useMemo(() => {
+    const sections = (currentDraft.notes ?? "")
+      .split(/\n\s*\n/)
+      .map((section) => section.trim())
+      .filter(Boolean);
+
+    return {
+      summary: sections[0] ?? "Keep the next edit warm, clear, and concrete.",
+      callout: sections[1] ?? "Plain text stays the safe sync fallback for this phase."
+    };
+  }, [currentDraft.notes]);
 
   function updateDraft(nextDraft: TaskDetailModel) {
     setDraft(nextDraft);
@@ -189,13 +200,13 @@ function TaskDetailPanelContent({
         </div>
         <div className="task-detail-header-actions" aria-label="Task detail actions">
           <button type="button" className="icon-button" aria-label="Flag task">
-            Flag
+            {"\u2691"}
           </button>
           <button type="button" className="icon-button" aria-label="More task actions">
-            More
+            •••
           </button>
           <button type="button" className="icon-button" aria-label="Close task detail">
-            Close
+            ×
           </button>
         </div>
       </header>
@@ -220,7 +231,7 @@ function TaskDetailPanelContent({
       <section className="task-detail-progress">
         <div className="task-detail-progress-header">
           <p>Subtasks progress</p>
-          <p>{`${completedCount} / ${totalCount} | ${progressPercent}%`}</p>
+          <p>{`${completedCount} / ${totalCount} · ${progressPercent}%`}</p>
         </div>
         <div className="task-detail-progress-track" aria-hidden="true">
           <div className="task-detail-progress-fill" style={{ width: `${progressPercent}%` }} />
@@ -230,11 +241,16 @@ function TaskDetailPanelContent({
       <section className="task-detail-body">
         <div className="task-detail-body-copy">
           <h2>Implementation plan</h2>
-          <p>Cover ambient -&gt; gentle -&gt; firm escalation. Keep copy warm, never guilt-tripping.</p>
+          <p>{noteSections.summary}</p>
+        </div>
+
+        <div className="task-detail-callout">
+          <p aria-hidden="true">💡</p>
+          <p>{noteSections.callout}</p>
         </div>
 
         <label className="task-detail-notes-field">
-          <span>Notes / body</span>
+          <span className="sr-only">Notes / body</span>
           <textarea
             aria-label="Notes"
             value={currentDraft.notes ?? ""}
@@ -248,11 +264,6 @@ function TaskDetailPanelContent({
             {titleError}
           </p>
         ) : null}
-
-        <div className="task-detail-callout">
-          <p aria-hidden="true">Tip</p>
-          <p>Plain text only. Line breaks are preserved, and the Google sync fallback stays lossless at this stage.</p>
-        </div>
       </section>
 
       <section className="task-detail-subtasks" aria-label="Subtasks">
@@ -306,7 +317,18 @@ function TaskDetailPanelContent({
         <div className="task-detail-details-head">
           <p>Details</p>
         </div>
-        <div className="task-detail-details-grid">
+        <div className="task-detail-list-grid">
+          <DetailRow label="List" value={formatListValue(currentDraft.listId)} icon="📁" accent="danger" />
+          <DetailRow label="Tags" value={currentDraft.tags.join("  ")} icon="🏷️" accent="success" />
+          <DetailRow label="Energy" value={currentDraft.energy} icon="⚡" accent="danger" />
+          <DetailRow label="Resistance" value={currentDraft.resistance} icon="😰" accent="warning" />
+          <DetailRow label="Estimate" value={currentDraft.estimate} icon="⏱️" />
+          <DetailRow label="Urgency" value={currentDraft.urgency} icon="🔥" accent="danger" />
+          <DetailRow label="Nudge" value={currentDraft.nudge} icon="🔔" />
+          <DetailRow label="Repeats" value={currentDraft.repeats} icon="🔁" muted />
+        </div>
+
+        <div className="task-detail-edit-grid">
           <label>
             <span>List</span>
             <select aria-label="List" value={currentDraft.listId} onChange={(event) => updateField("listId", event.target.value)}>
@@ -353,20 +375,10 @@ function TaskDetailPanelContent({
             </select>
           </label>
         </div>
-
-        <div className="task-detail-list-grid">
-          <DetailRow label="Tags" value={currentDraft.tags.join("  ")} />
-          <DetailRow label="Energy" value={currentDraft.energy} accent="warning" />
-          <DetailRow label="Resistance" value={currentDraft.resistance} accent="warning" />
-          <DetailRow label="Estimate" value={currentDraft.estimate} />
-          <DetailRow label="Urgency" value={currentDraft.urgency} accent="danger" />
-          <DetailRow label="Nudge" value={currentDraft.nudge} />
-          <DetailRow label="Repeats" value={currentDraft.repeats} muted />
-        </div>
       </section>
 
       <footer className="task-detail-footer">
-        <button type="button" className="task-detail-cta" disabled>
+        <button type="button" className="task-detail-cta">
           Start 25-min Focus Session
         </button>
       </footer>
@@ -378,17 +390,45 @@ function DetailRow({
   label,
   value,
   accent,
+  icon,
   muted
 }: {
   label: string;
   value: string;
-  accent?: "warning" | "danger";
+  accent?: "warning" | "danger" | "success";
+  icon?: string;
   muted?: boolean;
 }) {
   return (
     <div className="task-detail-row">
-      <span className="task-detail-row-label">{label}</span>
+      <span className="task-detail-row-label">
+        {icon ? <span className="task-detail-row-icon" aria-hidden="true">{icon}</span> : null}
+        <span>{label}</span>
+      </span>
       <span className={`task-detail-row-value${accent ? ` is-${accent}` : ""}${muted ? " is-muted" : ""}`}>{value}</span>
     </div>
   );
+}
+
+function formatListValue(listId: string) {
+  switch (listId) {
+    case "platform":
+      return "Platform";
+    case "inbox":
+      return "Inbox";
+    case "today":
+      return "Today";
+    case "family":
+      return "Family";
+    case "personal":
+      return "Personal";
+    case "glimpact":
+      return "Glimpact";
+    case "jiholabo-v2":
+      return "Jiholabo V2";
+    case "project-zero":
+      return "Project Zero";
+    default:
+      return listId;
+  }
 }

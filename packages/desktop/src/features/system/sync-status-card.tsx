@@ -68,7 +68,7 @@ const titleStyle = {
 
 const subcopyStyle = {
   margin: 0,
-  color: "var(--text-muted)",
+  color: "var(--text-secondary)",
   fontSize: "12px"
 } satisfies CSSProperties;
 
@@ -82,8 +82,8 @@ const statCardStyle = {
   display: "grid",
   gap: "3px",
   borderRadius: "12px",
-  border: "1px solid rgba(208, 139, 91, 0.16)",
-  background: "rgba(247, 245, 241, 0.7)",
+  border: "1px solid rgba(91, 106, 240, 0.12)",
+  background: "rgba(238, 242, 246, 0.9)",
   padding: "10px 12px"
 } satisfies CSSProperties;
 
@@ -181,14 +181,14 @@ const taskRowMetaStyle = {
 
 const bannerStyleByTone: Record<BadgeTone, CSSProperties> = {
   neutral: {
-    background: "rgba(247, 245, 241, 0.9)",
+    background: "rgba(238, 242, 246, 0.9)",
     color: "var(--text-soft)",
-    borderColor: "rgba(224, 219, 214, 0.9)"
+    borderColor: "rgba(226, 232, 240, 0.9)"
   },
   accent: {
-    background: "rgba(208, 139, 91, 0.12)",
+    background: "rgba(91, 106, 240, 0.12)",
     color: "var(--accent)",
-    borderColor: "rgba(208, 139, 91, 0.2)"
+    borderColor: "rgba(91, 106, 240, 0.2)"
   },
   success: {
     background: "rgba(0, 184, 152, 0.12)",
@@ -201,9 +201,9 @@ const bannerStyleByTone: Record<BadgeTone, CSSProperties> = {
     borderColor: "rgba(91, 106, 240, 0.18)"
   },
   danger: {
-    background: "rgba(191, 56, 43, 0.1)",
-    color: "var(--danger)",
-    borderColor: "rgba(191, 56, 43, 0.18)"
+    background: "rgba(255, 107, 107, 0.1)",
+    color: "#c94646",
+    borderColor: "rgba(255, 107, 107, 0.18)"
   }
 };
 

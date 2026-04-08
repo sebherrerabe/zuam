@@ -13,7 +13,7 @@ parallel_group: foundation
 source_of_truth:
   - AGENTS.md
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-07
+last_updated: 2026-04-08
 ---
 
 # Frontend Architecture Baseline
@@ -75,6 +75,25 @@ electron/
 - Task views should swap within a shared center-panel route state so filters and context can persist across view changes.
 - Task detail remains the primary editing surface; progression, AI, and focus affordances are secondary contextual layers.
 - AI companion UI must render typed review surfaces, not markdown-only blobs.
+
+## Figma Workflow Baseline
+- Frontend agents must fetch the exact design node with the Figma plugin before implementing a Figma-backed slice.
+- Required order: `get_design_context` for the target node, `get_metadata` only when the target node is ambiguous or the frame is too large, then `get_screenshot` for visual validation.
+- The fetched screenshot is part of implementation context, not an optional extra. Do not mark a Figma-backed frontend slice complete without comparing the built UI against the screenshot.
+- If the design file contains multiple plausible mockups, the relevant module doc or this shared architecture doc must identify which node is authoritative before implementation continues.
+- If a slice has no exact Figma node yet, use the nearest host frame as the visual baseline and explicitly record that the styling is an inference.
+
+## Current Light Mockup Registry
+- `1:19` `Desktop Shell — Today`: canonical Phase 1 desktop shell reference for sidebar, main list panel, quick add, and right detail host.
+- `1:255` `Detail`: canonical Phase 1 task detail panel reference nested inside `1:19`.
+- `198:2` `Zuamy Planning Workspace (light)`: separate planning/AI workspace reference. This is not the Phase 1 desktop shell and should not replace `1:19` when implementing `desktop-shell-layout`.
+
+## Mockup Coverage Rules
+- `desktop-shell-layout` maps to `1:19`.
+- `task-detail-basic-editor` maps to `1:255`.
+- `google-tasks-sync` currently has no dedicated light mockup card; use `1:19` as the shell host reference and record UI-card placement as an inference until a dedicated sync node exists.
+- `nudge-engine` currently has no dedicated frozen nudge modal frame; use the `1:19`/`1:255` light language as the nearest reference and record the modal treatment as an inference until a dedicated node exists.
+- `198:2` should be treated as a later AI companion/planning workspace surface unless a module doc explicitly scopes it in.
 
 ## Focus And Progression
 - Focus session timing should use a client-side state machine plus backend synchronization.

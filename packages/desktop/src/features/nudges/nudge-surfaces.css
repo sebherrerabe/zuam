@@ -1,13 +1,13 @@
 .nudge-root {
-  color: #35281f;
+  color: #1d1d1f;
   font-family: Inter, "Segoe UI", sans-serif;
 }
 
 .nudge-notification,
 .nudge-modal {
-  background: #fffaf1;
-  border: 1px solid #e3d4c0;
-  box-shadow: 0 18px 48px rgba(79, 52, 23, 0.16);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 18px 48px rgba(15, 30, 54, 0.16);
 }
 
 .nudge-notification {
@@ -42,7 +42,7 @@
 
 .nudge-kicker {
   margin: 0;
-  color: #8a6f57;
+  color: #5b6af0;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -58,13 +58,13 @@
 
 .nudge-copy {
   margin: 0;
-  color: #594636;
+  color: #6e6e73;
   font-size: 13px;
   line-height: 1.5;
 }
 
 .nudge-copy--compact {
-  color: #6c5b4a;
+  color: #6e6e73;
 }
 
 .nudge-meta-row {
@@ -78,19 +78,19 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #eadfcd;
+  border: 1px solid #dbe3ef;
   border-radius: 999px;
-  background: #fff;
-  color: #7b654f;
+  background: #eef2f6;
+  color: #6e6e73;
   font-size: 11px;
   font-weight: 600;
   padding: 6px 10px;
 }
 
 .nudge-chip--accent {
-  border-color: #f1b06f;
-  background: #fff2e2;
-  color: #b36313;
+  border-color: rgba(0, 184, 152, 0.2);
+  background: rgba(0, 184, 152, 0.12);
+  color: #00875f;
 }
 
 .nudge-avatar {
@@ -100,28 +100,28 @@
   width: 42px;
   height: 42px;
   padding: 5px;
-  border: 1px solid #e0d1bd;
+  border: 1px solid #dbe3ef;
   border-radius: 12px;
-  background: #faf0e1;
+  background: #eef2f6;
   flex: none;
 }
 
 .nudge-avatar__pixel {
   border-radius: 1px;
-  background: #f29a4d;
+  background: #5b6af0;
 }
 
 .nudge-avatar__pixel[data-tone="light"] {
-  background: #f8e1c3;
+  background: #d7ddff;
 }
 
 .nudge-avatar__pixel[data-tone="dark"] {
-  background: #b96d24;
+  background: #00b898;
 }
 
 .nudge-divider {
   border: 0;
-  border-top: 1px solid #ebe0d2;
+  border-top: 1px solid #e2e8f0;
   margin: 0;
 }
 
@@ -133,10 +133,10 @@
 
 .nudge-button {
   appearance: none;
-  border: 1px solid #dcc7ae;
+  border: 1px solid #dbe3ef;
   border-radius: 999px;
-  background: #fffdf8;
-  color: #4c3a2d;
+  background: #fff;
+  color: #1d1d1f;
   cursor: pointer;
   font-size: 13px;
   font-weight: 650;
@@ -150,12 +150,12 @@
 }
 
 .nudge-button:hover {
-  background: #fff5ea;
-  border-color: #d4b796;
+  background: #f5f8fc;
+  border-color: #cfd9e8;
 }
 
 .nudge-button:focus-visible {
-  outline: 3px solid rgba(243, 156, 82, 0.35);
+  outline: 3px solid rgba(91, 106, 240, 0.2);
   outline-offset: 2px;
 }
 
@@ -164,15 +164,15 @@
 }
 
 .nudge-button--primary {
-  background: linear-gradient(180deg, #f6a85d 0%, #ef8d32 100%);
-  border-color: #ef8d32;
+  background: linear-gradient(90deg, #00d4ab 0%, #5c6bf0 100%);
+  border-color: transparent;
   color: #fff;
-  box-shadow: 0 10px 24px rgba(239, 141, 50, 0.24);
+  box-shadow: 0 10px 24px rgba(91, 106, 240, 0.2);
 }
 
 .nudge-button--primary:hover {
-  background: linear-gradient(180deg, #f6b26b 0%, #ef8d32 100%);
-  border-color: #e57d23;
+  background: linear-gradient(90deg, #14d7b1 0%, #6876f3 100%);
+  border-color: transparent;
 }
 
 .nudge-button--ghost {
@@ -180,12 +180,12 @@
 }
 
 .nudge-button--ghost:hover {
-  background: rgba(255, 245, 234, 0.92);
+  background: rgba(238, 242, 246, 0.92);
 }
 
 .nudge-button--danger {
-  border-color: #e1b7a5;
-  color: #8d4435;
+  border-color: rgba(255, 107, 107, 0.24);
+  color: #c94646;
 }
 
 .nudge-layout {
@@ -204,7 +204,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(53, 40, 31, 0.6);
+  background: rgba(15, 30, 54, 0.52);
 }
 
 .nudge-modal {
@@ -239,14 +239,14 @@
 .nudge-detail-card {
   display: grid;
   gap: 4px;
-  border: 1px solid #eadccc;
+  border: 1px solid #e2e8f0;
   border-radius: 18px;
   background: #fff;
   padding: 14px 16px;
 }
 
 .nudge-detail-card__label {
-  color: #8a6f57;
+  color: #6e6e73;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -254,7 +254,7 @@
 }
 
 .nudge-detail-card__value {
-  color: #3b2c22;
+  color: #1d1d1f;
   font-size: 14px;
   line-height: 1.45;
   white-space: pre-line;
@@ -268,9 +268,9 @@
 .nudge-state-panel {
   display: grid;
   gap: 10px;
-  border: 1px solid #eadccc;
+  border: 1px solid #e2e8f0;
   border-radius: 22px;
-  background: #fff8ee;
+  background: #f7fbff;
   padding: 18px;
 }
 
@@ -282,7 +282,7 @@
 
 .nudge-state-panel__copy {
   margin: 0;
-  color: #614d3c;
+  color: #6e6e73;
   font-size: 13px;
   line-height: 1.5;
 }

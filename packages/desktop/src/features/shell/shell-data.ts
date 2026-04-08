@@ -2,83 +2,379 @@ import type { NudgeEvent } from "@zuam/shared";
 
 import type { SyncStatusSnapshot } from "../system";
 
-export type ChatMessage = {
+export type SidebarSmartItem = {
   id: string;
-  speaker: "user" | "zuamy";
-  text: string;
+  label: string;
+  view: "today" | "next7days" | "assigned" | "inbox" | "focusQueue";
+  icon: string;
+  count?: number;
 };
 
-export type PlanCard = {
-  day: string;
-  items: Array<{ time: string; label: string }>;
+export type SidebarListItem = {
+  id: string;
+  label: string;
+  count: number;
+  colorClass: string;
 };
 
-export type ReviewTab = "summary" | "checklist" | "task-diff" | "calendar" | "rationale";
+export type SidebarSystemItem = {
+  id: string;
+  label: string;
+  icon: string;
+};
 
-export const reviewTabs: Array<{ id: ReviewTab; label: string }> = [
-  { id: "summary", label: "Summary" },
-  { id: "checklist", label: "Checklist" },
-  { id: "task-diff", label: "Task Diff" },
-  { id: "calendar", label: "Calendar" },
-  { id: "rationale", label: "Rationale" }
+export type ShellTaskRow = {
+  id: string;
+  title: string;
+  listName: string;
+  listColorClass: string;
+  checkboxTone: "danger" | "warning" | "blue" | "neutral";
+  timeLabel?: string;
+  dueBadge?: string;
+  progressLabel?: string;
+  estimate?: string;
+  tag?: string;
+  tagTone?: "teal" | "blue";
+  priorityLabel?: string;
+  priorityTone?: "high" | "medium";
+};
+
+export type ShellTaskSection = {
+  id: string;
+  label: string;
+  count: number;
+  tasks: ShellTaskRow[];
+};
+
+export const smartNavItems: SidebarSmartItem[] = [
+  { id: "today", label: "Today", view: "today", icon: "Today", count: 7 },
+  { id: "next7days", label: "Next 7 Days", view: "next7days", icon: "Next", count: 7 },
+  { id: "assigned", label: "Assigned to Me", view: "assigned", icon: "Me", count: 2 },
+  { id: "inbox", label: "Inbox", view: "inbox", icon: "Inbox", count: 6 },
+  { id: "focusQueue", label: "Focus Queue", view: "focusQueue", icon: "Focus" }
 ];
 
-export const chatMessages: ChatMessage[] = [
+export const userLists: SidebarListItem[] = [
+  { id: "jiholabo-v2", label: "Jiholabo V2", count: 24, colorClass: "is-violet" },
+  { id: "personal", label: "Personal", count: 12, colorClass: "is-green" },
+  { id: "family", label: "Family", count: 4, colorClass: "is-yellow" },
+  { id: "glimpact", label: "Glimpact", count: 16, colorClass: "is-blue" },
+  { id: "platform", label: "Platform", count: 17, colorClass: "is-red" }
+];
+
+export const sidebarTags = ["#work", "#urgent", "#deep-work"];
+
+export const systemNavItems: SidebarSystemItem[] = [
+  { id: "completed", label: "Completed", icon: "Done" },
+  { id: "wontdo", label: "Won't Do", icon: "Skip" },
+  { id: "trash", label: "Trash", icon: "Trash" },
+  { id: "settings", label: "Settings", icon: "Gear" }
+];
+
+export const presentationTabs = [
+  { id: "list", label: "List" },
+  { id: "kanban", label: "Kanban" },
+  { id: "matrix", label: "Matrix" },
+  { id: "calendar", label: "Calendar" }
+] as const;
+
+export const todaySections: ShellTaskSection[] = [
   {
-    id: "user-1",
-    speaker: "user",
-    text: "My week is a mess. I need to prep the investor update, finish the nudge engine, and somehow survive today."
+    id: "overdue",
+    label: "Overdue",
+    count: 2,
+    tasks: [
+      {
+        id: "task-7",
+        title: "File Q1 taxes",
+        listName: "Personal",
+        listColorClass: "is-green",
+        checkboxTone: "danger",
+        dueBadge: "2d overdue",
+        estimate: "45 min",
+        tag: "URGENT",
+        tagTone: "blue",
+        priorityLabel: "DREAD",
+        priorityTone: "high"
+      },
+      {
+        id: "task-8",
+        title: "Send invoice to Glimpact",
+        listName: "Glimpact",
+        listColorClass: "is-blue",
+        checkboxTone: "warning",
+        dueBadge: "1d overdue",
+        progressLabel: "0/2",
+        estimate: "10 min"
+      }
+    ]
   },
   {
-    id: "zuamy-1",
-    speaker: "zuamy",
-    text:
-      "Got it. I see three threads:\n\n1. Investor update - high stakes, due Thursday\n2. Nudge engine - deep work, needs a big block\n3. Daily survival - quick wins for momentum\n\nI've drafted a plan. Review it on the right."
-  },
-  {
-    id: "user-2",
-    speaker: "user",
-    text: "Can you also make sure I have time for the dentist Tuesday afternoon?"
-  },
-  {
-    id: "zuamy-2",
-    speaker: "zuamy",
-    text:
-      "Noted - I see the dentist block on your calendar (Tue 2-3:30 PM). I've routed deep work around it. Updated plan is ready for review."
+    id: "due-today",
+    label: "Due Today",
+    count: 5,
+    tasks: [
+      {
+        id: "task-1",
+        title: "Ship nudge engine v1 (Level 0-2)",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "danger",
+        timeLabel: "6:00 PM",
+        progressLabel: "3/7",
+        estimate: "2h 15m",
+        tag: "#deep-work",
+        tagTone: "teal",
+        priorityLabel: "HIGH",
+        priorityTone: "medium"
+      },
+      {
+        id: "task-2",
+        title: "Review Jiholabo onboarding copy",
+        listName: "Jiholabo V2",
+        listColorClass: "is-violet",
+        checkboxTone: "warning",
+        timeLabel: "3:30 PM",
+        progressLabel: "2/4",
+        estimate: "25 min"
+      },
+      {
+        id: "task-4",
+        title: "Call mom back",
+        listName: "Family",
+        listColorClass: "is-yellow",
+        checkboxTone: "blue",
+        estimate: "15 min"
+      },
+      {
+        id: "task-5",
+        title: "Rewrite scoring weights doc",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "warning",
+        timeLabel: "8:00 PM",
+        estimate: "40 min",
+        tag: "#work",
+        tagTone: "teal"
+      },
+      {
+        id: "task-6",
+        title: "Water the plants",
+        listName: "Personal",
+        listColorClass: "is-green",
+        checkboxTone: "neutral",
+        estimate: "5 min"
+      }
+    ]
   }
 ];
 
-export const planCards: PlanCard[] = [
+export const nextSevenDaysSections: ShellTaskSection[] = [
   {
-    day: "Today (Sun)",
-    items: [
-      { time: "2-4 PM", label: "Investor outline (focus)" },
-      { time: "4:30 PM", label: "Call mom back" },
-      { time: "5:00 PM", label: "Water plants" }
-    ]
-  },
-  {
-    day: "Monday",
-    items: [
-      { time: "9-11:30 AM", label: "Nudge engine (focus)" },
-      { time: "1:00 PM", label: "Review Jiholabo copy" },
-      { time: "3:00 PM", label: "Pull Q1 metrics data" }
-    ]
-  },
-  {
-    day: "Tuesday",
-    items: [
-      { time: "9-11 AM", label: "Investor data pull (focus)" },
-      { time: "2-3:30 PM", label: "Dentist (blocked)" },
-      { time: "4:00 PM", label: "Scoring weights doc" }
+    id: "next-seven-days",
+    label: "Next 7 Days",
+    count: 4,
+    tasks: [
+      {
+        id: "task-2",
+        title: "Review onboarding invite copy",
+        listName: "Jiholabo V2",
+        listColorClass: "is-violet",
+        checkboxTone: "warning",
+        timeLabel: "Thu · 9:00 AM",
+        estimate: "45 min"
+      },
+      {
+        id: "task-3",
+        title: "Pull Q1 metrics data",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "danger",
+        timeLabel: "Today · 8:00 PM",
+        estimate: "40 min",
+        tag: "#work",
+        tagTone: "teal"
+      },
+      {
+        id: "task-4",
+        title: "Call mom back",
+        listName: "Family",
+        listColorClass: "is-yellow",
+        checkboxTone: "blue",
+        timeLabel: "Today · 4:30 PM",
+        estimate: "15 min"
+      },
+      {
+        id: "task-6",
+        title: "Water the plants",
+        listName: "Personal",
+        listColorClass: "is-green",
+        checkboxTone: "neutral",
+        timeLabel: "Today",
+        estimate: "5 min"
+      }
     ]
   }
 ];
 
-export const understandingCopy =
-  "You have 3 priorities this week: investor update (due Thu), nudge engine shipping (needs deep-work blocks), and daily survival tasks. The dentist appointment Tue 2-3:30 PM is protected. I'm front-loading the highest-leverage item and routing deep work around calendar blocks.";
+export const assignedSections: ShellTaskSection[] = [
+  {
+    id: "assigned",
+    label: "Assigned to Me",
+    count: 2,
+    tasks: [
+      {
+        id: "task-1",
+        title: "Ship nudge engine v1 (Level 0-2)",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "danger",
+        timeLabel: "Today · 6:00 PM",
+        progressLabel: "3/7",
+        estimate: "2h 15m",
+        tag: "#deep-work",
+        tagTone: "teal"
+      },
+      {
+        id: "task-3",
+        title: "Pull Q1 metrics data",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "danger",
+        timeLabel: "Today · 8:00 PM",
+        estimate: "40 min"
+      }
+    ]
+  }
+];
 
-export const planStats = "7 actions | 3 focus blocks | 6h 30m deep work | 0 conflicts";
+export const inboxSections: ShellTaskSection[] = [
+  {
+    id: "inbox",
+    label: "Inbox",
+    count: 3,
+    tasks: [
+      {
+        id: "task-8",
+        title: "Send invoice to Glimpact",
+        listName: "Glimpact",
+        listColorClass: "is-blue",
+        checkboxTone: "warning",
+        estimate: "10 min"
+      },
+      {
+        id: "task-5",
+        title: "Rewrite scoring weights doc",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "warning",
+        estimate: "40 min"
+      },
+      {
+        id: "task-6",
+        title: "Water the plants",
+        listName: "Personal",
+        listColorClass: "is-green",
+        checkboxTone: "neutral",
+        estimate: "5 min"
+      }
+    ]
+  }
+];
+
+export const focusQueueSections: ShellTaskSection[] = [
+  {
+    id: "focus-queue",
+    label: "Focus Queue",
+    count: 3,
+    tasks: [
+      {
+        id: "task-1",
+        title: "Ship nudge engine v1 (Level 0-2)",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "danger",
+        estimate: "2h 15m",
+        tag: "#deep-work",
+        tagTone: "teal"
+      },
+      {
+        id: "task-3",
+        title: "Pull Q1 metrics data",
+        listName: "Platform",
+        listColorClass: "is-red",
+        checkboxTone: "danger",
+        estimate: "40 min",
+        tag: "#work",
+        tagTone: "teal"
+      },
+      {
+        id: "task-2",
+        title: "Review onboarding invite copy",
+        listName: "Jiholabo V2",
+        listColorClass: "is-violet",
+        checkboxTone: "warning",
+        estimate: "45 min"
+      }
+    ]
+  }
+];
+
+export const listSections: Record<string, ShellTaskSection[]> = {
+  platform: [
+    {
+      id: "platform",
+      label: "Platform",
+      count: 3,
+      tasks: [
+        todaySections[1]!.tasks[0]!,
+        {
+          id: "task-3",
+          title: "Pull Q1 metrics data",
+          listName: "Platform",
+          listColorClass: "is-red",
+          checkboxTone: "danger",
+          estimate: "40 min",
+          tag: "#work",
+          tagTone: "teal"
+        },
+        todaySections[1]!.tasks[3]!
+      ]
+    }
+  ],
+  "jiholabo-v2": [
+    {
+      id: "jiholabo-v2",
+      label: "Jiholabo V2",
+      count: 1,
+      tasks: [todaySections[1]!.tasks[1]!]
+    }
+  ],
+  personal: [
+    {
+      id: "personal",
+      label: "Personal",
+      count: 2,
+      tasks: [todaySections[0]!.tasks[0]!, todaySections[1]!.tasks[4]!]
+    }
+  ],
+  family: [
+    {
+      id: "family",
+      label: "Family",
+      count: 1,
+      tasks: [todaySections[1]!.tasks[2]!]
+    }
+  ],
+  glimpact: [
+    {
+      id: "glimpact",
+      label: "Glimpact",
+      count: 1,
+      tasks: [todaySections[0]!.tasks[1]!]
+    }
+  ]
+};
 
 export const initialSyncSnapshot: SyncStatusSnapshot = {
   connection: "connected",

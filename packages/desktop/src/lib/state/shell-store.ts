@@ -3,6 +3,7 @@ import { create } from "zustand";
 export type ShellView =
   | "today"
   | "next7days"
+  | "assigned"
   | "inbox"
   | "list"
   | "kanban"

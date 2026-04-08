@@ -11,7 +11,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Test Strategy
@@ -53,6 +53,13 @@ Each module must define tests for:
 - Mock Google Tasks and Calendar APIs in automated tests unless a later module explicitly defines contract tests against sandbox accounts.
 - Use deterministic clocks for time-sensitive features such as nudges, deadlines, polling, and focus sessions.
 - Use fixture factories rather than hand-written JSON blobs once implementation begins.
+
+## Figma-Backed Frontend Validation
+- For any frontend slice backed by mockups, fetch the exact node with the Figma plugin before implementation.
+- Required plugin flow: `get_design_context` first, `get_metadata` only to disambiguate or narrow the target, then `get_screenshot`.
+- Frontend unit tests and e2e tests do not replace visual comparison. Agents must compare the implemented UI against the fetched screenshot as part of completion.
+- The exact node IDs used for comparison should be recorded in the relevant module doc, shared frontend architecture doc, or implementation notes.
+- If a design file contains multiple mockups for related surfaces, the docs must name which node is authoritative for the current slice. If they do not, update the docs before treating the design as implementation-ready.
 
 ## Traceability Rules
 - Every requirement ID must map to tests.

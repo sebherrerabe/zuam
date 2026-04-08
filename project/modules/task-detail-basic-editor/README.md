@@ -10,7 +10,7 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-07
+last_updated: 2026-04-08
 ---
 
 # Task Detail Basic Editor
@@ -37,4 +37,9 @@ Define the right-panel task detail experience for Phase 1 using a plain-text edi
 ## Dependency Notes
 - Requires task identity and save contracts from `core-data-model-crud`.
 - Must interoperate with shell selection state from `desktop-shell-layout`.
+
+## Figma Reference
+- Fetch `1:255` `Detail` via the Figma plugin before implementing or revising this module.
+- Use `get_design_context` for `1:255`, then `get_screenshot` to validate spacing, progress treatment, metadata rows, and subtask layout.
+- Treat the Focus Session CTA shown in the mockup as phase-gated per ADR-014 rather than proof that all later-phase controls belong in this module now.
 

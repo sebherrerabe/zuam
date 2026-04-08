@@ -9,10 +9,14 @@ depends_on:
   - desktop-shell-layout
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Frontend Test Specs
+
+## Figma Validation Baseline
+- Authoritative light mockup node: `1:255` `Detail` in file `OsyWf2xeC712smZfYoaatq`.
+- Frontend agents must fetch this node with the Figma plugin using `get_design_context`, then `get_screenshot` before marking the slice visually complete.
 
 ## `FE-UNIT-TDE-001`
 - Covers `TDE-REQ-1`.
@@ -34,4 +38,8 @@ last_updated: 2026-04-04
 
 ## `FE-E2E-TDE-003`
 - Switching between two tasks preserves each task's unsaved draft state until save or discard.
+
+## `FE-VIS-TDE-001`
+- Compare the implemented detail panel against the fetched screenshot for node `1:255`.
+- Verify hierarchy, spacing, progress bar treatment, metadata rows, and bottom focus CTA match the mockup within normal implementation tolerance.
 

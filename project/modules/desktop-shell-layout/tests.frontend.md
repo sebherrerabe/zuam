@@ -9,10 +9,15 @@ depends_on:
   - task-detail-basic-editor
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-1-desktop
-last_updated: 2026-04-04
+last_updated: 2026-04-08
 ---
 
 # Frontend Test Specs
+
+## Figma Validation Baseline
+- Authoritative light mockup node: `1:19` `Desktop Shell — Today` in file `OsyWf2xeC712smZfYoaatq`.
+- Frontend agents must fetch this node with the Figma plugin using `get_design_context`, then `get_screenshot` before marking the slice visually complete.
+- `198:2` `Zuamy Planning Workspace (light)` is not a substitute for this module.
 
 ## `FE-UNIT-DSK-001`
 - Covers `DSK-REQ-1`.
@@ -38,4 +43,8 @@ last_updated: 2026-04-04
 
 ## `FE-E2E-DSK-003`
 - Narrow desktop windows collapse the detail panel cleanly and preserve accessibility focus order.
+
+## `FE-VIS-DSK-001`
+- Compare the implemented desktop shell against the fetched screenshot for node `1:19`.
+- Verify the three-panel composition, dark sidebar treatment, light content surfaces, active navigation emphasis, and quick-add placement match the mockup within normal implementation tolerance.
 
