@@ -10,8 +10,20 @@ import {
   setTaskStatus
 } from "../../lib/api/desktop-api";
 import type { ShellPresentation, ShellView } from "../../lib/state/shell-store";
-import type { TaskTaxonomyQueryInput } from "../../lib/api/desktop-api.types";
+import type {
+  GoogleCalendarContextSnapshot,
+  TaskTaxonomyQueryInput,
+  TaskViewQueryResult
+} from "../../lib/api/desktop-api.types";
 import type { TaskGroupBy, TaskSortBy } from "@zuam/shared";
+
+type TaskViewQuerySurfaceResult = TaskViewQueryResult & {
+  error?: string;
+};
+
+type GoogleCalendarContextSurface = GoogleCalendarContextSnapshot & {
+  error?: string;
+};
 
 type UseTaskWorkspaceArgs = {
   activeView: ShellView;
@@ -75,6 +87,49 @@ function buildQueryInput({
   return input;
 }
 
+function buildTaskQueryErrorResult(input: TaskTaxonomyQueryInput, error: unknown): TaskViewQuerySurfaceResult {
+  const message = error instanceof Error ? error.message : "Unknown task query error";
+  const sortBy = input.sortBy ?? (input.view === "matrix" ? "priority" : "manual");
+  const groupBy =
+    input.groupBy ?? (input.view === "kanban" ? "section" : input.view === "matrix" ? "quadrant" : "section");
+
+  return {
+    items: [],
+    explanation: "Unable to load the current task surface.",
+    predicate: {
+      key: "error",
+      label: "Unavailable",
+      description: message
+    },
+    reasonsByTaskId: {},
+    groupBy,
+    sortBy,
+    groups: [],
+    totalCount: 0,
+    error: message
+  };
+}
+
+function buildCalendarContextErrorResult(error: unknown): GoogleCalendarContextSurface {
+  const message = error instanceof Error ? error.message : "Unknown calendar context error";
+  const now = new Date().toISOString();
+
+  return {
+    userId: "user-1",
+    lastRefreshedAt: null,
+    expiresAt: now,
+    stale: true,
+    calendars: [],
+    busyBlocks: [],
+    freeWindows: [],
+    partialErrors: [message],
+    planningWindowStart: now,
+    planningWindowEnd: now,
+    nextSyncToken: null,
+    error: message
+  };
+}
+
 export function useTaskWorkspace(args: UseTaskWorkspaceArgs) {
   const queryClient = useQueryClient();
   const queryInput = buildQueryInput(args);
@@ -84,9 +139,15 @@ export function useTaskWorkspace(args: UseTaskWorkspaceArgs) {
     queryFn: fetchDesktopWorkspaceBootstrap
   });
 
-  const taskQuery = useQuery({
+  const taskQuery = useQuery<TaskViewQuerySurfaceResult>({
     queryKey: ["desktop-task-query", queryInput],
-    queryFn: () => fetchTaskViewQuery(queryInput)
+    queryFn: async () => {
+      try {
+        return await fetchTaskViewQuery(queryInput);
+      } catch (error) {
+        return buildTaskQueryErrorResult(queryInput, error);
+      }
+    }
   });
 
   const focusQueueQuery = useQuery({
@@ -95,9 +156,15 @@ export function useTaskWorkspace(args: UseTaskWorkspaceArgs) {
     enabled: args.activeView === "focusQueue"
   });
 
-  const calendarContextQuery = useQuery({
+  const calendarContextQuery = useQuery<GoogleCalendarContextSurface>({
     queryKey: ["desktop-calendar-context"],
-    queryFn: fetchCalendarContext
+    queryFn: async () => {
+      try {
+        return await fetchCalendarContext();
+      } catch (error) {
+        return buildCalendarContextErrorResult(error);
+      }
+    }
   });
 
   const calendarSuggestionsQuery = useQuery({

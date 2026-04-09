@@ -1,6 +1,34 @@
 import path from "node:path";
 
-import { BrowserWindow, app } from "electron";
+import { BrowserWindow, Notification as ElectronNotification, app, ipcMain } from "electron";
+
+import {
+  DESKTOP_NOTIFICATION_CHANNELS,
+  normalizeDesktopNotificationRequest,
+  type DesktopNotificationDeliveryResult
+} from "../src/lib/electron/desktop-notification-bridge";
+
+ipcMain.handle(
+  DESKTOP_NOTIFICATION_CHANNELS.show,
+  (_event, input: unknown): DesktopNotificationDeliveryResult => {
+    const request = normalizeDesktopNotificationRequest(input);
+    if (!request) {
+      return { delivered: false, reason: "invalid-payload" };
+    }
+
+    if (!ElectronNotification.isSupported()) {
+      return { delivered: false, reason: "unsupported" };
+    }
+
+    new ElectronNotification({
+      title: request.title,
+      body: request.body,
+      silent: request.silent ?? false
+    }).show();
+
+    return { delivered: true };
+  }
+);
 
 function createMainWindow() {
   const window = new BrowserWindow({

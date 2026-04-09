@@ -42,5 +42,5 @@ Deliver the Phase 1 reminder system: level 1 notifications plus level 2 full-scr
 
 ## Figma Reference
 - This module has no dedicated frozen light-mode nudge modal frame in the current Figma file.
-- Fetch `1:19` `Desktop Shell — Today` and `1:255` `Detail` as the nearest visual references, then record the modal/notification treatment as an explicit inference.
+- Fetch `155:3` `Desktop Shell — Today (light)` and `155:233` `Detail Panel` as the nearest visual references, then record the modal/notification treatment as an explicit inference.
 - Frontend work must still use the Figma plugin and compare against fetched screenshots, even when the exact nudge surface is inferred from the surrounding light-mode language.

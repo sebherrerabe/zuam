@@ -59,6 +59,7 @@ Each module must define tests for:
 - Required plugin flow: `get_design_context` first, `get_metadata` only to disambiguate or narrow the target, then `get_screenshot`.
 - Frontend unit tests and e2e tests do not replace visual comparison. Agents must compare the implemented UI against the fetched screenshot as part of completion.
 - The exact node IDs used for comparison should be recorded in the relevant module doc, shared frontend architecture doc, or implementation notes.
+- Agents must resolve the reference node from the documented registry first, not from whichever frame happens to look close in the file.
 - If a design file contains multiple mockups for related surfaces, the docs must name which node is authoritative for the current slice. If they do not, update the docs before treating the design as implementation-ready.
 
 ## Traceability Rules

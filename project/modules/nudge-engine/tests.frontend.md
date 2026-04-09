@@ -18,7 +18,7 @@ last_updated: "2026-04-08"
 
 ## Figma Validation Baseline
 - No dedicated frozen light mockup exists yet for the nudge overlay or notification surfaces.
-- Use nodes `1:19` `Desktop Shell — Today` and `1:255` `Detail` in file `OsyWf2xeC712smZfYoaatq` as the nearest light-mode references.
+- Use nodes `155:3` `Desktop Shell — Today (light)` and `155:233` `Detail Panel` in file `OsyWf2xeC712smZfYoaatq` as the nearest light-mode references.
 - Frontend agents must fetch the relevant host node with the Figma plugin using `get_design_context`, then `get_screenshot`, and explicitly record the nudge modal/notification treatment as an inference until a dedicated node exists.
 
 ## `NUDGE-FE-001` Desktop notification rendering
@@ -38,5 +38,5 @@ last_updated: "2026-04-08"
 - Verify focus order, button labels, and high-contrast readability in the dialog.
 
 ## `NUDGE-FE-VIS-001`
-- Compare the implemented level 1 and level 2 nudge surfaces against the fetched shell/detail screenshots for nodes `1:19` and `1:255`.
+- Compare the implemented level 1 and level 2 nudge surfaces against the fetched shell/detail screenshots for nodes `155:3` and `155:233`.
 - Verify color, typography, density, and action hierarchy feel visually native to the light-mode shell, and document overlay-specific styling as an intentional inference.

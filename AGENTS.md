@@ -93,8 +93,9 @@ For frontend work backed by mockups:
 
 8. If a Figma file or mockup is in scope, identify the exact node(s) with the Figma plugin before coding.
 9. Use the Figma plugin in this order: `get_design_context` for the exact node, `get_metadata` only to disambiguate or narrow large frames, then `get_screenshot` for the visual reference.
-10. Record the node IDs you implemented against in the relevant `project/` doc or implementation notes if they are not already documented.
-11. Treat automated frontend tests and Figma comparison as complementary: e2e coverage is required, but visual parity must still be checked against the fetched screenshot.
+10. Before coding, check `project/_frontend-architecture.md` and the relevant module doc for the authoritative Figma node registry. Do not pick ad hoc frames if the docs already name the reference nodes.
+11. Record the node IDs you implemented against in the relevant `project/` doc or implementation notes if they are not already documented.
+12. Treat automated frontend tests and Figma comparison as complementary: e2e coverage is required, but visual parity must still be checked against the fetched screenshot.
 
 ## Implementation Architecture Rules
 

@@ -114,10 +114,10 @@ function TaskDetailPanelContent({
     };
   }, []);
 
-  const completedCount = useMemo(() => draft?.subtasks.filter((subtask) => subtask.completed).length ?? 0, [draft]);
-  const totalCount = draft?.subtasks.length ?? 0;
-  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const currentDraft = draft ?? initialTask;
+  const completedCount = useMemo(() => currentDraft.subtasks.filter((subtask) => subtask.completed).length, [currentDraft]);
+  const totalCount = currentDraft.subtasks.length;
+  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const noteSections = useMemo(() => {
     const sections = (currentDraft.notes ?? "")
       .split(/\n\s*\n/)
@@ -129,6 +129,12 @@ function TaskDetailPanelContent({
       callout: sections[1] ?? "Plain text stays the safe sync fallback for this phase."
     };
   }, [currentDraft.notes]);
+  const signalCards = [
+    { id: "energy", label: "ENERGY", icon: "\u26A1", value: currentDraft.energy, tone: "energy" },
+    { id: "resistance", label: "RESIST.", icon: "\u{1F630}", value: currentDraft.resistance, tone: "neutral" },
+    { id: "nudge", label: "NUDGE", icon: "\u{1F514}", value: currentDraft.nudge.split(/[·Â]/)[0]?.trim() ?? currentDraft.nudge, tone: "nudge" },
+    { id: "urgency", label: "URGENCY", icon: "\u{1F525}", value: currentDraft.urgency.replace(/\s+/g, ""), tone: "danger" }
+  ] as const;
 
   function updateDraft(nextDraft: TaskDetailModel) {
     setDraft(nextDraft);
@@ -224,10 +230,10 @@ function TaskDetailPanelContent({
             {"\u2691"}
           </button>
           <button type="button" className="icon-button" aria-label="More task actions">
-            •••
+            {"\u2022\u2022\u2022"}
           </button>
           <button type="button" className="icon-button" aria-label="Close task detail">
-            ×
+            {"\u00D7"}
           </button>
         </div>
       </header>
@@ -249,10 +255,22 @@ function TaskDetailPanelContent({
         </label>
       </div>
 
+      <section className="task-detail-signals" aria-label="ADHD signals">
+        {signalCards.map((card) => (
+          <div key={card.id} className={`task-detail-signal-card is-${card.tone}`}>
+            <div className="task-detail-signal-top">
+              <span aria-hidden="true">{card.icon}</span>
+              <span>{card.label}</span>
+            </div>
+            <strong>{card.value}</strong>
+          </div>
+        ))}
+      </section>
+
       <section className="task-detail-progress">
         <div className="task-detail-progress-header">
-          <p>Subtasks progress</p>
-          <p>{`${completedCount} / ${totalCount} · ${progressPercent}%`}</p>
+          <p>Subtasks</p>
+          <p>{`${completedCount} / ${totalCount} \u00B7 ${progressPercent}%`}</p>
         </div>
         <div className="task-detail-progress-track" aria-hidden="true">
           <div className="task-detail-progress-fill" style={{ width: `${progressPercent}%` }} />
@@ -266,7 +284,7 @@ function TaskDetailPanelContent({
         </div>
 
         <div className="task-detail-callout">
-          <p aria-hidden="true">💡</p>
+          <p aria-hidden="true">{"\u{1F4A1}"}</p>
           <p>{noteSections.callout}</p>
         </div>
 
@@ -276,7 +294,7 @@ function TaskDetailPanelContent({
             aria-label="Notes"
             value={currentDraft.notes ?? ""}
             onChange={(event) => updateField("notes", event.target.value)}
-            rows={7}
+            rows={4}
           />
         </label>
 
@@ -289,7 +307,7 @@ function TaskDetailPanelContent({
 
       <section className="task-detail-subtasks" aria-label="Subtasks">
         <div className="task-detail-section-header">
-          <p>Subtasks</p>
+          <p>SUBTASKS</p>
           <button type="button" className="text-link" onClick={() => setComposerOpen((current) => !current)}>
             + Add
           </button>
@@ -334,75 +352,23 @@ function TaskDetailPanelContent({
         ) : null}
       </section>
 
-      <section className="task-detail-details">
-        <div className="task-detail-details-head">
-          <p>Details</p>
+      <section className="task-detail-reward-panel" aria-label="task xp summary">
+        <div className="task-detail-reward-chip">
+          <strong>+35 XP</strong>
+          <span>on completion</span>
         </div>
-        <div className="task-detail-list-grid">
-          <DetailRow label="List" value={formatListValue(currentDraft.listId)} icon="📁" accent="danger" />
-          <DetailRow label="Tags" value={currentDraft.tags.join("  ")} icon="🏷️" accent="success" />
-          <DetailRow label="Energy" value={currentDraft.energy} icon="⚡" accent="danger" />
-          <DetailRow label="Resistance" value={currentDraft.resistance} icon="😰" accent="warning" />
-          <DetailRow label="Estimate" value={currentDraft.estimate} icon="⏱️" />
-          <DetailRow label="Urgency" value={currentDraft.urgency} icon="🔥" accent="danger" />
-          <DetailRow label="Nudge" value={currentDraft.nudge} icon="🔔" />
-          <DetailRow label="Repeats" value={currentDraft.repeats} icon="🔁" muted />
-        </div>
-
-        <div className="task-detail-edit-grid">
-          <label>
-            <span>List</span>
-            <select aria-label="List" value={currentDraft.listId} onChange={(event) => updateField("listId", event.target.value)}>
-              <option value="platform">Platform</option>
-              <option value="inbox">Inbox</option>
-              <option value="today">Today</option>
-              <option value="project-zero">Project Zero</option>
-            </select>
-          </label>
-          <label>
-            <span>Section</span>
-            <select
-              aria-label="Section"
-              value={currentDraft.sectionId ?? ""}
-              onChange={(event) => updateField("sectionId", event.target.value)}
-            >
-              <option value="launch">Launch</option>
-              <option value="review">Review</option>
-              <option value="planning">Planning</option>
-              <option value="backlog">Backlog</option>
-            </select>
-          </label>
-          <label>
-            <span>Due date</span>
-            <input
-              aria-label="Due date"
-              type="date"
-              value={currentDraft.dueDate ?? ""}
-              onChange={(event) => updateField("dueDate", event.target.value)}
-            />
-          </label>
-          <label>
-            <span>Priority</span>
-            <select
-              aria-label="Priority"
-              value={currentDraft.priority}
-              onChange={(event) => updateField("priority", event.target.value as TaskPriority)}
-            >
-              {priorityOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <p>Why: overdue + high resistance + deep work</p>
       </section>
 
       {calendarHint ? (
         <section className="task-detail-calendar-hint" aria-label="calendar hints">
-          <p className="task-detail-section-kicker">Calendar context</p>
-          <strong>{calendarHint.title}</strong>
-          <p>{calendarHint.body}</p>
+          <div className="task-detail-calendar-icon" aria-hidden="true">
+            AI
+          </div>
+          <div>
+            <strong>{calendarHint.title}</strong>
+            <p>{calendarHint.body}</p>
+          </div>
         </section>
       ) : null}
 
@@ -410,55 +376,56 @@ function TaskDetailPanelContent({
         <button type="button" className="task-detail-cta" onClick={focusCallToAction?.onClick}>
           {focusCallToAction?.label ?? "Start 25-min Focus Session"}
         </button>
-        <p className="task-detail-focus-helper">{focusCallToAction?.helper ?? "Start a focused sprint from this task."}</p>
+        <p className="task-detail-focus-helper">+60 XP + 1 focus shard on session completion</p>
       </footer>
+
+      <section className="task-detail-edit-grid">
+        <label>
+          <span>List</span>
+          <select aria-label="List" value={currentDraft.listId} onChange={(event) => updateField("listId", event.target.value)}>
+            <option value="platform">Platform</option>
+            <option value="inbox">Inbox</option>
+            <option value="today">Today</option>
+            <option value="project-zero">Project Zero</option>
+          </select>
+        </label>
+        <label>
+          <span>Section</span>
+          <select
+            aria-label="Section"
+            value={currentDraft.sectionId ?? ""}
+            onChange={(event) => updateField("sectionId", event.target.value)}
+          >
+            <option value="launch">Launch</option>
+            <option value="review">Review</option>
+            <option value="planning">Planning</option>
+            <option value="backlog">Backlog</option>
+          </select>
+        </label>
+        <label>
+          <span>Due date</span>
+          <input
+            aria-label="Due date"
+            type="date"
+            value={currentDraft.dueDate ?? ""}
+            onChange={(event) => updateField("dueDate", event.target.value)}
+          />
+        </label>
+        <label>
+          <span>Priority</span>
+          <select
+            aria-label="Priority"
+            value={currentDraft.priority}
+            onChange={(event) => updateField("priority", event.target.value as TaskPriority)}
+          >
+            {priorityOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
     </section>
   );
-}
-
-function DetailRow({
-  label,
-  value,
-  accent,
-  icon,
-  muted
-}: {
-  label: string;
-  value: string;
-  accent?: "warning" | "danger" | "success";
-  icon?: string;
-  muted?: boolean;
-}) {
-  return (
-    <div className="task-detail-row">
-      <span className="task-detail-row-label">
-        {icon ? <span className="task-detail-row-icon" aria-hidden="true">{icon}</span> : null}
-        <span>{label}</span>
-      </span>
-      <span className={`task-detail-row-value${accent ? ` is-${accent}` : ""}${muted ? " is-muted" : ""}`}>{value}</span>
-    </div>
-  );
-}
-
-function formatListValue(listId: string) {
-  switch (listId) {
-    case "platform":
-      return "Platform";
-    case "inbox":
-      return "Inbox";
-    case "today":
-      return "Today";
-    case "family":
-      return "Family";
-    case "personal":
-      return "Personal";
-    case "glimpact":
-      return "Glimpact";
-    case "jiholabo-v2":
-      return "Jiholabo V2";
-    case "project-zero":
-      return "Project Zero";
-    default:
-      return listId;
-  }
 }

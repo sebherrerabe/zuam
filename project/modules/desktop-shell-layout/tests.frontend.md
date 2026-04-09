@@ -15,8 +15,8 @@ last_updated: 2026-04-08
 # Frontend Test Specs
 
 ## Figma Validation Baseline
-- Authoritative light mockup node: `1:19` `Desktop Shell — Today` in file `OsyWf2xeC712smZfYoaatq`.
-- Frontend agents must fetch this node with the Figma plugin using `get_design_context`, then `get_screenshot` before marking the slice visually complete.
+- Authoritative light mockup nodes: `155:2` `v3 — Warm Light Mode` for the design system, and `155:3` `Desktop Shell — Today (light)` for the exact shell frame in file `OsyWf2xeC712smZfYoaatq`.
+- Frontend agents must fetch `155:3` with the Figma plugin using `get_design_context`, then `get_screenshot` before marking the slice visually complete.
 - `198:2` `Zuamy Planning Workspace (light)` is not a substitute for this module.
 
 ## `FE-UNIT-DSK-001`
@@ -45,6 +45,5 @@ last_updated: 2026-04-08
 - Narrow desktop windows collapse the detail panel cleanly and preserve accessibility focus order.
 
 ## `FE-VIS-DSK-001`
-- Compare the implemented desktop shell against the fetched screenshot for node `1:19`.
-- Verify the three-panel composition, dark sidebar treatment, light content surfaces, active navigation emphasis, and quick-add placement match the mockup within normal implementation tolerance.
-
+- Compare the implemented desktop shell against the fetched screenshot for node `155:3`.
+- Verify the three-panel composition, warm-light shell treatment, progression card, active navigation emphasis, task density, and quick-add placement match the mockup within normal implementation tolerance.

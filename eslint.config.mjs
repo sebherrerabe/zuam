@@ -12,6 +12,7 @@ export default tseslint.config(
       "**/dist-electron/**",
       "**/.output/**",
       "**/.expo/**",
+      "**/.claude/worktrees/**",
       "**/coverage/**",
       "packages/mobile/expo-env.d.ts"
     ]

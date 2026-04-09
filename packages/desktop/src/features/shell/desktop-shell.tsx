@@ -19,15 +19,21 @@ import {
   notificationNudge
 } from "./shell-data";
 
-const smartNavItems: Array<{ id: ShellView; label: string; smartList?: SmartListId }> = [
-  { id: "today", label: "Today", smartList: "today" },
-  { id: "next7days", label: "Next 7 Days", smartList: "next7days" },
-  { id: "assigned", label: "Assigned to Me" },
-  { id: "inbox", label: "Inbox", smartList: "inbox" },
-  { id: "focusQueue", label: "Focus Queue" }
+const smartNavItems: Array<{ id: ShellView; label: string; smartList?: SmartListId; icon: string }> = [
+  { id: "today", label: "Today", smartList: "today", icon: "\u{1F4C5}" },
+  { id: "next7days", label: "Next 7 Days", smartList: "next7days", icon: "\u{1F4C6}" },
+  { id: "assigned", label: "Assigned to Me", icon: "\u{1F464}" },
+  { id: "inbox", label: "Inbox", smartList: "inbox", icon: "\u{1F4E5}" },
+  { id: "focusQueue", label: "Focus Queue", icon: "\u{1F3AF}" }
 ];
 
 const presentationTabs: ShellPresentation[] = ["list", "kanban", "matrix", "calendar"];
+const systemNavItems = [
+  { id: "completed", label: "Completed", icon: "\u2713" },
+  { id: "wontdo", label: "Won't Do", icon: "\u2014" },
+  { id: "trash", label: "Trash", icon: "\u{1F5D1}" },
+  { id: "settings", label: "Settings", icon: "\u2699" }
+] as const;
 
 export function DesktopShell() {
   const activeView = useShellStore((state) => state.activeView);
@@ -94,7 +100,15 @@ export function DesktopShell() {
   const tags = workspace.bootstrapQuery.data?.tags ?? [];
   const savedFilters = workspace.bootstrapQuery.data?.savedFilters ?? [];
   const heading = resolveHeading(activeView, activeListId, activeTagSlug, activeSavedFilterId, lists, savedFilters);
-  const subtitle = resolveSubtitle(activeView, workspace.taskQuery.data?.totalCount ?? 0, activePresentation, groupBy, sortBy);
+  const subtitle = resolveSubtitle(
+    activeView,
+    workspace.taskQuery.data?.totalCount ?? 0,
+    workspace.taskQuery.data?.items ?? [],
+    activePresentation,
+    groupBy,
+    sortBy
+  );
+  const activeDateLabel = resolveDateLabel(activeView, workspace.taskQuery.data?.items ?? []);
 
   const focusCallToAction = (() => {
     if (focus.currentSession && focus.currentSession.taskId === selectedTaskId) {
@@ -216,10 +230,32 @@ export function DesktopShell() {
           <p>Seb H.</p>
         </div>
 
+        <section className="sidebar-progression-card" aria-label="progression card">
+          <div className="sidebar-progression-avatar" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="sidebar-progression-copy">
+            <p>Lv 7 · Pathfinder</p>
+            <span>\u2694 Flame Cloak</span>
+          </div>
+          <span className="sidebar-progression-chevron" aria-hidden="true">
+            \u2197
+          </span>
+          <div className="sidebar-progression-bar" aria-hidden="true">
+            <span />
+          </div>
+          <p className="sidebar-progression-meta">1,240 / 1,500 XP</p>
+        </section>
+
         <div className="sidebar-search-wrap">
           <button type="button" className="sidebar-search-trigger" onClick={openQuickCapture}>
-            <span className="sidebar-search-icon" aria-hidden="true" />
-            <span>Quick capture - Ctrl/Cmd+K</span>
+            <span className="sidebar-search-icon" aria-hidden="true">
+              \u26A1
+            </span>
+            <span>Quick Capture...</span>
           </button>
         </div>
 
@@ -231,6 +267,9 @@ export function DesktopShell() {
               className={`sidebar-nav-item${activeView === item.id ? " is-active" : ""}`}
               onClick={() => selectSmartView(item.id)}
             >
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                {item.icon}
+              </span>
               <span className="sidebar-nav-label">{item.label}</span>
               <span className="sidebar-nav-count">{sidebarCounts.find((row) => row.key === (item.smartList ?? item.id))?.count ?? 0}</span>
             </button>
@@ -265,7 +304,7 @@ export function DesktopShell() {
               <button
                 key={tag.id}
                 type="button"
-                className="sidebar-tag-item"
+                className={`sidebar-tag-item${tag.slug === "work" ? " is-work" : tag.slug === "deep-work" ? " is-deep-work" : ""}`}
                 onClick={() => selectTag(tag.slug)}
               >
                 #{tag.slug}
@@ -286,18 +325,43 @@ export function DesktopShell() {
                 className="sidebar-tag-item"
                 onClick={() => selectSavedFilter(filter.id)}
               >
+                <span className="sidebar-filter-bullet" aria-hidden="true">
+                  \u2299
+                </span>
                 {filter.name}
               </button>
             ))}
           </div>
         </section>
+
+        <nav className="sidebar-footer-nav" aria-label="System navigation">
+          {systemNavItems.map((item) => (
+            <button key={item.id} type="button" className="sidebar-nav-item is-system">
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className="sidebar-nav-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <button type="button" className="sidebar-zuamy-trigger">
+          <span className="sidebar-zuamy-icon" aria-hidden="true">
+            AI
+          </span>
+          <span className="sidebar-nav-label">Zuamy</span>
+          <span className="sidebar-zuamy-chip">AI</span>
+        </button>
       </aside>
 
       <section className="desktop-main-panel" aria-label="Task list">
         <header className="desktop-main-header">
-          <div className="desktop-main-title-group">
-            <h1>{heading}</h1>
-            <p>{subtitle}</p>
+          <div className="desktop-main-title-block">
+            <div className="desktop-main-title-group">
+              <h1>{heading}</h1>
+              <p>{subtitle}</p>
+            </div>
+            <p className="desktop-main-date">{activeDateLabel}</p>
           </div>
 
           <div className="desktop-main-header-actions">
@@ -354,10 +418,8 @@ export function DesktopShell() {
 
         <footer className="desktop-quick-add-wrap">
           <button type="button" className="desktop-quick-add" onClick={openQuickCapture}>
-            <span className="desktop-quick-add-plus" aria-hidden="true">
-              +
-            </span>
-            <span>{`Add task... try "review design tomorrow 3pm ~platform !1 #work"`}</span>
+            <span className="desktop-quick-add-plus" aria-hidden="true">\uFF0B</span>
+            <span>{`Add task...  try "review design tomorrow 3pm ~platform !high #work"`}</span>
           </button>
         </footer>
       </section>
@@ -526,15 +588,21 @@ function resolveHeading(
 function resolveSubtitle(
   activeView: ShellView,
   totalCount: number,
+  items: Array<{ title: string }>,
   activePresentation: ShellPresentation,
   groupBy: TaskGroupBy,
   sortBy: TaskSortBy
 ) {
   if (activeView === "focusQueue") {
-    return `${totalCount} supporting tasks - recommendation-first queue - ${sortBy}`;
+    return `${totalCount} supporting tasks - recommendation-first queue`;
   }
 
-  return `${totalCount} tasks - ${activePresentation} view - grouped by ${groupBy} - sorted by ${sortBy}`;
+  const totalMinutes = items.reduce((sum, item) => sum + estimateMinutesForTask(item.title), 0);
+  if (activePresentation === "list" && totalMinutes > 0) {
+    return `${totalCount} tasks - est ${formatEstimateMinutes(totalMinutes)}`;
+  }
+
+  return `${totalCount} tasks - ${activePresentation} view - ${groupBy} - ${sortBy}`;
 }
 
 function applyPresentationDefaults(
@@ -606,4 +674,45 @@ function formatDuration(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function resolveDateLabel(activeView: ShellView, items: Array<{ dueDate?: string | null }>) {
+  if (activeView !== "today") {
+    return "Warm light mode baseline";
+  }
+
+  const sampleDueDate = items.find((item) => item.dueDate)?.dueDate;
+  if (!sampleDueDate) {
+    return "Today";
+  }
+
+  const date = new Date(`${sampleDueDate}T12:00:00`);
+  return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+}
+
+function estimateMinutesForTask(title: string) {
+  const minutesByTitle: Record<string, number> = {
+    "Ship nudge engine v1 (Level 0-2)": 135,
+    "Review Jiholabo onboarding copy": 25,
+    "Pull Q1 metrics data": 40,
+    "Call mom back": 15,
+    "Rewrite scoring weights doc": 40,
+    "Water the plants": 5,
+    "File Q1 taxes": 45,
+    "Send invoice to Glimpact": 10
+  };
+
+  return minutesByTitle[title] ?? 0;
+}
+
+function formatEstimateMinutes(totalMinutes: number) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+  return `${minutes}m`;
 }

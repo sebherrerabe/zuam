@@ -42,7 +42,7 @@ Define the Electron + TanStack Start desktop shell that anchors the three-panel 
 - Shares layout state with `task-detail-basic-editor` and `task-views`.
 
 ## Figma Reference
-- Fetch `1:19` `Desktop Shell — Today` via the Figma plugin before implementing or revising this module.
-- Use `get_design_context` for `1:19`, then `get_screenshot` to validate the actual proportions and chrome.
+- Fetch `155:3` `Desktop Shell — Today (light)` via the Figma plugin before implementing or revising this module.
+- Use `155:2` `v3 — Warm Light Mode` as the authoritative design-system canvas, then fetch `155:3` with `get_design_context` and `get_screenshot` to validate actual proportions, chrome, progression card treatment, and shell tone.
 - Do not substitute `198:2` `Zuamy Planning Workspace (light)` for this module; that is a separate planning/AI workspace surface.
-
+- Do not default to legacy `1:19` unless you are explicitly comparing old and new mockups.

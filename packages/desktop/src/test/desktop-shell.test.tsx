@@ -2,9 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { DesktopShell } from "../features/shell/desktop-shell";
+import { TaskViews } from "../features/views/task-views";
 import { resetTaskDetailCache } from "../features/tasks/task-detail-cache";
 import { resetDesktopApiMocks } from "../lib/api/desktop-api";
 import { useShellStore } from "../lib/state/shell-store";
+import type { TaskRecord } from "@zuam/shared";
+import type { TaskViewQueryResult } from "../lib/api/desktop-api.types";
 
 function renderShell() {
   const queryClient = new QueryClient();
@@ -14,6 +17,103 @@ function renderShell() {
       <DesktopShell />
     </QueryClientProvider>
   );
+}
+
+function renderTaskViews(overrides: Partial<TaskViewQueryResult> & { error?: string } = {}) {
+  const task = buildTask({
+    id: "task-1",
+    title: "Ship nudge engine v1",
+    sectionId: "review",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q1_URGENT_IMPORTANT",
+    priority: "high",
+    energyLevel: "HIGH",
+    tagSlugs: ["work"]
+  });
+
+  const query = buildTaskQuery({
+    items: [task],
+    groups: [
+      { key: "review", label: "Review", items: [task] },
+      {
+        key: "launch",
+        label: "Launch",
+        items: [
+          buildTask({
+            id: "task-2",
+            title: "Pull Q1 metrics data",
+            sectionId: "launch",
+            kanbanColumn: "IN_PROGRESS",
+            matrixQuadrant: "Q2_IMPORTANT",
+            priority: "medium",
+            energyLevel: "MEDIUM"
+          })
+        ]
+      }
+    ],
+    totalCount: 2,
+    ...overrides
+  });
+
+  return render(
+    <TaskViews
+      activeView="today"
+      activePresentation="kanban"
+      selectedTaskId="task-1"
+      taskQuery={query}
+      focusRecommendation={{ task: null, rationale: "No active tasks are currently eligible for focus." }}
+      calendarContext={undefined}
+      calendarSuggestions={[]}
+      onSelectTask={() => undefined}
+      onMoveTask={() => undefined}
+      onSetTaskStatus={() => undefined}
+    />
+  );
+}
+
+function buildTask(overrides: Partial<TaskRecord> = {}): TaskRecord {
+  return {
+    id: "task-base",
+    userId: "user-1",
+    listId: "platform",
+    sectionId: "review",
+    parentTaskId: null,
+    title: "Ship nudge engine v1",
+    notes: null,
+    dueDate: "2026-04-07",
+    completed: false,
+    completedAt: null,
+    sortOrder: 1,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "high",
+    energyLevel: "HIGH",
+    resistance: "MILD",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q1_URGENT_IMPORTANT",
+    tagSlugs: ["work"],
+    ...overrides
+  };
+}
+
+function buildTaskQuery(overrides: Partial<TaskViewQueryResult> & { error?: string } = {}): TaskViewQueryResult & { error?: string } {
+  return {
+    items: [],
+    explanation: "Matched 0 task(s)",
+    predicate: {
+      key: "today",
+      label: "Today",
+      description: "Today"
+    },
+    reasonsByTaskId: {},
+    groupBy: "section",
+    sortBy: "manual",
+    groups: [],
+    totalCount: 0,
+    ...overrides
+  };
 }
 
 describe("desktop shell layout", () => {
@@ -39,9 +139,11 @@ describe("desktop shell layout", () => {
     renderShell();
 
     expect(screen.getByRole("navigation", { name: /smart lists/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/progression card/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Today" })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /task detail/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /zuamy/i })).toBeInTheDocument();
     expect(screen.queryByText(/planning workspace/i)).not.toBeInTheDocument();
   });
 
@@ -112,24 +214,26 @@ describe("desktop shell layout", () => {
     renderShell();
 
     fireEvent.click(screen.getByRole("button", { name: "Kanban" }));
-    const card = await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)high - high/i });
+    const cardButton = await screen.findByRole("button", { name: /ship nudge engine v1/i });
+    const card = cardButton.closest('[draggable="true"]');
+    if (!card) {
+      throw new Error("Kanban task card was not draggable");
+    }
     const todoColumn = screen.getByRole("region", { name: /review/i });
 
     fireEvent.dragStart(card, {
       dataTransfer: {
         setData: () => undefined,
-        getData: () => "task-1"
+        getData: (key: string) => (key === "text/task-id" ? "task-1" : key === "text/task-title" ? "Ship nudge engine v1" : "")
       }
     });
     fireEvent.drop(todoColumn, {
       dataTransfer: {
-        getData: () => "task-1"
+        getData: (key: string) => (key === "text/task-id" ? "task-1" : key === "text/task-title" ? "Ship nudge engine v1" : "")
       }
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole("region", { name: /review/i })).toHaveTextContent(/ship nudge engine v1/i);
-    });
+    expect(screen.getByText(/ship nudge engine v1 to review/i)).toBeInTheDocument();
   });
 
   it("FE-UNIT-FOCUS-001: focus timer lifecycle and break overlay stay attached to the selected task", async () => {
@@ -152,5 +256,85 @@ describe("desktop shell layout", () => {
 
     await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i });
     expect(await screen.findByText(/best next slot/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-TASK-VIEWS-003: loading, empty, and error states are explicit", () => {
+    const { rerender } = render(
+      <TaskViews
+        activeView="today"
+        activePresentation="list"
+        selectedTaskId={null}
+        taskQuery={undefined}
+        focusRecommendation={undefined}
+        calendarContext={undefined}
+        calendarSuggestions={[]}
+        onSelectTask={() => undefined}
+        onMoveTask={() => undefined}
+        onSetTaskStatus={() => undefined}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
+    expect(screen.getByText(/loading the current task surface/i)).toBeInTheDocument();
+
+    rerender(
+      <TaskViews
+        activeView="today"
+        activePresentation="list"
+        selectedTaskId={null}
+        taskQuery={buildTaskQuery()}
+        focusRecommendation={undefined}
+        calendarContext={undefined}
+        calendarSuggestions={[]}
+        onSelectTask={() => undefined}
+        onMoveTask={() => undefined}
+        onSetTaskStatus={() => undefined}
+      />
+    );
+
+    expect(screen.getByText(/no tasks are due today/i)).toBeInTheDocument();
+
+    rerender(
+      <TaskViews
+        activeView="today"
+        activePresentation="list"
+        selectedTaskId={null}
+        taskQuery={buildTaskQuery({ error: "Backend offline" })}
+        focusRecommendation={undefined}
+        calendarContext={undefined}
+        calendarSuggestions={[]}
+        onSelectTask={() => undefined}
+        onMoveTask={() => undefined}
+        onSetTaskStatus={() => undefined}
+      />
+    );
+
+    expect(screen.getByText(/backend offline/i)).toBeInTheDocument();
+    expect(screen.getByText(/refresh the shell or try again/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-TASK-VIEWS-004: kanban moves show saving feedback before the refetch lands", () => {
+    renderTaskViews();
+
+    const cardButton = screen.getByRole("button", { name: /ship nudge engine v1/i });
+    const card = cardButton.closest('[draggable="true"]');
+    if (!card) {
+      throw new Error("Task card was not draggable");
+    }
+    const launchColumn = screen.getByRole("region", { name: /launch/i });
+
+    fireEvent.dragStart(card, {
+      dataTransfer: {
+        setData: () => undefined,
+        getData: (key: string) => (key === "text/task-id" ? "task-1" : key === "text/task-title" ? "Ship nudge engine v1" : "")
+      }
+    });
+    fireEvent.drop(launchColumn, {
+      dataTransfer: {
+        getData: (key: string) => (key === "text/task-id" ? "task-1" : key === "text/task-title" ? "Ship nudge engine v1" : "")
+      }
+    });
+
+    expect(screen.getByText(/ship nudge engine v1 to launch/i)).toBeInTheDocument();
   });
 });

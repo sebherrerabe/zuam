@@ -11,7 +11,12 @@ import { TasksService } from "../src/modules/tasks/service";
 import { GoogleCalendarContextController } from "../src/modules/google-calendar-context/controller";
 import { GoogleCalendarContextDao } from "../src/modules/google-calendar-context/dao";
 import { GoogleCalendarContextEventBus } from "../src/modules/google-calendar-context/events";
+import { normalizeGoogleCalendarSeedSource } from "../src/modules/google-calendar-context/google-calendar-api-adapter";
 import { GoogleCalendarContextService } from "../src/modules/google-calendar-context/service";
+import {
+  googleCalendarPartialErrorSeedSourceDocFixture,
+  googleCalendarSeedSourceDocFixture
+} from "./fixtures/google-calendar-api-doc-fixtures";
 
 function buildHarness() {
   const store = new CoreDataStore();
@@ -53,29 +58,30 @@ function createTask(harness: ReturnType<typeof buildHarness>, userId: string, ti
 }
 
 describe("google-calendar-context backend flows", () => {
-  it("BE-UNIT-GCAL-001: raw calendar data normalizes into busy blocks and free windows", () => {
-    const harness = buildHarness();
+  it("BE-UNIT-GCAL-001: documented calendar API payloads normalize into the internal read model", () => {
+    const normalized = normalizeGoogleCalendarSeedSource(googleCalendarSeedSourceDocFixture);
 
-    harness.calendarService.seedRawSource("user-a", {
-      calendars: [
-        {
+    expect(normalized).toEqual({
+      calendars: expect.arrayContaining([
+        expect.objectContaining({
           id: "work",
           summary: "Work",
-          accessRole: "reader"
-        },
-        {
+          accessRole: "reader",
+          primary: true
+        }),
+        expect.objectContaining({
           id: "personal",
           summary: "Personal",
           accessRole: "freeBusyReader",
           hidden: true
-        },
-        {
+        }),
+        expect.objectContaining({
           id: "archived",
           summary: "Archived",
           accessRole: "owner",
           deleted: true
-        }
-      ],
+        })
+      ]),
       busyByCalendarId: {
         work: {
           busy: [
@@ -87,15 +93,22 @@ describe("google-calendar-context backend flows", () => {
               start: "2026-04-07T13:00:00.000Z",
               end: "2026-04-07T14:00:00.000Z"
             }
-          ]
+          ],
+          errors: undefined
         }
       },
       planningWindowStart: "2026-04-07T09:00:00.000Z",
       planningWindowEnd: "2026-04-07T17:00:00.000Z",
       fetchedAt: "2026-04-07T09:05:00.000Z",
       freshnessTtlMinutes: 15,
-      nextSyncToken: "token-1"
+      nextSyncToken: "calendar-sync-token-1"
     });
+  });
+
+  it("BE-UNIT-GCAL-002: raw calendar data normalizes into busy blocks and free windows", () => {
+    const harness = buildHarness();
+
+    harness.calendarService.seedRawSource("user-a", googleCalendarSeedSourceDocFixture);
 
     const snapshot = harness.calendarController.get("user-a");
     expect(snapshot).toMatchObject({
@@ -124,33 +137,14 @@ describe("google-calendar-context backend flows", () => {
     });
   });
 
-  it("BE-UNIT-GCAL-002: stale calendar state refreshes instead of serving an expired snapshot", () => {
+  it("BE-UNIT-GCAL-003: stale calendar state refreshes instead of serving an expired snapshot", () => {
     const harness = buildHarness();
     const refreshEvents: unknown[] = [];
     harness.calendarEvents.on("calendar:refreshed", (snapshot) => refreshEvents.push(snapshot));
 
     harness.calendarService.seedRawSource("user-a", {
-      calendars: [
-        {
-          id: "work",
-          summary: "Work",
-          accessRole: "reader"
-        }
-      ],
-      busyByCalendarId: {
-        work: {
-          busy: [
-            {
-              start: "2026-04-07T10:00:00.000Z",
-              end: "2026-04-07T11:00:00.000Z"
-            }
-          ]
-        }
-      },
-      planningWindowStart: "2026-04-07T09:00:00.000Z",
-      planningWindowEnd: "2026-04-07T17:00:00.000Z",
-      fetchedAt: "2026-04-07T09:00:00.000Z",
-      freshnessTtlMinutes: 15
+      ...googleCalendarSeedSourceDocFixture,
+      fetchedAt: "2026-04-07T09:00:00.000Z"
     });
 
     const snapshot = harness.calendarService.getCalendarContext("user-a", {
@@ -166,37 +160,11 @@ describe("google-calendar-context backend flows", () => {
     expect(refreshEvents).toHaveLength(2);
   });
 
-  it("BE-UNIT-GCAL-003 and BE-UNIT-GCAL-004: slot suggestions avoid busy blocks and explain the blockers", () => {
+  it("BE-UNIT-GCAL-004 and BE-UNIT-GCAL-005: slot suggestions avoid busy blocks and explain the blockers", () => {
     const harness = buildHarness();
     const task = createTask(harness, "user-a", "Write calendar hints");
 
-    harness.calendarService.seedRawSource("user-a", {
-      calendars: [
-        {
-          id: "work",
-          summary: "Work",
-          accessRole: "reader"
-        }
-      ],
-      busyByCalendarId: {
-        work: {
-          busy: [
-            {
-              start: "2026-04-07T10:00:00.000Z",
-              end: "2026-04-07T11:00:00.000Z"
-            },
-            {
-              start: "2026-04-07T13:00:00.000Z",
-              end: "2026-04-07T14:00:00.000Z"
-            }
-          ]
-        }
-      },
-      planningWindowStart: "2026-04-07T09:00:00.000Z",
-      planningWindowEnd: "2026-04-07T17:00:00.000Z",
-      fetchedAt: "2026-04-07T09:05:00.000Z",
-      freshnessTtlMinutes: 15
-    });
+    harness.calendarService.seedRawSource("user-a", googleCalendarSeedSourceDocFixture);
 
     const suggestions = harness.calendarController.suggestions("user-a", {
       taskId: task.id,
@@ -236,41 +204,13 @@ describe("google-calendar-context backend flows", () => {
     }
   });
 
-  it("BE-UNIT-GCAL-005: partial calendar failures still return the available context", () => {
+  it("BE-UNIT-GCAL-006: partial calendar failures still return the available context", () => {
     const harness = buildHarness();
 
-    harness.calendarService.seedRawSource("user-a", {
-      calendars: [
-        {
-          id: "work",
-          summary: "Work",
-          accessRole: "reader"
-        },
-        {
-          id: "team",
-          summary: "Team",
-          accessRole: "freeBusyReader"
-        }
-      ],
-      busyByCalendarId: {
-        work: {
-          busy: [
-            {
-              start: "2026-04-07T10:00:00.000Z",
-              end: "2026-04-07T11:00:00.000Z"
-            }
-          ]
-        }
-      },
-      planningWindowStart: "2026-04-07T09:00:00.000Z",
-      planningWindowEnd: "2026-04-07T17:00:00.000Z",
-      fetchedAt: "2026-04-07T09:05:00.000Z"
-    });
+    harness.calendarService.seedRawSource("user-a", googleCalendarPartialErrorSeedSourceDocFixture);
 
     const snapshot = harness.calendarController.get("user-a");
-    expect(snapshot.partialErrors).toEqual([
-      "Missing free/busy data for team"
-    ]);
+    expect(snapshot.partialErrors).toEqual(["team: internalError"]);
     expect(snapshot.busyBlocks).toHaveLength(1);
     expect(snapshot.freeWindows).not.toHaveLength(0);
   });

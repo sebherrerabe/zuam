@@ -81,18 +81,22 @@ electron/
 - Required order: `get_design_context` for the target node, `get_metadata` only when the target node is ambiguous or the frame is too large, then `get_screenshot` for visual validation.
 - The fetched screenshot is part of implementation context, not an optional extra. Do not mark a Figma-backed frontend slice complete without comparing the built UI against the screenshot.
 - If the design file contains multiple plausible mockups, the relevant module doc or this shared architecture doc must identify which node is authoritative before implementation continues.
+- Agents must check the registry below before choosing a frame. Do not default to older nodes when a newer authoritative reference exists in the registry.
 - If a slice has no exact Figma node yet, use the nearest host frame as the visual baseline and explicitly record that the styling is an inference.
 
 ## Current Light Mockup Registry
-- `1:19` `Desktop Shell — Today`: canonical Phase 1 desktop shell reference for sidebar, main list panel, quick add, and right detail host.
-- `1:255` `Detail`: canonical Phase 1 task detail panel reference nested inside `1:19`.
-- `198:2` `Zuamy Planning Workspace (light)`: separate planning/AI workspace reference. This is not the Phase 1 desktop shell and should not replace `1:19` when implementing `desktop-shell-layout`.
+- `155:2` `v3 — Warm Light Mode`: authoritative current light-mode design-system canvas for desktop and mobile brand language.
+- `155:3` `Desktop Shell — Today (light)`: canonical current desktop shell reference for sidebar, progression card, quick capture, task list density, and shell tone.
+- `155:233` `Detail Panel`: canonical current task detail reference inside the warm-light system.
+- `198:2` `Zuamy Planning Workspace (light)`: separate planning/AI workspace reference. This is not the Phase 1 desktop shell and should not replace `155:3` when implementing `desktop-shell-layout`.
+- `1:19` and `1:255` are legacy light references kept for historical comparison only. Do not use them as the default implementation baseline when `155:2` covers the slice.
 
 ## Mockup Coverage Rules
-- `desktop-shell-layout` maps to `1:19`.
-- `task-detail-basic-editor` maps to `1:255`.
-- `google-tasks-sync` currently has no dedicated light mockup card; use `1:19` as the shell host reference and record UI-card placement as an inference until a dedicated sync node exists.
-- `nudge-engine` currently has no dedicated frozen nudge modal frame; use the `1:19`/`1:255` light language as the nearest reference and record the modal treatment as an inference until a dedicated node exists.
+- `desktop-shell-layout` maps to `155:3`.
+- `task-detail-basic-editor` maps to `155:233`.
+- `google-tasks-sync` currently has no dedicated frozen sync card; use `155:3` as the shell host reference and record UI-card placement as an inference until a dedicated sync node exists.
+- `nudge-engine` currently has no dedicated frozen nudge modal frame; use the `155:2` warm-light system and `155:233` detail language as the nearest reference and record the modal treatment as an inference until a dedicated node exists.
+- `mobile-shell-core` should use `155:2` as the current design-system reference until authoritative mobile-specific nodes are documented.
 - `198:2` should be treated as a later AI companion/planning workspace surface unless a module doc explicitly scopes it in.
 
 ## Focus And Progression

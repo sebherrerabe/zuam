@@ -44,5 +44,5 @@ Bootstrap full import plus incremental bidirectional sync between Google Tasks a
 
 ## Figma Reference
 - This module has no dedicated frozen sync-status node in the current light mockups.
-- Fetch `1:19` `Desktop Shell — Today` as the host shell reference and treat sync-card placement and styling as an explicit inference until a dedicated sync-status node exists.
+- Fetch `155:3` `Desktop Shell — Today (light)` as the host shell reference and treat sync-card placement and styling as an explicit inference until a dedicated sync-status node exists.
 - Frontend work for this module must still fetch a screenshot from the Figma plugin and record that the sync surface is derived from the host shell rather than an exact node.

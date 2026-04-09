@@ -17,8 +17,8 @@ last_updated: "2026-04-08"
 
 ## Figma Validation Baseline
 - No dedicated frozen light mockup exists yet for the sync widget.
-- Use node `1:19` `Desktop Shell — Today` in file `OsyWf2xeC712smZfYoaatq` as the host-shell reference.
-- Frontend agents must fetch `1:19` with the Figma plugin using `get_design_context`, then `get_screenshot`, and explicitly record sync-chip/card styling as an inference rather than a direct pixel match.
+- Use node `155:3` `Desktop Shell — Today (light)` in file `OsyWf2xeC712smZfYoaatq` as the host-shell reference.
+- Frontend agents must fetch `155:3` with the Figma plugin using `get_design_context`, then `get_screenshot`, and explicitly record sync-chip/card styling as an inference rather than a direct pixel match.
 
 ## `FE-UNIT-SYNC-001` Sync status visibility
 - The desktop shell shows the last sync time, current sync status, and whether Google Tasks is connected.
@@ -37,5 +37,5 @@ last_updated: "2026-04-08"
 - Verify stale syncing indicators clear after success.
 
 ## `FE-VIS-SYNC-001`
-- Compare the implemented sync-status surface against the fetched host-shell screenshot for node `1:19`.
+- Compare the implemented sync-status surface against the fetched host-shell screenshot for node `155:3`.
 - Verify the surface reads as native to the shell's light-mode spacing, typography, and accent system, and record any placement or container styling as intentional inference.

@@ -1,33 +1,60 @@
 import { z } from "zod";
 
-export const seedGoogleCalendarSourceInputSchema = z.object({
-  calendars: z.array(
+import { calendarAccessRoles } from "./types";
+
+const calendarListEntrySchema = z.object({
+  kind: z.literal("calendar#calendarListEntry").optional(),
+  etag: z.string().optional(),
+  id: z.string().min(1),
+  summary: z.string().min(1),
+  accessRole: z.enum(calendarAccessRoles),
+  hidden: z.boolean().optional(),
+  deleted: z.boolean().optional(),
+  primary: z.boolean().optional()
+});
+
+const calendarListResponseSchema = z.object({
+  kind: z.literal("calendar#calendarList").optional(),
+  etag: z.string().optional(),
+  nextPageToken: z.string().optional(),
+  nextSyncToken: z.string().optional(),
+  items: z.array(calendarListEntrySchema).default([])
+});
+
+const freeBusyCalendarErrorSchema = z.object({
+  domain: z.string().min(1),
+  reason: z.string().min(1)
+});
+
+const freeBusyCalendarEntrySchema = z.object({
+  errors: z.array(freeBusyCalendarErrorSchema).optional(),
+  busy: z.array(
     z.object({
-      id: z.string().min(1),
-      summary: z.string().min(1),
-      accessRole: z.enum(["freeBusyReader", "reader", "writer", "owner"]),
-      hidden: z.boolean().optional(),
-      deleted: z.boolean().optional(),
-      primary: z.boolean().optional()
+      start: z.string().datetime(),
+      end: z.string().datetime()
     })
-  ),
-  busyByCalendarId: z.record(
+  ).default([])
+});
+
+const freeBusyResponseSchema = z.object({
+  kind: z.literal("calendar#freeBusy").optional(),
+  timeMin: z.string().datetime(),
+  timeMax: z.string().datetime(),
+  groups: z.record(
     z.string(),
     z.object({
-      busy: z.array(
-        z.object({
-          start: z.string().datetime(),
-          end: z.string().datetime()
-        })
-      ),
-      errors: z.array(z.string().min(1)).optional()
+      errors: z.array(freeBusyCalendarErrorSchema).optional(),
+      calendars: z.array(z.string().min(1)).optional()
     })
-  ),
-  planningWindowStart: z.string().datetime(),
-  planningWindowEnd: z.string().datetime(),
+  ).optional(),
+  calendars: z.record(z.string(), freeBusyCalendarEntrySchema).default({})
+});
+
+export const seedGoogleCalendarSourceInputSchema = z.object({
+  calendarList: calendarListResponseSchema,
+  freeBusy: freeBusyResponseSchema,
   fetchedAt: z.string().datetime().optional(),
-  freshnessTtlMinutes: z.number().int().positive().optional(),
-  nextSyncToken: z.string().nullable().optional()
+  freshnessTtlMinutes: z.number().int().positive().optional()
 });
 
 export const calendarSuggestionInputSchema = z.object({

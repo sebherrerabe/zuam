@@ -3,6 +3,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { TasksDao } from "../tasks/dao";
 import { GoogleCalendarContextDao } from "./dao";
 import { GoogleCalendarContextEventBus } from "./events";
+import { normalizeGoogleCalendarSeedSource } from "./google-calendar-api-adapter";
 import {
   calendarRefreshInputSchema,
   calendarSuggestionInputSchema,
@@ -33,7 +34,7 @@ export class GoogleCalendarContextService {
       throw new BadRequestException("Invalid Google Calendar source payload");
     }
 
-    this.dao.seedRawSource(userId, parsed.data);
+    this.dao.seedRawSource(userId, normalizeGoogleCalendarSeedSource(parsed.data));
     return this.refreshCalendarContext(userId, { at: parsed.data.fetchedAt });
   }
 

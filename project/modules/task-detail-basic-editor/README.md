@@ -39,7 +39,6 @@ Define the right-panel task detail experience for Phase 1 using a plain-text edi
 - Must interoperate with shell selection state from `desktop-shell-layout`.
 
 ## Figma Reference
-- Fetch `1:255` `Detail` via the Figma plugin before implementing or revising this module.
-- Use `get_design_context` for `1:255`, then `get_screenshot` to validate spacing, progress treatment, metadata rows, and subtask layout.
+- Fetch `155:233` `Detail Panel` via the Figma plugin before implementing or revising this module.
+- Use `155:2` `v3 — Warm Light Mode` as the design-system context, then fetch `155:233` with `get_design_context` and `get_screenshot` to validate spacing, ADHD signal treatment, metadata rows, CTA hierarchy, and subtask layout.
 - Treat the Focus Session CTA shown in the mockup as phase-gated per ADR-014 rather than proof that all later-phase controls belong in this module now.
-
