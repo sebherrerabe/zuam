@@ -1,8 +1,6 @@
-import { useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Application, extend } from "@pixi/react";
-import { Container, Graphics } from "pixi.js";
 
 import {
   equipProgressionItem,
@@ -11,13 +9,15 @@ import {
   fetchProgressionShareCard
 } from "../../lib/api/desktop-api";
 import { exportProgressShareCard } from "../../lib/electron/desktop-notification-bridge";
-import type { Unlockable } from "../../lib/api/desktop-api.types";
 import {
   buildProfilePresentation,
   formatRewardTimestamp
 } from "./progression-utils";
 
-extend({ Container, Graphics });
+const ProgressAvatarScene = lazy(async () => {
+  const module = await import("./progress-avatar-scene");
+  return { default: module.ProgressAvatarScene };
+});
 
 type ProgressionSurfaceProps = {
   onReturnToToday?: () => void;
@@ -112,7 +112,9 @@ export function ProgressionSurface({ onReturnToToday }: ProgressionSurfaceProps)
       <div className="progression-layout">
         <section className="progression-profile-card">
           <div className="progression-avatar-scene" aria-hidden="true">
-            <ProgressAvatarScene unlockables={presentation.unlockables.filter((unlockable) => unlockable.status === "equipped")} />
+            <Suspense fallback={<div className="progression-avatar-scene-fallback" aria-hidden="true" />}>
+              <ProgressAvatarScene unlockables={presentation.unlockables.filter((unlockable) => unlockable.status === "equipped")} />
+            </Suspense>
           </div>
           <div className="progression-profile-copy">
             <p className="phase-three-section-label">Current loadout</p>
@@ -228,48 +230,4 @@ export function ProgressionSurface({ onReturnToToday }: ProgressionSurfaceProps)
       </div>
     </section>
   );
-}
-
-function ProgressAvatarScene({ unlockables }: { unlockables: Array<Unlockable & { accent: string }> }) {
-  const cloak = unlockables.find((unlockable) => unlockable.type === "cloak");
-  const hat = unlockables.find((unlockable) => unlockable.type === "hat");
-  const trail = unlockables.find((unlockable) => unlockable.type === "trail");
-
-  /* eslint-disable react/no-unknown-property */
-  return (
-    <Application width={180} height={180} backgroundAlpha={0} antialias={false}>
-      <pixiContainer>
-        <pixiGraphics
-          draw={(graphics) => {
-            graphics.clear();
-            graphics.roundRect(20, 26, 140, 128, 28);
-            graphics.fill({ color: "#f5ede3", alpha: 1 });
-          }}
-        />
-        <pixiGraphics
-          draw={(graphics) => {
-            graphics.clear();
-            graphics.circle(92, 64, 24);
-            graphics.fill({ color: "#f0d8c5", alpha: 1 });
-            graphics.roundRect(64, 88, 56, 54, 16);
-            graphics.fill({ color: cloak?.accent ?? "#6b8db5", alpha: 1 });
-          }}
-        />
-        <pixiGraphics
-          draw={(graphics) => {
-            graphics.clear();
-            if (hat) {
-              graphics.roundRect(68, 38, 48, 12, 8);
-              graphics.fill({ color: hat.accent, alpha: 1 });
-            }
-            if (trail) {
-              graphics.roundRect(36, 130, 108, 10, 8);
-              graphics.fill({ color: trail.accent, alpha: 0.55 });
-            }
-          }}
-        />
-      </pixiContainer>
-    </Application>
-  );
-  /* eslint-enable react/no-unknown-property */
 }

@@ -33,6 +33,7 @@ describe("infra-release-observability", () => {
       "typecheck",
       "test",
       "build",
+      "package-smoke",
       "package",
       "publish",
       "summary"

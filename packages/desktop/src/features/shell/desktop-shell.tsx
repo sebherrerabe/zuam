@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 
 import type { SmartListId, TaskGroupBy, TaskSortBy } from "@zuam/shared";
 import type { NudgeEvent } from "@zuam/shared";
 
 import { acknowledgeNudge, snoozeTask } from "../../lib/api/desktop-api";
 import { useShellStore, type ShellPresentation, type ShellView } from "../../lib/state/shell-store";
-import { AnalyticsSurface } from "../analytics";
 import { NudgeBlockingModal, NudgeNotificationSurface } from "../nudges";
 import { FocusBreakOverlay, FocusSessionPanel } from "../focus/focus-session-panel";
 import { useFocusSession } from "../focus/use-focus-session";
-import { ProgressionSurface } from "../progression";
 import { useSyncStatus } from "../system";
 import { TaskDetailPanel } from "../tasks/task-detail-panel";
 import { TaskViews } from "../views/task-views";
@@ -37,6 +35,16 @@ const systemNavItems = [
   { id: "trash", label: "Trash", icon: "\u{1F5D1}" },
   { id: "settings", label: "Settings", icon: "\u2699" }
 ] as const;
+
+const AnalyticsSurface = lazy(async () => {
+  const module = await import("../analytics");
+  return { default: module.AnalyticsSurface };
+});
+
+const ProgressionSurface = lazy(async () => {
+  const module = await import("../progression");
+  return { default: module.ProgressionSurface };
+});
 
 export function DesktopShell() {
   const activeView = useShellStore((state) => state.activeView);
@@ -427,15 +435,19 @@ export function DesktopShell() {
 
         <div className="desktop-main-content">
           {activeView === "insights" ? (
-            <AnalyticsSurface
-              onOpenProgression={() => selectSmartView("progression")}
-              onOpenTask={(taskId) => {
-                setSelectedTaskId(taskId);
-                setActiveView("today");
-              }}
-            />
+            <Suspense fallback={<PhaseThreeSurfaceFallback label="analytics dashboard" title="Loading analytics..." body="Bringing the reflective dashboard online." />}>
+              <AnalyticsSurface
+                onOpenProgression={() => selectSmartView("progression")}
+                onOpenTask={(taskId) => {
+                  setSelectedTaskId(taskId);
+                  setActiveView("today");
+                }}
+              />
+            </Suspense>
           ) : activeView === "progression" ? (
-            <ProgressionSurface onReturnToToday={() => selectSmartView("today")} />
+            <Suspense fallback={<PhaseThreeSurfaceFallback label="progression profile" title="Loading progression..." body="Preparing the profile, unlock feed, and share card." />}>
+              <ProgressionSurface onReturnToToday={() => selectSmartView("today")} />
+            </Suspense>
           ) : (
             <TaskViews
               activeView={activeView}
@@ -590,6 +602,18 @@ function QuickCaptureDialog({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function PhaseThreeSurfaceFallback({ label, title, body }: { label: string; title: string; body: string }) {
+  return (
+    <section className="phase-three-surface" aria-label={label}>
+      <div className="phase-three-hero">
+        <p className="phase-three-kicker">Phase 3</p>
+        <h2>{title}</h2>
+        <p>{body}</p>
+      </div>
+    </section>
   );
 }
 

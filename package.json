@@ -11,7 +11,7 @@
     "dev:desktop": "pnpm --filter @zuam/desktop dev",
     "dev:mobile": "pnpm --filter @zuam/mobile dev",
     "build": "pnpm -r --if-present build",
-    "test": "jest --config ./jest.config.cjs && pnpm -r --if-present test",
+    "test": "jest --config ./jest.config.cjs && pnpm -r --workspace-concurrency=1 --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint . --max-warnings=0"
   },

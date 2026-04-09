@@ -7,11 +7,13 @@
   "scripts": {
     "dev": "pnpm --filter @zuam/shared build && pnpm run dev:raw",
     "dev:raw": "vite dev --host 127.0.0.1 --port 3000",
-    "build": "pnpm --filter @zuam/shared build && vite build && tsc -p tsconfig.electron.json",
+    "build": "pnpm --filter @zuam/shared build && vite build && node ../../tooling/release/generate-desktop-client-index.cjs && tsc -p tsconfig.electron.json",
     "package:ci": "node ../../tooling/release/package-desktop-release.cjs",
+    "package:smoke": "pnpm build && pnpm run package:smoke:check",
+    "package:smoke:check": "node ../../tooling/release/smoke-desktop-package.cjs",
     "typecheck": "pnpm --filter @zuam/shared build && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
     "lint": "eslint src electron playwright vite.config.ts vitest.config.ts playwright.config.ts playwright.vite.config.ts --ext .ts,.tsx",
-    "test": "pnpm --filter @zuam/shared build && vitest run",
+    "test": "pnpm --filter @zuam/shared build && vitest run --pool=threads --maxWorkers=1",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots"
   },

@@ -60,6 +60,7 @@ Use GitHub Actions with separate concerns:
 - lint
 - backend tests
 - desktop tests
+- desktop build + package smoke checks
 - mobile tests as mobile work deepens
 - desktop packaging only on release/tag workflows
 
@@ -68,6 +69,10 @@ Use GitHub Actions with separate concerns:
 - Database target: Railway Postgres
 - Desktop packaging target: Electron Builder + GitHub Releases
 - Mobile distribution remains later-phase and should not block desktop release readiness
+- Desktop release readiness requires a smoke pass that verifies:
+  - built client entry exists
+  - Electron `main` and `preload` bundles exist
+  - release metadata/event files can be generated from CI env inputs
 
 ## Observability Baseline
 - structured backend logging

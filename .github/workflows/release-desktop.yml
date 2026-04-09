@@ -42,6 +42,16 @@ jobs:
       - name: build
         run: pnpm build
 
+      - name: package-smoke
+        run: pnpm --filter @zuam/desktop package:smoke:check
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+
       - name: package
         run: pnpm --filter @zuam/desktop package:ci
         env:
