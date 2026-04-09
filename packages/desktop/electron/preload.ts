@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 import {
   DESKTOP_NOTIFICATION_CHANNELS,
+  createDesktopRuntimeBridge,
   readBrowserNotificationState,
   requestBrowserNotificationPermission,
   type DesktopNotificationDeliveryResult,
@@ -29,6 +30,8 @@ function createNotificationBridge() {
 }
 
 contextBridge.exposeInMainWorld("zuamDesktop", {
-  platform: process.platform,
-  notifications: createNotificationBridge()
+  ...createDesktopRuntimeBridge({
+    platform: process.platform,
+    notifications: createNotificationBridge()
+  })
 });

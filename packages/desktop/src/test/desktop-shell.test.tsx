@@ -239,7 +239,7 @@ describe("desktop shell layout", () => {
   it("FE-UNIT-FOCUS-001: focus timer lifecycle and break overlay stay attached to the selected task", async () => {
     renderShell();
 
-    fireEvent.click(screen.getByRole("button", { name: /start 25-min focus session/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /start 25-min focus session/i }));
     expect(await screen.findByRole("complementary", { name: /focus session/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /break/i }));

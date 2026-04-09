@@ -2,33 +2,41 @@ import type { ListDto } from "@zuam/shared";
 
 import type { SyncStatusSnapshot } from "../../features/system";
 import {
+  createMockSubtask,
+  deleteMockTask,
   fetchMockCalendarContext,
   fetchMockCalendarSuggestions,
   fetchMockFocusQueueRecommendation,
   fetchMockFocusSessionSnapshot,
+  fetchMockTaskDetail,
   fetchMockTaskQuery,
   fetchMockWorkspaceBootstrap,
   moveMockTask,
   pauseMockFocusSession,
   resetDesktopApiMocks,
   resumeMockFocusSession,
+  setMockSubtaskCompleted,
   setMockTaskStatus,
   startMockBreak,
   startMockFocusSession,
-  endMockFocusSession
+  endMockFocusSession,
+  updateMockTaskDetail
 } from "./desktop-api.mock";
 import type {
   CalendarSuggestionsResponse,
+  CreateSubtaskInput,
   DesktopWorkspaceBootstrap,
   FocusQueueRecommendation,
   FocusSessionSnapshot,
   GoogleCalendarContextSnapshot,
   StartFocusSessionInput,
+  TaskDetailResponse,
   TaskMoveInput,
   TaskStatusInput,
   TaskTaxonomyQueryInput,
   TaskViewQueryResult,
-  TransitionFocusSessionInput
+  TransitionFocusSessionInput,
+  UpdateTaskDetailInput
 } from "./desktop-api.types";
 
 const DEFAULT_USER_ID = "user-1";
@@ -110,6 +118,72 @@ export async function fetchTaskViewQuery(input: TaskTaxonomyQueryInput) {
     method: "POST",
     body: input
   });
+}
+
+export async function fetchTaskDetail(taskId: string) {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockTaskDetail(taskId);
+  }
+
+  return apiRequest<TaskDetailResponse>(`/tasks/${taskId}`);
+}
+
+export async function updateTaskDetail(taskId: string, input: UpdateTaskDetailInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return updateMockTaskDetail(taskId, input);
+  }
+
+  return apiRequest<TaskDetailResponse>(`/tasks/${taskId}`, {
+    method: "PATCH",
+    body: input
+  });
+}
+
+export async function createSubtask(input: CreateSubtaskInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return createMockSubtask(input);
+  }
+
+  return apiRequest(`/tasks`, {
+    method: "POST",
+    body: input
+  });
+}
+
+export async function setSubtaskCompleted(taskId: string, completed: boolean) {
+  if (!hasDesktopApiBaseUrl()) {
+    return setMockSubtaskCompleted(taskId, completed);
+  }
+
+  return apiRequest(`/tasks/${taskId}/complete`, {
+    method: "POST",
+    body: { completed }
+  });
+}
+
+export async function deleteTask(taskId: string) {
+  if (!hasDesktopApiBaseUrl()) {
+    return deleteMockTask(taskId);
+  }
+
+  const apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl) {
+    throw new Error("Desktop API base URL is not configured");
+  }
+
+  const response = await fetch(`${apiBaseUrl}/tasks/${taskId}`, {
+    method: "DELETE",
+    headers: {
+      "x-zuam-user-id": DEFAULT_USER_ID
+    }
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Desktop API request failed with ${response.status}`);
+  }
+
+  return null;
 }
 
 export async function fetchFocusQueueRecommendation(input: TaskTaxonomyQueryInput = {}) {

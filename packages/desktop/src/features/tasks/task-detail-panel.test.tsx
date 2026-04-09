@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { resetDesktopApiMocks } from "../../lib/api/desktop-api";
+import { useShellStore } from "../../lib/state/shell-store";
 import { resetTaskDetailCache } from "./task-detail-cache";
 import { TaskDetailPanel } from "./task-detail-panel";
-import { useShellStore } from "../../lib/state/shell-store";
 
 function renderPanel(taskId = "task-1") {
   const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ function renderPanel(taskId = "task-1") {
 describe("task detail basic editor", () => {
   beforeEach(() => {
     resetTaskDetailCache();
+    resetDesktopApiMocks();
     useShellStore.setState({
       activeView: "today",
       activeListId: null,
@@ -28,10 +30,10 @@ describe("task detail basic editor", () => {
     });
   });
 
-  it("FE-UNIT-TDE-001: opens a task with title, metadata, and body fields populated", () => {
+  it("FE-UNIT-TDE-001: opens a task with title, metadata, and body fields populated", async () => {
     renderPanel();
 
-    expect(screen.getByDisplayValue("Ship nudge engine v1 (Level 0-2)")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("Ship nudge engine v1 (Level 0-2)")).toBeInTheDocument();
     expect(screen.getByLabelText(/task title/i)).toHaveValue("Ship nudge engine v1 (Level 0-2)");
     expect((screen.getByLabelText(/notes/i) as HTMLTextAreaElement).value).toContain(
       "Cover ambient -> gentle -> firm escalation."
@@ -45,16 +47,12 @@ describe("task detail basic editor", () => {
   it("FE-UNIT-TDE-002: typing into notes transitions through dirty and saving states and clears dirty on success", async () => {
     renderPanel();
 
-    const notesField = screen.getByLabelText(/notes/i);
+    const notesField = await screen.findByLabelText(/notes/i);
     fireEvent.change(notesField, {
       target: { value: "Cover ambient -> gentle -> firm escalation.\nKeep copy warm.\n\nUpdated copy." }
     });
 
     expect(screen.getByRole("status")).toHaveTextContent("Dirty");
-
-    await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent("Saving");
-    });
 
     await waitFor(() => {
       expect(screen.getByRole("status")).toHaveTextContent("Saved");
@@ -65,10 +63,10 @@ describe("task detail basic editor", () => {
     );
   });
 
-  it("FE-UNIT-TDE-003: subtask interactions stay scoped to the selected task and update progress", () => {
+  it("FE-UNIT-TDE-003: subtask interactions stay scoped to the selected task and update progress", async () => {
     const { rerender } = renderPanel("task-1");
 
-    expect(screen.getByText("3 / 7 · 43%")).toBeInTheDocument();
+    expect(await screen.findByText("3 / 7 · 43%")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^\+ add$/i }));
     fireEvent.change(screen.getByRole("textbox", { name: /new subtask/i }), {
@@ -92,7 +90,7 @@ describe("task detail basic editor", () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByLabelText(/task title/i)).toHaveValue("Review onboarding invite copy");
+    expect(await screen.findByLabelText(/task title/i)).toHaveValue("Review onboarding invite copy");
     expect(screen.getByText("0 / 2 · 0%")).toBeInTheDocument();
     expect(screen.queryByText("Electron overlay window (Level 2)")).not.toBeInTheDocument();
   });

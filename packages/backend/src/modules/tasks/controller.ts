@@ -12,6 +12,11 @@ export class TasksController {
     return this.tasksService.listTasks(ensureUserId(userId), listId);
   }
 
+  @Get(":id")
+  get(@Headers("x-zuam-user-id") userId: string | undefined, @Param("id") id: string) {
+    return this.tasksService.getTaskDetail(ensureUserId(userId), id);
+  }
+
   @Post()
   create(@Headers("x-zuam-user-id") userId: string | undefined, @Body() body: unknown) {
     return this.tasksService.createTask(ensureUserId(userId), body);

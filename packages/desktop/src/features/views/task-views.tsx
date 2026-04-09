@@ -303,9 +303,13 @@ function CalendarView({
     <section className="desktop-placeholder-panel" role="region" aria-label="calendar task view">
       <h2>Calendar context</h2>
       <p>
-        {context?.stale
-          ? "Calendar context is stale. Refresh before committing a new focus block."
-          : `Busy blocks: ${context?.busyBlocks.length ?? 0}. Free windows: ${context?.freeWindows.length ?? 0}.`}
+        {context?.availabilityState === "unknown"
+          ? "Calendar context is unavailable. The shell is falling back to task-only prioritization."
+          : context?.availabilityState === "partial"
+            ? `Calendar context is partial. Busy blocks: ${context.busyBlocks.length}. Free windows: ${context.freeWindows.length}.`
+            : context?.availabilityState === "stale"
+              ? "Calendar context is stale. Refresh before committing a new focus block."
+              : `Busy blocks: ${context?.busyBlocks.length ?? 0}. Free windows: ${context?.freeWindows.length ?? 0}.`}
       </p>
       <div className="calendar-window-stack">
         {(context?.busyBlocks ?? []).map((busy) => (
@@ -321,6 +325,7 @@ function CalendarView({
             <strong>{suggestion.taskTitle}</strong>
             <span>{formatTimeRange(suggestion.start, suggestion.end)}</span>
             <span>{suggestion.rationale}</span>
+            <span>{`Confidence: ${suggestion.confidence}`}</span>
           </button>
         ))}
       </div>

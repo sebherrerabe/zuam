@@ -42,6 +42,21 @@ declare global {
   }
 }
 
+export function createDesktopRuntimeBridge(input: DesktopRuntimeBridge): DesktopRuntimeBridge {
+  return {
+    platform: input.platform,
+    notifications: input.notifications
+  };
+}
+
+export function getDesktopRuntimeBridge(): DesktopRuntimeBridge | null {
+  return window.zuamDesktop ?? null;
+}
+
+export function getDesktopRuntimePlatform(): string {
+  return getDesktopRuntimeBridge()?.platform ?? (typeof navigator !== "undefined" ? navigator.platform : "web");
+}
+
 export function normalizeDesktopNotificationRequest(input: unknown): DesktopNotificationRequest | null {
   if (typeof input !== "object" || input === null) {
     return null;
@@ -72,7 +87,7 @@ export function readBrowserNotificationState(): DesktopNotificationState {
   return {
     supported: permission !== "unsupported",
     permission,
-    platform: typeof navigator !== "undefined" ? navigator.platform : "web"
+    platform: getDesktopRuntimePlatform()
   };
 }
 
@@ -91,7 +106,7 @@ export async function requestBrowserNotificationPermission(): Promise<DesktopNot
 }
 
 export function getDesktopNotificationBridge(): DesktopNotificationBridge | null {
-  return window.zuamDesktop?.notifications ?? null;
+  return getDesktopRuntimeBridge()?.notifications ?? null;
 }
 
 export async function getDesktopNotificationState(): Promise<DesktopNotificationState> {

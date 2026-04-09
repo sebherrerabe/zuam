@@ -117,6 +117,50 @@ export type FocusSessionSnapshot = {
   taskRollups: FocusTaskRollup[];
 };
 
+export type TaskDetailSubtaskResponse = {
+  id: string;
+  title: string;
+  completed: boolean;
+  completedAt: string | null;
+  dueDate: string | null;
+  sortOrder: number;
+};
+
+export type TaskDetailResponse = {
+  id: string;
+  userId: string;
+  listId: string;
+  sectionId: string | null;
+  parentTaskId: string | null;
+  title: string;
+  notes: string | null;
+  dueDate: string | null;
+  completed: boolean;
+  completedAt: string | null;
+  sortOrder: number;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  priority: TaskRecord["priority"];
+  subtasks: TaskDetailSubtaskResponse[];
+};
+
+export type UpdateTaskDetailInput = {
+  title?: string;
+  notes?: string | null;
+  dueDate?: string | null;
+  priority?: TaskRecord["priority"];
+  listId?: string;
+  sectionId?: string | null;
+};
+
+export type CreateSubtaskInput = {
+  listId: string;
+  sectionId?: string | null;
+  parentTaskId: string;
+  title: string;
+};
+
 export type StartFocusSessionInput = {
   taskId: string;
   durationMinutes?: number;
@@ -149,12 +193,17 @@ export type ScheduleSuggestion = {
   start: string;
   end: string;
   durationMinutes: number;
+  confidence: "low" | "medium" | "high";
+  generatedAt: string;
   rationale: string;
   blockingBusyWindows: BusyBlock[];
 };
 
+export type CalendarAvailabilityState = "fresh" | "stale" | "partial" | "unknown";
+
 export type GoogleCalendarContextSnapshot = {
   userId: string;
+  availabilityState: CalendarAvailabilityState;
   lastRefreshedAt: string | null;
   expiresAt: string | null;
   stale: boolean;

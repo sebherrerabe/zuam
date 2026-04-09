@@ -1,8 +1,8 @@
 import type { ListDto, SmartListId, TaskGroupBy, TaskRecord, TaskSortBy } from "@zuam/shared";
 
-import { taskDetailFixtures } from "../../features/tasks/task-detail-data";
 import type {
   CalendarSuggestionsResponse,
+  CreateSubtaskInput,
   DesktopWorkspaceBootstrap,
   FocusQueueRecommendation,
   FocusSession,
@@ -13,12 +13,15 @@ import type {
   SidebarCountRow,
   StartFocusSessionInput,
   TagRecord,
+  TaskDetailResponse,
+  TaskDetailSubtaskResponse,
   TaskMoveInput,
   TaskStatusInput,
   TaskTaxonomyQueryInput,
   TaskViewGroup,
   TaskViewQueryResult,
-  TransitionFocusSessionInput
+  TransitionFocusSessionInput,
+  UpdateTaskDetailInput
 } from "./desktop-api.types";
 
 const FALLBACK_USER_ID = "user-1";
@@ -34,12 +37,229 @@ type FallbackStore = {
   calendarContext: GoogleCalendarContextSnapshot;
 };
 
-function stripHash(tag: string) {
-  return tag.trim().replace(/^#/, "");
-}
+const seedTasks: Array<
+  TaskRecord & {
+    dueLabel?: string;
+    subtasks?: Array<{ id: string; title: string; completed: boolean; estimate: string }>;
+  }
+> = [
+  {
+    id: "task-1",
+    userId: FALLBACK_USER_ID,
+    listId: "platform",
+    sectionId: "launch",
+    parentTaskId: null,
+    title: "Ship nudge engine v1 (Level 0-2)",
+    notes: "Cover ambient -> gentle -> firm escalation. Keep copy warm, never guilt-tripping.\n\nLevel 2 uses full-screen overlay. Copy bank: shared/nudge-texts/ -- 15+ variants per resistance tier.",
+    dueDate: "2026-04-07T18:00:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 0,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "high",
+    energyLevel: "HIGH",
+    resistance: "HIGH",
+    kanbanColumn: "IN_PROGRESS",
+    matrixQuadrant: "Q1_URGENT_IMPORTANT",
+    tagSlugs: ["deep-work", "work"],
+    subtasks: [
+      { id: "sub-1", title: "Define escalation ladder 0-4", completed: true, estimate: "15m" },
+      { id: "sub-2", title: "Copy bank schema + seed", completed: true, estimate: "30m" },
+      { id: "sub-3", title: "Scheduler hook to task.dueDate", completed: true, estimate: "20m" },
+      { id: "sub-4", title: "Electron overlay window (Level 2)", completed: false, estimate: "45m" },
+      { id: "sub-5", title: "WebSocket push to desktop client", completed: false, estimate: "30m" },
+      { id: "sub-6", title: "Snooze + reschedule actions", completed: false, estimate: "25m" },
+      { id: "sub-7", title: "Unit tests for escalation state", completed: false, estimate: "40m" }
+    ]
+  },
+  {
+    id: "task-2",
+    userId: FALLBACK_USER_ID,
+    listId: "platform",
+    sectionId: "review",
+    parentTaskId: null,
+    title: "Review onboarding invite copy",
+    notes: "Keep the gate direct and non-punitive.\nLead with clarity, then offer the next action.\n\nCopy should feel calm even when it says no.",
+    dueDate: "2026-04-09T15:30:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 1,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "medium",
+    energyLevel: "MEDIUM",
+    resistance: "MILD",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q3_URGENT",
+    tagSlugs: ["copy", "onboarding"],
+    subtasks: [
+      { id: "sub-8", title: "Check hard-stop language", completed: false, estimate: "20m" },
+      { id: "sub-9", title: "Review empty-state copy", completed: false, estimate: "25m" }
+    ]
+  },
+  {
+    id: "task-3",
+    userId: FALLBACK_USER_ID,
+    listId: "platform",
+    sectionId: "review",
+    parentTaskId: null,
+    title: "Pull Q1 metrics data",
+    notes: "Collect the top revenue, retention, and activation numbers for the investor update.\n\nPull the final deltas before formatting slides.",
+    dueDate: "2026-04-07T20:00:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 2,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "high",
+    energyLevel: "HIGH",
+    resistance: "MILD",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q2_IMPORTANT",
+    tagSlugs: ["work"],
+    subtasks: [
+      { id: "sub-10", title: "Export retention graph", completed: true, estimate: "10m" },
+      { id: "sub-11", title: "Check Q1 activation source", completed: false, estimate: "20m" }
+    ]
+  },
+  {
+    id: "task-4",
+    userId: FALLBACK_USER_ID,
+    listId: "family",
+    sectionId: null,
+    parentTaskId: null,
+    title: "Call mom back",
+    notes: "Return the call and confirm next weekend timing.\n\nKeep it short if energy is low.",
+    dueDate: "2026-04-07T16:30:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 3,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "low",
+    energyLevel: "LOW",
+    resistance: "MILD",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q4_NEITHER",
+    tagSlugs: []
+  },
+  {
+    id: "task-5",
+    userId: FALLBACK_USER_ID,
+    listId: "platform",
+    sectionId: "planning",
+    parentTaskId: null,
+    title: "Rewrite scoring weights doc",
+    notes: "Refactor the urgency weighting explanation so implementation can follow it without product follow-up.\n\nCapture the rationale for each threshold.",
+    dueDate: "2026-04-07T20:00:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 4,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "medium",
+    energyLevel: "MEDIUM",
+    resistance: "MILD",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q3_URGENT",
+    tagSlugs: ["work"],
+    subtasks: [{ id: "sub-12", title: "Audit current score bands", completed: false, estimate: "15m" }]
+  },
+  {
+    id: "task-6",
+    userId: FALLBACK_USER_ID,
+    listId: "personal",
+    sectionId: null,
+    parentTaskId: null,
+    title: "Water the plants",
+    notes: "Hit the balcony plants first, then the desk plants.\n\nThe quick win matters more than doing it perfectly.",
+    dueDate: "2026-04-07T12:00:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 5,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "none",
+    energyLevel: "LOW",
+    resistance: "NONE",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q4_NEITHER",
+    tagSlugs: []
+  },
+  {
+    id: "task-7",
+    userId: FALLBACK_USER_ID,
+    listId: "personal",
+    sectionId: "backlog",
+    parentTaskId: null,
+    title: "File Q1 taxes",
+    notes: "Collect invoices, reconcile expenses, and send the package before it slips another week.\n\nDo the paperwork before touching secondary admin.",
+    dueDate: "2026-04-05T12:00:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 6,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "high",
+    energyLevel: "MEDIUM",
+    resistance: "DREAD",
+    kanbanColumn: "BACKLOG",
+    matrixQuadrant: "Q1_URGENT_IMPORTANT",
+    tagSlugs: ["urgent"],
+    subtasks: [
+      { id: "sub-13", title: "Collect bank statements", completed: false, estimate: "15m" },
+      { id: "sub-14", title: "Export expense sheet", completed: false, estimate: "30m" }
+    ]
+  },
+  {
+    id: "task-8",
+    userId: FALLBACK_USER_ID,
+    listId: "glimpact",
+    sectionId: "review",
+    parentTaskId: null,
+    title: "Send invoice to Glimpact",
+    notes: "Send the final invoice and confirm the payment reference.\n\nKeep the email short and direct.",
+    dueDate: "2026-04-06T12:00:00.000Z",
+    completed: false,
+    completedAt: null,
+    sortOrder: 7,
+    isDeleted: false,
+    createdAt: "2026-04-07T12:00:00.000Z",
+    updatedAt: "2026-04-07T12:00:00.000Z",
+    status: "active",
+    priority: "medium",
+    energyLevel: "LOW",
+    resistance: "HIGH",
+    kanbanColumn: "TODO",
+    matrixQuadrant: "Q1_URGENT_IMPORTANT",
+    tagSlugs: [],
+    subtasks: [
+      { id: "sub-15", title: "Attach invoice PDF", completed: false, estimate: "5m" },
+      { id: "sub-16", title: "Confirm payment reference", completed: false, estimate: "5m" }
+    ]
+  }
+];
 
-function toTaskRecord(input: (typeof taskDetailFixtures)[keyof typeof taskDetailFixtures]): TaskRecord {
-  const urgency = Number.parseInt(input.urgency, 10);
+function toTaskRecord(input: (typeof seedTasks)[number]): TaskRecord {
+  const urgency = Number.parseInt(
+    input.id === "task-7" ? "9" : input.id === "task-8" ? "8" : input.id === "task-1" ? "8" : input.id === "task-3" ? "7" : "4",
+    10
+  );
 
   return {
     id: input.id,
@@ -58,7 +278,7 @@ function toTaskRecord(input: (typeof taskDetailFixtures)[keyof typeof taskDetail
     updatedAt: input.updatedAt,
     status: input.completed ? "completed" : "active",
     priority: input.priority,
-    energyLevel: input.energy,
+    energyLevel: input.energyLevel,
     resistance: input.resistance,
     kanbanColumn:
       input.sectionId === "backlog"
@@ -76,7 +296,7 @@ function toTaskRecord(input: (typeof taskDetailFixtures)[keyof typeof taskDetail
           : urgency >= 4
             ? "Q3_URGENT"
             : "Q4_NEITHER",
-    tagSlugs: input.tags.map(stripHash)
+    tagSlugs: input.tagSlugs
   };
 }
 
@@ -116,7 +336,25 @@ function buildInitialStore(): FallbackStore {
       createList("glimpact", "Glimpact", "#5a90ff", 3),
       createList("platform", "Platform", "#ff5f57", 4)
     ],
-    tasks: Object.values(taskDetailFixtures).map(toTaskRecord),
+    tasks: seedTasks.flatMap((task) => {
+      const parent = toTaskRecord(task);
+      const subtasks = (task.subtasks ?? []).map((subtask, index) => ({
+        ...parent,
+        id: subtask.id,
+        parentTaskId: parent.id,
+        title: subtask.title,
+        completed: subtask.completed,
+        completedAt: subtask.completed ? parent.updatedAt : null,
+        dueDate: null,
+        sortOrder: index + 100,
+        priority: "none" as const,
+        energyLevel: "MEDIUM" as const,
+        resistance: "NONE" as const,
+        tagSlugs: []
+      }));
+
+      return [parent, ...subtasks];
+    }),
     tags: [
       createTag("tag-work", "work", "work", 0),
       createTag("tag-urgent", "urgent", "urgent", 1),
@@ -148,6 +386,7 @@ function buildInitialStore(): FallbackStore {
     taskRollups: [],
     calendarContext: {
       userId: FALLBACK_USER_ID,
+      availabilityState: "fresh",
       lastRefreshedAt: "2026-04-07T13:50:00.000Z",
       expiresAt: "2026-04-07T14:05:00.000Z",
       stale: false,
@@ -219,7 +458,7 @@ function addDays(value: string, days: number) {
 }
 
 function activeTasks() {
-  return store.tasks.filter((task) => task.status === "active" && !task.isDeleted);
+  return store.tasks.filter((task) => task.status === "active" && !task.isDeleted && task.parentTaskId === null);
 }
 
 function applySmartList(task: TaskRecord, smartList: SmartListId, today = FALLBACK_NOW.slice(0, 10)) {
@@ -377,12 +616,145 @@ export async function fetchMockWorkspaceBootstrap(): Promise<DesktopWorkspaceBoo
   };
 }
 
+function getTaskRecord(taskId: string) {
+  const task = store.tasks.find((item) => item.id === taskId && !item.isDeleted);
+  if (!task) {
+    throw new Error(`Task ${taskId} was not found`);
+  }
+
+  return task;
+}
+
+function toTaskDetailSubtask(task: TaskRecord): TaskDetailSubtaskResponse {
+  return {
+    id: task.id,
+    title: task.title,
+    completed: task.completed,
+    completedAt: task.completedAt,
+    dueDate: task.dueDate,
+    sortOrder: task.sortOrder
+  };
+}
+
+function toTaskDetailResponse(taskId: string): TaskDetailResponse {
+  const task = getTaskRecord(taskId);
+  return {
+    id: task.id,
+    userId: task.userId,
+    listId: task.listId,
+    sectionId: task.sectionId,
+    parentTaskId: task.parentTaskId,
+    title: task.title,
+    notes: task.notes,
+    dueDate: task.dueDate,
+    completed: task.completed,
+    completedAt: task.completedAt,
+    sortOrder: task.sortOrder,
+    isDeleted: task.isDeleted,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    priority: task.priority,
+    subtasks: store.tasks
+      .filter((item) => item.parentTaskId === taskId && !item.isDeleted)
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map(toTaskDetailSubtask)
+  };
+}
+
+export async function fetchMockTaskDetail(taskId: string): Promise<TaskDetailResponse> {
+  return toTaskDetailResponse(taskId);
+}
+
+export async function updateMockTaskDetail(taskId: string, input: UpdateTaskDetailInput): Promise<TaskDetailResponse> {
+  store.tasks = store.tasks.map((task) =>
+    task.id === taskId
+      ? {
+          ...task,
+          title: input.title ?? task.title,
+          notes: input.notes === undefined ? task.notes : input.notes,
+          dueDate: input.dueDate === undefined ? task.dueDate : input.dueDate,
+          priority: input.priority ?? task.priority,
+          listId: input.listId ?? task.listId,
+          sectionId: input.sectionId === undefined ? task.sectionId : input.sectionId,
+          updatedAt: nowIso()
+        }
+      : task
+  );
+
+  return toTaskDetailResponse(taskId);
+}
+
+export async function createMockSubtask(input: CreateSubtaskInput): Promise<TaskDetailSubtaskResponse> {
+  const parent = getTaskRecord(input.parentTaskId);
+  const createdAt = nowIso();
+  const task: TaskRecord = {
+    id: `task-${store.tasks.length + 1}`,
+    userId: FALLBACK_USER_ID,
+    listId: input.listId,
+    sectionId: input.sectionId ?? null,
+    parentTaskId: input.parentTaskId,
+    title: input.title,
+    notes: null,
+    dueDate: null,
+    completed: false,
+    completedAt: null,
+    sortOrder: Math.max(0, ...store.tasks.filter((item) => item.parentTaskId === input.parentTaskId).map((item) => item.sortOrder)) + 1,
+    isDeleted: false,
+    createdAt,
+    updatedAt: createdAt,
+    status: "active",
+    priority: "none",
+    energyLevel: parent.energyLevel,
+    resistance: "NONE",
+    kanbanColumn: parent.kanbanColumn,
+    matrixQuadrant: parent.matrixQuadrant,
+    tagSlugs: []
+  };
+
+  store.tasks = [...store.tasks, task];
+  return toTaskDetailSubtask(task);
+}
+
+export async function setMockSubtaskCompleted(taskId: string, completed: boolean): Promise<TaskDetailSubtaskResponse> {
+  store.tasks = store.tasks.map((task) =>
+    task.id === taskId
+      ? {
+          ...task,
+          completed,
+          completedAt: completed ? nowIso() : null,
+          status: completed ? "completed" : "active",
+          updatedAt: nowIso()
+        }
+      : task
+  );
+
+  return toTaskDetailSubtask(getTaskRecord(taskId));
+}
+
+export async function deleteMockTask(taskId: string) {
+  store.tasks = store.tasks.map((task) =>
+    task.id === taskId
+      ? {
+          ...task,
+          status: "trash",
+          isDeleted: true,
+          updatedAt: nowIso()
+        }
+      : task
+  );
+
+  return null;
+}
+
 export async function fetchMockTaskQuery(input: TaskTaxonomyQueryInput): Promise<TaskViewQueryResult> {
   const sortBy = input.sortBy ?? (input.view === "matrix" ? "priority" : "manual");
   const groupBy =
     input.groupBy ?? (input.view === "kanban" ? "section" : input.view === "matrix" ? "quadrant" : "section");
 
   const filtered = store.tasks.filter((task) => {
+    if (task.parentTaskId) {
+      return false;
+    }
     if (input.listId && task.listId !== input.listId) {
       return false;
     }
@@ -720,6 +1092,8 @@ function buildSuggestionsForDuration(task: TaskRecord, durationMinutes: number):
     start: window.start,
     end: new Date(new Date(window.start).getTime() + durationMinutes * 60_000).toISOString(),
     durationMinutes,
+    confidence: store.calendarContext.availabilityState === "fresh" ? "high" : "medium",
+    generatedAt: nowIso(),
     rationale:
       index === 0
         ? `Earliest free slot after current busy blocks for ${task.title}`

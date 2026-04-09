@@ -20,6 +20,14 @@ export class TasksDao {
     );
   }
 
+  listByParentTaskId(userId: string, parentTaskId: string): TaskRecord[] {
+    return sortByOrder(
+      [...this.store.tasks.values()].filter(
+        (task) => task.userId === userId && task.parentTaskId === parentTaskId && !task.isDeleted
+      )
+    );
+  }
+
   getById(userId: string, id: string): TaskRecord {
     const task = this.store.tasks.get(id);
     if (!task || task.userId !== userId || task.isDeleted) {

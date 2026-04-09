@@ -116,6 +116,7 @@ function buildCalendarContextErrorResult(error: unknown): GoogleCalendarContextS
 
   return {
     userId: "user-1",
+    availabilityState: "unknown",
     lastRefreshedAt: null,
     expiresAt: now,
     stale: true,

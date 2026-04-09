@@ -12,6 +12,8 @@ import {
 import type {
   BusyBlock,
   CalendarAccessRole,
+  CalendarAvailabilityState,
+  CalendarConfidenceLevel,
   FreeWindow,
   GoogleCalendarContextSnapshot,
   RawGoogleCalendarSource,
@@ -61,7 +63,21 @@ export class GoogleCalendarContextService {
     const current = this.dao.getSnapshot(userId);
     const now = parsed.data.at ?? new Date().toISOString();
 
-    if (!current || current.stale || this.isExpired(current, now)) {
+    if (!current) {
+      const rawSource = this.dao.getRawSource(userId);
+      if (!rawSource) {
+        return this.buildUnknownSnapshot(userId, now, "Google Calendar source has not been seeded");
+      }
+
+      return this.refreshCalendarContext(userId, { at: now });
+    }
+
+    if (current.stale || this.isExpired(current, now)) {
+      const rawSource = this.dao.getRawSource(userId);
+      if (!rawSource) {
+        return this.markSnapshotStale(current, now);
+      }
+
       return this.refreshCalendarContext(userId, { at: now });
     }
 
@@ -76,13 +92,20 @@ export class GoogleCalendarContextService {
 
     const task = this.tasksDao.getById(userId, parsed.data.taskId);
     const snapshot = this.getCalendarContext(userId, { at: parsed.data.at });
+    if (snapshot.availabilityState === "unknown" && snapshot.busyBlocks.length === 0) {
+      this.dao.storeSuggestions(userId, []);
+      this.eventBus.emitSuggested([]);
+      return [];
+    }
+
     const suggestions = this.buildSuggestions(snapshot, {
       taskId: parsed.data.taskId,
       taskTitle: task.title,
       durationMinutes: parsed.data.durationMinutes,
       windowStart: parsed.data.windowStart,
       windowEnd: parsed.data.windowEnd,
-      limit: parsed.data.limit
+      limit: parsed.data.limit,
+      generatedAt: parsed.data.at ?? new Date().toISOString()
     });
 
     this.dao.storeSuggestions(userId, suggestions);
@@ -133,12 +156,14 @@ export class GoogleCalendarContextService {
     const fetchedAt = rawSource.fetchedAt ?? now;
     const ttl = rawSource.freshnessTtlMinutes ?? DEFAULT_STALE_AFTER_MINUTES;
     const expiresAt = new Date(new Date(fetchedAt).getTime() + ttl * 60_000).toISOString();
+    const availabilityState = partialErrors.length > 0 ? "partial" : "fresh";
 
     return {
       userId,
+      availabilityState,
       lastRefreshedAt: fetchedAt,
       expiresAt,
-      stale: false,
+      stale: availabilityState !== "fresh",
       calendars,
       busyBlocks: mergedBusy,
       freeWindows,
@@ -158,6 +183,7 @@ export class GoogleCalendarContextService {
       windowStart: string;
       windowEnd: string;
       limit: number;
+      generatedAt: string;
     }
   ) {
     const freeWindows = this.deriveFreeWindows(snapshot.busyBlocks, input.windowStart, input.windowEnd);
@@ -170,12 +196,15 @@ export class GoogleCalendarContextService {
 
       const blockingBusyWindows = this.findBlockingBusyWindows(snapshot.busyBlocks, freeWindow);
       const end = new Date(new Date(freeWindow.start).getTime() + input.durationMinutes * 60_000).toISOString();
+      const confidence = this.resolveSuggestionConfidence(snapshot.availabilityState, blockingBusyWindows);
       suggestions.push({
         taskId: input.taskId,
         taskTitle: input.taskTitle,
         start: freeWindow.start,
         end,
         durationMinutes: input.durationMinutes,
+        confidence,
+        generatedAt: input.generatedAt,
         rationale: this.buildRationale(input.taskTitle, freeWindow, blockingBusyWindows),
         blockingBusyWindows
       });
@@ -195,6 +224,37 @@ export class GoogleCalendarContextService {
 
     const blockerSummary = blockers.map((blocker) => `${blocker.calendarSummary} ${blocker.start} to ${blocker.end}`).join("; ");
     return `Best next slot for ${taskTitle} starts at ${freeWindow.start} because it fits between busy blocks: ${blockerSummary}.`;
+  }
+
+  private resolveSuggestionConfidence(
+    availabilityState: CalendarAvailabilityState,
+    blockers: BusyBlock[]
+  ): CalendarConfidenceLevel {
+    if (availabilityState === "unknown") {
+      return "low";
+    }
+
+    if (availabilityState === "stale") {
+      return "low";
+    }
+
+    if (availabilityState === "partial") {
+      return blockers.some((blocker) => blocker.confidence === "low")
+        ? "low"
+        : blockers.some((blocker) => blocker.confidence === "medium")
+          ? "low"
+          : "medium";
+    }
+
+    if (blockers.some((blocker) => blocker.confidence === "low")) {
+      return "low";
+    }
+
+    if (blockers.some((blocker) => blocker.confidence === "medium")) {
+      return "medium";
+    }
+
+    return "high";
   }
 
   private findBlockingBusyWindows(busyBlocks: BusyBlock[], freeWindow: FreeWindow) {
@@ -311,6 +371,38 @@ export class GoogleCalendarContextService {
     const expiresAt = new Date(snapshot.expiresAt).getTime();
     const at = new Date(now).getTime();
     return Number.isNaN(expiresAt) || Number.isNaN(at) || at >= expiresAt;
+  }
+
+  private buildUnknownSnapshot(userId: string, now: string, reason: string): GoogleCalendarContextSnapshot {
+    const snapshot: GoogleCalendarContextSnapshot = {
+      userId,
+      availabilityState: "unknown",
+      lastRefreshedAt: null,
+      expiresAt: null,
+      stale: true,
+      calendars: [],
+      busyBlocks: [],
+      freeWindows: [],
+      partialErrors: [reason],
+      planningWindowStart: now,
+      planningWindowEnd: now,
+      nextSyncToken: null
+    };
+
+    this.dao.storeSnapshot(userId, snapshot);
+    return snapshot;
+  }
+
+  private markSnapshotStale(snapshot: GoogleCalendarContextSnapshot, now: string): GoogleCalendarContextSnapshot {
+    const staleSnapshot: GoogleCalendarContextSnapshot = {
+      ...snapshot,
+      availabilityState: "stale",
+      stale: true,
+      expiresAt: snapshot.expiresAt ?? now
+    };
+
+    this.dao.storeSnapshot(snapshot.userId, staleSnapshot);
+    return staleSnapshot;
   }
 
   private requireRawSource(userId: string) {

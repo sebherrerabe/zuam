@@ -31,6 +31,10 @@ export type TaskRecord = TaskDto & {
   tagSlugs: string[];
 };
 
+export type TaskDetailRecord = TaskRecord & {
+  subtasks: TaskRecord[];
+};
+
 export type TagRecord = {
   id: string;
   userId: string;

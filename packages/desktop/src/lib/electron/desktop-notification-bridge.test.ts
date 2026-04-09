@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   DESKTOP_NOTIFICATION_CHANNELS,
+  createDesktopRuntimeBridge,
+  getDesktopNotificationBridge,
+  getDesktopRuntimeBridge,
+  getDesktopRuntimePlatform,
   getDesktopNotificationState,
   normalizeDesktopNotificationRequest,
   requestDesktopNotificationPermission,
@@ -100,6 +104,33 @@ describe("desktop notification bridge", () => {
     await expect(showDesktopNotification({ title: "Desktop only" })).resolves.toEqual({ delivered: true });
 
     expect(show).toHaveBeenCalledWith({ title: "Desktop only" });
+  });
+
+  it("exposes the runtime bridge and platform independently of browser permissions", () => {
+    const notifications = {
+      getState: vi.fn(async () => ({
+        supported: true,
+        permission: "granted" as const,
+        platform: "win32"
+      })),
+      requestPermission: vi.fn(async () => ({
+        supported: true,
+        permission: "granted" as const,
+        platform: "win32"
+      })),
+      show: vi.fn(async () => ({ delivered: true }))
+    };
+
+    const runtime = createDesktopRuntimeBridge({
+      platform: "win32",
+      notifications
+    });
+
+    window.zuamDesktop = runtime;
+
+    expect(getDesktopRuntimeBridge()).toBe(runtime);
+    expect(getDesktopNotificationBridge()).toBe(notifications);
+    expect(getDesktopRuntimePlatform()).toBe("win32");
   });
 
   it("exposes the ipc channel constant for the preload/main bridge", () => {

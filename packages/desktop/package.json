@@ -10,14 +10,17 @@
     "build": "pnpm --filter @zuam/shared build && vite build && tsc -p tsconfig.electron.json",
     "package:ci": "node ../../tooling/release/package-desktop-release.cjs",
     "typecheck": "pnpm --filter @zuam/shared build && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.electron.json --noEmit",
-    "lint": "eslint src electron vite.config.ts vitest.config.ts --ext .ts,.tsx",
-    "test": "pnpm --filter @zuam/shared build && vitest run"
+    "lint": "eslint src electron playwright vite.config.ts vitest.config.ts playwright.config.ts playwright.vite.config.ts --ext .ts,.tsx",
+    "test": "pnpm --filter @zuam/shared build && vitest run",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.96.2",
     "@tanstack/react-router": "^1.168.10",
     "@tanstack/react-start": "^1.167.16",
     "@zuam/shared": "workspace:*",
+    "@playwright/test": "^1.55.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "zod": "^4.3.6",

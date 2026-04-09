@@ -146,6 +146,11 @@ export function DesktopShell() {
     };
   })();
 
+  const selectedTaskSummary =
+    workspace.taskQuery.data?.items.find((task) => task.id === selectedTaskId) ??
+    workspace.focusQueueQuery.data?.task ??
+    null;
+
   const primarySuggestion = workspace.calendarSuggestionsQuery.data?.suggestions[0] ?? null;
   const calendarHint = primarySuggestion
     ? {
@@ -154,8 +159,8 @@ export function DesktopShell() {
       }
     : workspace.calendarContextQuery.data
       ? {
-          title: workspace.calendarContextQuery.data.stale ? "Calendar context is stale" : "Calendar context is available",
-          body: `Busy blocks: ${workspace.calendarContextQuery.data.busyBlocks.length}. Free windows: ${workspace.calendarContextQuery.data.freeWindows.length}.`
+          title: resolveCalendarStateTitle(workspace.calendarContextQuery.data.availabilityState),
+          body: resolveCalendarStateBody(workspace.calendarContextQuery.data)
         }
       : null;
 
@@ -430,6 +435,7 @@ export function DesktopShell() {
         {selectedTaskId ? (
           <TaskDetailPanel
             taskId={selectedTaskId}
+            taskSummary={selectedTaskSummary}
             focusCallToAction={focusCallToAction}
             calendarHint={calendarHint}
           />
@@ -715,4 +721,39 @@ function formatEstimateMinutes(totalMinutes: number) {
     return `${hours}h`;
   }
   return `${minutes}m`;
+}
+
+function resolveCalendarStateTitle(availabilityState: "fresh" | "stale" | "partial" | "unknown") {
+  switch (availabilityState) {
+    case "stale":
+      return "Calendar context is stale";
+    case "partial":
+      return "Calendar context is partial";
+    case "unknown":
+      return "Calendar context is unavailable";
+    case "fresh":
+    default:
+      return "Calendar context is available";
+  }
+}
+
+function resolveCalendarStateBody(context: {
+  availabilityState: "fresh" | "stale" | "partial" | "unknown";
+  busyBlocks: Array<unknown>;
+  freeWindows: Array<unknown>;
+  partialErrors: string[];
+}) {
+  if (context.availabilityState === "unknown") {
+    return "No calendar snapshot is available yet. The shell is falling back to task-only prioritization.";
+  }
+
+  if (context.availabilityState === "partial") {
+    return `Busy blocks: ${context.busyBlocks.length}. Free windows: ${context.freeWindows.length}. Partial errors: ${context.partialErrors.length}.`;
+  }
+
+  if (context.availabilityState === "stale") {
+    return `Busy blocks: ${context.busyBlocks.length}. Free windows: ${context.freeWindows.length}. Refresh before committing a new focus block.`;
+  }
+
+  return `Busy blocks: ${context.busyBlocks.length}. Free windows: ${context.freeWindows.length}.`;
 }

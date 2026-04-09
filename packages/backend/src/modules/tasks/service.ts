@@ -11,7 +11,7 @@ import {
   setTaskStatusInputSchema,
   updateTaskInputSchema
 } from "./dto";
-import type { TaskLifecycleStatus, TaskRecord } from "./types";
+import type { TaskDetailRecord, TaskLifecycleStatus, TaskRecord } from "./types";
 
 @Injectable()
 export class TasksService {
@@ -25,6 +25,14 @@ export class TasksService {
     return this.tasksDao
       .list(userId, listId)
       .filter((task) => !task.isDeleted && (!listId || task.listId === listId));
+  }
+
+  getTaskDetail(userId: string, id: string): TaskDetailRecord {
+    const task = this.tasksDao.getById(userId, id);
+    return {
+      ...task,
+      subtasks: this.tasksDao.listByParentTaskId(userId, id)
+    };
   }
 
   createTask(userId: string, input: unknown) {

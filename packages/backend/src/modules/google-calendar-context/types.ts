@@ -1,8 +1,10 @@
 export const calendarConfidenceLevels = ["low", "medium", "high"] as const;
 export const calendarAccessRoles = ["freeBusyReader", "reader", "writer", "owner"] as const;
+export const calendarAvailabilityStates = ["fresh", "stale", "partial", "unknown"] as const;
 
 export type CalendarConfidenceLevel = (typeof calendarConfidenceLevels)[number];
 export type CalendarAccessRole = (typeof calendarAccessRoles)[number];
+export type CalendarAvailabilityState = (typeof calendarAvailabilityStates)[number];
 
 export type RawGoogleCalendarListItem = {
   id: string;
@@ -54,12 +56,15 @@ export type ScheduleSuggestion = {
   start: string;
   end: string;
   durationMinutes: number;
+  confidence: CalendarConfidenceLevel;
+  generatedAt: string;
   rationale: string;
   blockingBusyWindows: BusyBlock[];
 };
 
 export type GoogleCalendarContextSnapshot = {
   userId: string;
+  availabilityState: CalendarAvailabilityState;
   lastRefreshedAt: string | null;
   expiresAt: string | null;
   stale: boolean;

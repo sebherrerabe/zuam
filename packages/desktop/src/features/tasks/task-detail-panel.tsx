@@ -1,20 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { TaskRecord } from "@zuam/shared";
 
+import {
+  createSubtask,
+  deleteTask,
+  fetchTaskDetail,
+  setSubtaskCompleted,
+  updateTaskDetail
+} from "../../lib/api/desktop-api";
 import { useShellStore } from "../../lib/state/shell-store";
 import {
-  commitTaskDetailDraft,
-  readTaskDetail,
+  buildTaskDetailPatch,
+  cloneTaskDetailModel,
+  formatDueLabel,
+  toTaskDetailModel,
+  type TaskDetailModel,
+  type TaskDetailSaveState,
+  type TaskPriority
+} from "./task-detail-data";
+import {
   readTaskDetailDraft,
   readTaskDetailSaveState,
   writeTaskDetailDraft,
   writeTaskDetailSaveState
 } from "./task-detail-cache";
-import type { TaskDetailModel, TaskDetailSaveState, TaskPriority } from "./task-detail-data";
 
 type TaskDetailPanelProps = {
   taskId?: string | null;
+  taskSummary?: TaskRecord | null;
   focusCallToAction?: {
     label: string;
     helper: string;
@@ -41,28 +56,13 @@ const priorityOptions: Array<{ value: TaskPriority; label: string }> = [
   { value: "high", label: "High" }
 ];
 
-let nextSubtaskId = 10_000;
-
-function createSubtaskId() {
-  nextSubtaskId += 1;
-  return `sub-${nextSubtaskId}`;
-}
-
-export function TaskDetailPanel({ taskId, focusCallToAction, calendarHint }: TaskDetailPanelProps) {
+export function TaskDetailPanel({ taskId, taskSummary, focusCallToAction, calendarHint }: TaskDetailPanelProps) {
   const selectedTaskId = useShellStore((state) => state.selectedTaskId);
   const resolvedTaskId = taskId ?? selectedTaskId;
-  const activeTaskId = resolvedTaskId ?? "task-1";
 
   const taskQuery = useQuery({
-    queryKey: ["task-detail", activeTaskId],
-    queryFn: async () => {
-      if (!resolvedTaskId) {
-        return null;
-      }
-
-      return readTaskDetail(resolvedTaskId);
-    },
-    initialData: readTaskDetail(activeTaskId),
+    queryKey: ["task-detail", resolvedTaskId],
+    queryFn: () => fetchTaskDetail(resolvedTaskId ?? ""),
     enabled: Boolean(resolvedTaskId),
     staleTime: Number.POSITIVE_INFINITY
   });
@@ -75,7 +75,8 @@ export function TaskDetailPanel({ taskId, focusCallToAction, calendarHint }: Tas
     <TaskDetailPanelContent
       key={resolvedTaskId}
       taskId={resolvedTaskId}
-      initialTask={taskQuery.data}
+      initialTask={toTaskDetailModel(taskQuery.data, taskSummary)}
+      taskSummary={taskSummary}
       focusCallToAction={focusCallToAction}
       calendarHint={calendarHint}
     />
@@ -85,37 +86,63 @@ export function TaskDetailPanel({ taskId, focusCallToAction, calendarHint }: Tas
 function TaskDetailPanelContent({
   taskId,
   initialTask,
+  taskSummary,
   focusCallToAction,
   calendarHint
 }: {
   taskId: string;
   initialTask: TaskDetailModel;
+  taskSummary?: TaskRecord | null;
   focusCallToAction?: TaskDetailPanelProps["focusCallToAction"];
   calendarHint?: TaskDetailPanelProps["calendarHint"];
 }) {
   const queryClient = useQueryClient();
-  const [draft, setDraft] = useState<TaskDetailModel>(() => readTaskDetailDraft(taskId));
+  const [draft, setDraft] = useState<TaskDetailModel>(() => readTaskDetailDraft(taskId) ?? cloneTaskDetailModel(initialTask));
   const [saveState, setSaveState] = useState<TaskDetailSaveState>(() => readTaskDetailSaveState(taskId));
   const [titleError, setTitleError] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const autosaveTimerRef = useRef<number | null>(null);
-  const commitTimerRef = useRef<number | null>(null);
+  const committedTaskRef = useRef<TaskDetailModel>(cloneTaskDetailModel(initialTask));
+  const pendingSubtaskCounterRef = useRef(0);
 
   useEffect(() => {
     return () => {
-      if (autosaveTimerRef.current) {
-        window.clearTimeout(autosaveTimerRef.current);
-      }
-
-      if (commitTimerRef.current) {
-        window.clearTimeout(commitTimerRef.current);
+      const autosaveTimer = autosaveTimerRef.current;
+      if (autosaveTimer) {
+        window.clearTimeout(autosaveTimer);
       }
     };
   }, []);
 
-  const currentDraft = draft ?? initialTask;
-  const completedCount = useMemo(() => currentDraft.subtasks.filter((subtask) => subtask.completed).length, [currentDraft]);
+  const saveMutation = useMutation({
+    mutationFn: (nextDraft: TaskDetailModel) =>
+      updateTaskDetail(taskId, buildTaskDetailPatch(nextDraft, committedTaskRef.current)),
+    onSuccess: (response) => {
+      const nextCommitted = toTaskDetailModel(response, taskSummary);
+      commitDraft(nextCommitted, response);
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["desktop-task-query"] }),
+        queryClient.invalidateQueries({ queryKey: ["desktop-workspace-bootstrap"] }),
+        queryClient.invalidateQueries({ queryKey: ["desktop-focus-queue"] }),
+        queryClient.invalidateQueries({ queryKey: ["desktop-calendar-suggestions"] })
+      ]);
+      setTitleError(null);
+      setSaveState("saved");
+      writeTaskDetailSaveState(taskId, "saved");
+    },
+    onError: () => {
+      revertDraft();
+      setSaveState("error");
+      writeTaskDetailSaveState(taskId, "error");
+    }
+  });
+
+  const currentDraft = draft;
+  const completedCount = useMemo(
+    () => currentDraft.subtasks.filter((subtask) => subtask.completed).length,
+    [currentDraft]
+  );
   const totalCount = currentDraft.subtasks.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const noteSections = useMemo(() => {
@@ -132,9 +159,27 @@ function TaskDetailPanelContent({
   const signalCards = [
     { id: "energy", label: "ENERGY", icon: "\u26A1", value: currentDraft.energy, tone: "energy" },
     { id: "resistance", label: "RESIST.", icon: "\u{1F630}", value: currentDraft.resistance, tone: "neutral" },
-    { id: "nudge", label: "NUDGE", icon: "\u{1F514}", value: currentDraft.nudge.split(/[·Â]/)[0]?.trim() ?? currentDraft.nudge, tone: "nudge" },
+    { id: "nudge", label: "NUDGE", icon: "\u{1F514}", value: currentDraft.nudge.split("·")[0]?.trim() ?? currentDraft.nudge, tone: "nudge" },
     { id: "urgency", label: "URGENCY", icon: "\u{1F525}", value: currentDraft.urgency.replace(/\s+/g, ""), tone: "danger" }
   ] as const;
+
+  function commitDraft(nextDraft: TaskDetailModel, queryValue?: unknown) {
+    const cloned = cloneTaskDetailModel(nextDraft);
+    committedTaskRef.current = cloned;
+    setDraft(cloned);
+    writeTaskDetailDraft(taskId, cloned);
+    if (queryValue !== undefined) {
+      queryClient.setQueryData(["task-detail", taskId], queryValue);
+    } else {
+      void queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
+    }
+  }
+
+  function revertDraft() {
+    const fallback = cloneTaskDetailModel(committedTaskRef.current);
+    setDraft(fallback);
+    writeTaskDetailDraft(taskId, fallback);
+  }
 
   function updateDraft(nextDraft: TaskDetailModel) {
     setDraft(nextDraft);
@@ -142,78 +187,125 @@ function TaskDetailPanelContent({
     setSaveState("dirty");
     writeTaskDetailSaveState(taskId, "dirty");
 
-    if (autosaveTimerRef.current) {
-      window.clearTimeout(autosaveTimerRef.current);
-    }
-
-    if (commitTimerRef.current) {
-      window.clearTimeout(commitTimerRef.current);
+    const autosaveTimer = autosaveTimerRef.current;
+    if (autosaveTimer) {
+      window.clearTimeout(autosaveTimer);
     }
 
     autosaveTimerRef.current = window.setTimeout(() => {
-      setSaveState("saving");
-      writeTaskDetailSaveState(taskId, "saving");
+      if (!nextDraft.title.trim()) {
+        setTitleError("Title is required.");
+        setSaveState("error");
+        writeTaskDetailSaveState(taskId, "error");
+        return;
+      }
 
-      commitTimerRef.current = window.setTimeout(() => {
-        if (!nextDraft.title.trim()) {
-          setTitleError("Title is required.");
-          setSaveState("error");
-          writeTaskDetailSaveState(taskId, "error");
-          return;
-        }
-
-        const committed = commitTaskDetailDraft(taskId, nextDraft);
-        queryClient.setQueryData(["task-detail", taskId], committed);
-        setTitleError(null);
+      const patch = buildTaskDetailPatch(nextDraft, committedTaskRef.current);
+      if (Object.keys(patch).length === 0) {
         setSaveState("saved");
         writeTaskDetailSaveState(taskId, "saved");
-      }, 120);
+        return;
+      }
+
+      setSaveState("saving");
+      writeTaskDetailSaveState(taskId, "saving");
+      saveMutation.mutate(nextDraft);
     }, 140);
   }
 
-  function updateField<K extends keyof TaskDetailModel>(field: K, value: TaskDetailModel[K]) {
-    updateDraft({
-      ...currentDraft,
-      [field]: value
-    });
-  }
-
-  function handleSubtaskToggle(subtaskId: string) {
-    updateDraft({
+  async function handleSubtaskToggle(subtaskId: string) {
+    const nextDraft = {
       ...currentDraft,
       subtasks: currentDraft.subtasks.map((subtask) =>
         subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask
       )
-    });
+    };
+    setDraft(nextDraft);
+    writeTaskDetailDraft(taskId, nextDraft);
+    setSaveState("saving");
+    writeTaskDetailSaveState(taskId, "saving");
+
+    try {
+      const toggled = nextDraft.subtasks.find((subtask) => subtask.id === subtaskId);
+      await setSubtaskCompleted(subtaskId, Boolean(toggled?.completed));
+      committedTaskRef.current = cloneTaskDetailModel(nextDraft);
+      setSaveState("saved");
+      writeTaskDetailSaveState(taskId, "saved");
+      void queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
+      void queryClient.invalidateQueries({ queryKey: ["desktop-task-query"] });
+    } catch {
+      revertDraft();
+      setSaveState("error");
+      writeTaskDetailSaveState(taskId, "error");
+    }
   }
 
-  function handleSubtaskDelete(subtaskId: string) {
-    updateDraft({
+  async function handleSubtaskDelete(subtaskId: string) {
+    const nextDraft = {
       ...currentDraft,
       subtasks: currentDraft.subtasks.filter((subtask) => subtask.id !== subtaskId)
-    });
+    };
+    setDraft(nextDraft);
+    writeTaskDetailDraft(taskId, nextDraft);
+    setSaveState("saving");
+    writeTaskDetailSaveState(taskId, "saving");
+
+    try {
+      await deleteTask(subtaskId);
+      committedTaskRef.current = cloneTaskDetailModel(nextDraft);
+      setSaveState("saved");
+      writeTaskDetailSaveState(taskId, "saved");
+      void queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
+      void queryClient.invalidateQueries({ queryKey: ["desktop-task-query"] });
+    } catch {
+      revertDraft();
+      setSaveState("error");
+      writeTaskDetailSaveState(taskId, "error");
+    }
   }
 
-  function handleSubtaskAdd() {
-    const nextTitle = newSubtaskTitle.trim();
-    if (!nextTitle) {
+  async function handleSubtaskAdd() {
+    const title = newSubtaskTitle.trim();
+    if (!title) {
       return;
     }
 
-    updateDraft({
+    const nextDraft = {
       ...currentDraft,
       subtasks: [
         ...currentDraft.subtasks,
         {
-          id: createSubtaskId(),
-          title: nextTitle,
+          id: `pending-${pendingSubtaskCounterRef.current++}`,
+          title,
           completed: false,
           estimate: "15m"
         }
       ]
-    });
-    setNewSubtaskTitle("");
+    };
+    setDraft(nextDraft);
+    writeTaskDetailDraft(taskId, nextDraft);
     setComposerOpen(false);
+    setNewSubtaskTitle("");
+    setSaveState("saving");
+    writeTaskDetailSaveState(taskId, "saving");
+
+    try {
+      await createSubtask({
+        listId: currentDraft.listId,
+        sectionId: currentDraft.sectionId,
+        parentTaskId: taskId,
+        title
+      });
+      committedTaskRef.current = cloneTaskDetailModel(nextDraft);
+      setSaveState("saved");
+      writeTaskDetailSaveState(taskId, "saved");
+      void queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
+      void queryClient.invalidateQueries({ queryKey: ["desktop-task-query"] });
+    } catch {
+      revertDraft();
+      setSaveState("error");
+      writeTaskDetailSaveState(taskId, "error");
+    }
   }
 
   return (
@@ -246,7 +338,7 @@ function TaskDetailPanelContent({
             aria-label="Task title"
             value={currentDraft.title}
             onChange={(event) => {
-              updateField("title", event.target.value);
+              updateDraft({ ...currentDraft, title: event.target.value });
               if (titleError) {
                 setTitleError(null);
               }
@@ -270,7 +362,7 @@ function TaskDetailPanelContent({
       <section className="task-detail-progress">
         <div className="task-detail-progress-header">
           <p>Subtasks</p>
-          <p>{`${completedCount} / ${totalCount} \u00B7 ${progressPercent}%`}</p>
+          <p>{`${completedCount} / ${totalCount} · ${progressPercent}%`}</p>
         </div>
         <div className="task-detail-progress-track" aria-hidden="true">
           <div className="task-detail-progress-fill" style={{ width: `${progressPercent}%` }} />
@@ -293,7 +385,7 @@ function TaskDetailPanelContent({
           <textarea
             aria-label="Notes"
             value={currentDraft.notes ?? ""}
-            onChange={(event) => updateField("notes", event.target.value)}
+            onChange={(event) => updateDraft({ ...currentDraft, notes: event.target.value })}
             rows={4}
           />
         </label>
@@ -320,7 +412,7 @@ function TaskDetailPanelContent({
                 <input
                   type="checkbox"
                   checked={subtask.completed}
-                  onChange={() => handleSubtaskToggle(subtask.id)}
+                  onChange={() => void handleSubtaskToggle(subtask.id)}
                 />
                 <span className={subtask.completed ? "is-complete" : undefined}>{subtask.title}</span>
               </label>
@@ -329,7 +421,7 @@ function TaskDetailPanelContent({
                 type="button"
                 className="text-link danger"
                 aria-label={`Delete ${subtask.title}`}
-                onClick={() => handleSubtaskDelete(subtask.id)}
+                onClick={() => void handleSubtaskDelete(subtask.id)}
               >
                 Delete
               </button>
@@ -345,7 +437,7 @@ function TaskDetailPanelContent({
               value={newSubtaskTitle}
               onChange={(event) => setNewSubtaskTitle(event.target.value)}
             />
-            <button type="button" className="primary-button" onClick={handleSubtaskAdd}>
+            <button type="button" className="primary-button" onClick={() => void handleSubtaskAdd()}>
               Add subtask
             </button>
           </div>
@@ -382,7 +474,11 @@ function TaskDetailPanelContent({
       <section className="task-detail-edit-grid">
         <label>
           <span>List</span>
-          <select aria-label="List" value={currentDraft.listId} onChange={(event) => updateField("listId", event.target.value)}>
+          <select
+            aria-label="List"
+            value={currentDraft.listId}
+            onChange={(event) => updateDraft({ ...currentDraft, listId: event.target.value })}
+          >
             <option value="platform">Platform</option>
             <option value="inbox">Inbox</option>
             <option value="today">Today</option>
@@ -394,8 +490,9 @@ function TaskDetailPanelContent({
           <select
             aria-label="Section"
             value={currentDraft.sectionId ?? ""}
-            onChange={(event) => updateField("sectionId", event.target.value)}
+            onChange={(event) => updateDraft({ ...currentDraft, sectionId: event.target.value || null })}
           >
+            <option value="">Unsectioned</option>
             <option value="launch">Launch</option>
             <option value="review">Review</option>
             <option value="planning">Planning</option>
@@ -408,7 +505,12 @@ function TaskDetailPanelContent({
             aria-label="Due date"
             type="date"
             value={currentDraft.dueDate ?? ""}
-            onChange={(event) => updateField("dueDate", event.target.value)}
+            onChange={(event) =>
+              updateDraft({
+                ...currentDraft,
+                dueDate: event.target.value || null,
+                dueLabel: formatDueLabel(event.target.value || null)
+              })}
           />
         </label>
         <label>
@@ -416,7 +518,7 @@ function TaskDetailPanelContent({
           <select
             aria-label="Priority"
             value={currentDraft.priority}
-            onChange={(event) => updateField("priority", event.target.value as TaskPriority)}
+            onChange={(event) => updateDraft({ ...currentDraft, priority: event.target.value as TaskPriority })}
           >
             {priorityOptions.map((option) => (
               <option key={option.value} value={option.value}>

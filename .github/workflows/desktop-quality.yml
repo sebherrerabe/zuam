@@ -1,0 +1,61 @@
+name: desktop-quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+          cache: pnpm
+
+      - name: enable-corepack
+        run: corepack enable
+
+      - name: install
+        run: pnpm install --frozen-lockfile
+
+      - name: install-playwright
+        run: pnpm --filter @zuam/desktop exec playwright install --with-deps chromium
+
+      - name: lint
+        run: pnpm lint
+
+      - name: typecheck
+        run: pnpm typecheck
+
+      - name: backend-tests
+        run: pnpm --filter @zuam/backend test
+
+      - name: desktop-tests
+        run: pnpm --filter @zuam/desktop test
+
+      - name: desktop-visual-tests
+        run: pnpm --filter @zuam/desktop test:visual
+
+      - name: summary
+        if: always()
+        run: |
+          {
+            echo "workflow: ${GITHUB_WORKFLOW}"
+            echo "scope: desktop-quality"
+            echo "status: ${JOB_STATUS}"
+            echo "visual goldens: update locally only after manual Figma review of nodes 155:3 and 155:233"
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          JOB_STATUS: ${{ job.status }}

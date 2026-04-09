@@ -113,7 +113,10 @@ describe("google-calendar-context backend flows", () => {
     const snapshot = harness.calendarController.get("user-a");
     expect(snapshot).toMatchObject({
       userId: "user-a",
+      availabilityState: "fresh",
       stale: false,
+      lastRefreshedAt: "2026-04-07T09:05:00.000Z",
+      expiresAt: "2026-04-07T09:20:00.000Z",
       calendars: expect.arrayContaining([expect.objectContaining({ id: "work", summary: "Work" })]),
       busyBlocks: expect.arrayContaining([expect.objectContaining({ calendarId: "work", confidence: "medium" })]),
       freeWindows: expect.arrayContaining([
@@ -153,6 +156,7 @@ describe("google-calendar-context backend flows", () => {
 
     expect(snapshot).toEqual(
       expect.objectContaining({
+        availabilityState: "fresh",
         stale: false,
         lastRefreshedAt: "2026-04-07T09:00:00.000Z"
       })
@@ -171,7 +175,8 @@ describe("google-calendar-context backend flows", () => {
       durationMinutes: 75,
       windowStart: "2026-04-07T09:00:00.000Z",
       windowEnd: "2026-04-07T17:00:00.000Z",
-      limit: 3
+      limit: 3,
+      at: "2026-04-07T09:05:00.000Z"
     });
 
     expect(suggestions).toHaveLength(2);
@@ -181,6 +186,8 @@ describe("google-calendar-context backend flows", () => {
       start: "2026-04-07T11:00:00.000Z",
       end: "2026-04-07T12:15:00.000Z",
       durationMinutes: 75,
+      confidence: "medium",
+      generatedAt: "2026-04-07T09:05:00.000Z",
       blockingBusyWindows: expect.arrayContaining([
         expect.objectContaining({
           start: "2026-04-07T10:00:00.000Z",
@@ -210,8 +217,27 @@ describe("google-calendar-context backend flows", () => {
     harness.calendarService.seedRawSource("user-a", googleCalendarPartialErrorSeedSourceDocFixture);
 
     const snapshot = harness.calendarController.get("user-a");
+    expect(snapshot.availabilityState).toBe("partial");
     expect(snapshot.partialErrors).toEqual(["team: internalError"]);
     expect(snapshot.busyBlocks).toHaveLength(1);
     expect(snapshot.freeWindows).not.toHaveLength(0);
+  });
+
+  it("BE-UNIT-GCAL-007: missing calendar data degrades to an explicit unknown availability state", () => {
+    const harness = buildHarness();
+
+    const snapshot = harness.calendarController.get("user-a");
+
+    expect(snapshot).toEqual(
+      expect.objectContaining({
+        availabilityState: "unknown",
+        stale: true,
+        lastRefreshedAt: null,
+        expiresAt: null,
+        partialErrors: ["Google Calendar source has not been seeded"],
+        busyBlocks: [],
+        freeWindows: []
+      })
+    );
   });
 });
