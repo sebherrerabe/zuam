@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   desktop-quality:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 45
 
     steps:
@@ -30,7 +30,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: install-playwright
-        run: pnpm --filter @zuam/desktop exec playwright install --with-deps chromium
+        run: pnpm --filter @zuam/desktop exec playwright install chromium
 
       - name: lint
         run: pnpm lint
