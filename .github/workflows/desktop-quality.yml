@@ -48,6 +48,15 @@ jobs:
       - name: desktop-visual-tests
         run: pnpm --filter @zuam/desktop test:visual
 
+      - name: upload-desktop-visual-artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-visual-artifacts
+          path: |
+            packages/desktop/test-results
+            packages/desktop/playwright/__screenshots__
+
       - name: summary
         if: always()
         run: |
@@ -55,7 +64,7 @@ jobs:
             echo "workflow: ${GITHUB_WORKFLOW}"
             echo "scope: desktop-quality"
             echo "status: ${JOB_STATUS}"
-            echo "visual goldens: update locally only after manual Figma review of nodes 155:3 and 155:233"
+            echo "visual goldens: update locally only after manual Figma review of nodes 155:3, 155:233, 271:2, 155:823, 271:119, and 155:946"
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           JOB_STATUS: ${{ job.status }}

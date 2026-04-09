@@ -1,7 +1,7 @@
 ---
 id: analytics-insights
 title: Analytics Insights Work Packet
-status: draft
+status: ready
 phase: 3
 owners:
   - Product Manager
@@ -10,7 +10,7 @@ depends_on:
   - focus-sessions
 parallel_group: metrics
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-06
+last_updated: 2026-04-09
 ---
 
 # Work Packet
@@ -35,12 +35,14 @@ Document the minimum explainable motivation analytics that can ship without beco
 
 ## Blockers / Dependencies
 - Requires completion and focus-session data to exist as stable inputs.
+- Depends on the Phase 2 closure rule that analytics consumes current task-completion, focus-session completion, and calendar-context contracts without redefining them.
 
 ## Parallel-Safe Boundaries
 - Can be planned in parallel with progression rewards once completion and focus-session semantics are fixed and the analytics output shapes are frozen.
 
 ## Completion Signals
 - A user can inspect a streak or summary and understand how the displayed metric was produced without seeing game-specific progression state.
+- The desktop analytics surface is visually aligned to Figma node `271:2` and remains read-only end to end.
 
 ## Non-Goals
 - No leaderboard or social network features.

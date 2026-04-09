@@ -14,7 +14,7 @@ parallel_group: foundation
 source_of_truth:
   - AGENTS.md
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-08
+last_updated: 2026-04-09
 ---
 
 # Delivery, Testing, And Release Baseline
@@ -79,7 +79,7 @@ Use GitHub Actions with separate concerns:
 ## Phase Preview
 - Phase 1: local dev bootstrap, CI skeleton, backend tests, desktop tests, packaging path
 - Phase 2: broaden e2e coverage for richer task views, focus sessions, and mobile shell
-- Phase 3: add regression coverage for progression, analytics, and share-card flows
+- Phase 3: add regression coverage for analytics `271:2`, progression profile `155:823`, unlock state `271:119`, detail reward cards hosted in `155:233`, and share-card flow `155:946`
 - Phase 4: add AI runtime/provider tests, memory-governance tests, and permission-policy coverage
 
 ## Non-Goals

@@ -1,7 +1,15 @@
 import type {
+  AnalyticsHeatmapResponse as SharedAnalyticsHeatmapResponse,
+  AnalyticsSummary as SharedAnalyticsSummary,
+  AnalyticsWindow as SharedAnalyticsWindow,
   ListDto,
+  MilestonePreview as SharedMilestonePreview,
+  ProgressionProfile as SharedProgressionProfile,
+  RewardEvent as SharedRewardEvent,
+  ShareProgressCardPayload as SharedShareProgressCardPayload,
   SmartListId,
   TaskGroupBy,
+  Unlockable as SharedUnlockable,
   TaskRecord,
   TaskSortBy
 } from "@zuam/shared";
@@ -225,6 +233,29 @@ export type GoogleCalendarContextSnapshot = {
 
 export type CalendarSuggestionsResponse = {
   suggestions: ScheduleSuggestion[];
+};
+
+export type AnalyticsWindow = SharedAnalyticsWindow;
+export type AnalyticsSummaryResponse = SharedAnalyticsSummary;
+export type AnalyticsHeatmapResponse = SharedAnalyticsHeatmapResponse;
+export type Unlockable = SharedUnlockable;
+export type RewardEvent = SharedRewardEvent;
+export type MilestonePreview = SharedMilestonePreview;
+export type ProgressionProfileResponse = {
+  profile: SharedProgressionProfile;
+  milestonePreview: SharedMilestonePreview;
+  unlockables: SharedUnlockable[];
+};
+export type ShareProgressCardPayload = SharedShareProgressCardPayload;
+export type EquipProgressionItemInput = {
+  unlockableId: string;
+};
+
+export type RewardPreview = {
+  completionXp: number;
+  focusSessionXp: number;
+  focusShards: number;
+  reasons: string[];
 };
 
 export type TaskMoveInput = {

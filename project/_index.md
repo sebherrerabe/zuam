@@ -17,7 +17,7 @@ parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
   - AGENTS.md
-last_updated: 2026-04-08
+last_updated: 2026-04-09
 ---
 
 # Project Planning Index
@@ -52,8 +52,8 @@ last_updated: 2026-04-08
 | Phase | Status | Goal | Doc |
 |---|---|---|---|
 | Phase 1 | ready | desktop-centered MVP foundation | [phase-1-foundation.md](./phases/phase-1-foundation.md) |
-| Phase 2 | draft | richer task experience and first mobile shell | [phase-2-core-experience.md](./phases/phase-2-core-experience.md) |
-| Phase 3 | draft | intelligence, insights, progression, and polish | [phase-3-polish-intelligence.md](./phases/phase-3-polish-intelligence.md) |
+| Phase 2 | draft | richer desktop task experience is complete; mobile shell remains deferred | [phase-2-core-experience.md](./phases/phase-2-core-experience.md) |
+| Phase 3 | ready | intelligence, insights, progression, and polish | [phase-3-polish-intelligence.md](./phases/phase-3-polish-intelligence.md) |
 | Phase 4 | draft | advanced AI assistance, public sharing, and future modules | [phase-4-advanced.md](./phases/phase-4-advanced.md) |
 
 ## Module Registry
@@ -72,8 +72,8 @@ last_updated: 2026-04-08
 | google-calendar-context | Phase 2 | ready | Backend Engineer | [module](./modules/google-calendar-context/README.md) |
 | mobile-shell-core | Phase 2 | draft | Frontend Engineer | [module](./modules/mobile-shell-core/README.md) |
 | tags-filters-smart-lists | Phase 2 | ready | Product Manager | [module](./modules/tags-filters-smart-lists/README.md) |
-| analytics-insights | Phase 3 | draft | Product Manager | [module](./modules/analytics-insights/README.md) |
-| player-progression-rewards | Phase 3 | draft | Product Manager | [module](./modules/player-progression-rewards/README.md) |
+| analytics-insights | Phase 3 | ready | Product Manager | [module](./modules/analytics-insights/README.md) |
+| player-progression-rewards | Phase 3 | ready | Product Manager | [module](./modules/player-progression-rewards/README.md) |
 | ai-companion-orchestrator | Phase 4 | draft | Product Manager | [module](./modules/ai-companion-orchestrator/README.md) |
 | ai-companion-runtime-governance | Phase 4 | draft | Backend Engineer | [module](./modules/ai-companion-runtime-governance/README.md) |
 | public-progression-profiles | Phase 4 | draft | Product Manager | [module](./modules/public-progression-profiles/README.md) |
@@ -93,6 +93,11 @@ last_updated: 2026-04-08
 - `contracts.md` defines public interfaces and invariants.
 - `tests.backend.md` and `tests.frontend.md` define the acceptance language.
 - `work-packet.md` defines the first tests to write and the safe implementation boundary.
+
+## Phase 2 Closure Note
+- Non-mobile Phase 2 is complete in code: task views, focus sessions, Google Calendar context, task-detail persistence, Electron runtime bridging, and desktop visual gates are all live.
+- `mobile-shell-core` remains intentionally deferred while mobile mockups and contracts harden.
+- Phase 3 consumes the current task completion, focus completion, and calendar-context contracts as-is and must not redefine those Phase 2 semantics.
 
 ## LLM Usage Pattern
 - Read the phase doc for sequence.

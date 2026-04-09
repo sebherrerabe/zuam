@@ -2,12 +2,18 @@ import type { ListDto } from "@zuam/shared";
 
 import type { SyncStatusSnapshot } from "../../features/system";
 import {
+  equipMockProgressionItem,
+  fetchMockAnalyticsHeatmap,
+  fetchMockAnalyticsSummary,
   createMockSubtask,
   deleteMockTask,
   fetchMockCalendarContext,
   fetchMockCalendarSuggestions,
   fetchMockFocusQueueRecommendation,
   fetchMockFocusSessionSnapshot,
+  fetchMockProgressionProfile,
+  fetchMockProgressionRewardHistory,
+  fetchMockProgressionShareCard,
   fetchMockTaskDetail,
   fetchMockTaskQuery,
   fetchMockWorkspaceBootstrap,
@@ -23,12 +29,19 @@ import {
   updateMockTaskDetail
 } from "./desktop-api.mock";
 import type {
+  AnalyticsHeatmapResponse,
+  AnalyticsSummaryResponse,
+  AnalyticsWindow,
   CalendarSuggestionsResponse,
   CreateSubtaskInput,
   DesktopWorkspaceBootstrap,
+  EquipProgressionItemInput,
   FocusQueueRecommendation,
   FocusSessionSnapshot,
   GoogleCalendarContextSnapshot,
+  ProgressionProfileResponse,
+  RewardEvent,
+  ShareProgressCardPayload,
   StartFocusSessionInput,
   TaskDetailResponse,
   TaskMoveInput,
@@ -299,6 +312,57 @@ export async function fetchCalendarSuggestions(taskId: string) {
     method: "POST",
     body: { taskId }
   });
+}
+
+export async function fetchAnalyticsSummary(window: Exclude<AnalyticsWindow, "last-90-days"> = "this-week") {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockAnalyticsSummary(window);
+  }
+
+  return apiRequest<AnalyticsSummaryResponse>(`/analytics/summary?window=${window}`);
+}
+
+export async function fetchAnalyticsHeatmap(window: AnalyticsWindow = "last-90-days") {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockAnalyticsHeatmap(window);
+  }
+
+  return apiRequest<AnalyticsHeatmapResponse>(`/analytics/heatmap?window=${window}`);
+}
+
+export async function fetchProgressionProfile() {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockProgressionProfile();
+  }
+
+  return apiRequest<ProgressionProfileResponse>("/progression/profile");
+}
+
+export async function fetchProgressionRewardHistory() {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockProgressionRewardHistory();
+  }
+
+  return apiRequest<RewardEvent[]>("/progression/reward-history");
+}
+
+export async function equipProgressionItem(input: EquipProgressionItemInput) {
+  if (!hasDesktopApiBaseUrl()) {
+    return equipMockProgressionItem(input);
+  }
+
+  return apiRequest<ProgressionProfileResponse>("/progression/profile/equipment", {
+    method: "PATCH",
+    body: { cosmeticId: input.unlockableId }
+  });
+}
+
+export async function fetchProgressionShareCard() {
+  if (!hasDesktopApiBaseUrl()) {
+    return fetchMockProgressionShareCard();
+  }
+
+  return apiRequest<ShareProgressCardPayload>("/progression/share-card");
 }
 
 export async function triggerGoogleSync(scope: "full" | "incremental" = "incremental") {

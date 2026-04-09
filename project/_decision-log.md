@@ -11,7 +11,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-08
+last_updated: 2026-04-09
 ---
 
 # Architectural Decision Log
@@ -233,5 +233,23 @@ last_updated: 2026-04-08
 - Context: The active Figma file contains at least two distinct light-mode desktop surfaces: `1:19` `Desktop Shell — Today` and `198:2` `Zuamy Planning Workspace (light)`. Without an explicit decision, frontend agents can incorrectly treat the planning workspace as the replacement for the Phase 1 shell.
 - Decision: Treat `1:19` as the canonical Phase 1 desktop shell, `1:255` as the canonical Phase 1 task-detail panel, and `198:2` as a separate planning/AI workspace surface that is not in scope for `desktop-shell-layout` unless a later module explicitly adopts it.
 - Consequences: Frontend docs must name the authoritative node IDs for Figma-backed slices. Agents implementing shell or task-detail work must fetch `1:19` and `1:255`. Work against `198:2` belongs to a separate planning/AI workspace slice rather than the core shell.
+- Supersedes: none
+- Superseded by: none
+
+## ADR-025: Phase 2 Is Desktop-Complete And Mobile-Deferred
+- Status: accepted
+- Date: 2026-04-09
+- Context: The non-mobile Phase 2 desktop slices are implemented, but the phase still reads as broadly open because `mobile-shell-core` remains deferred. That ambiguity blocks clean entry into Phase 3.
+- Decision: Treat Phase 2 as desktop-complete and mobile-deferred. Phase 3 may begin immediately for desktop/backend work without waiting for mobile design or implementation.
+- Consequences: Planning docs must distinguish completed non-mobile Phase 2 work from the deferred mobile shell. Phase 3 sequencing should no longer imply that mobile blocks analytics, progression, or desktop polish.
+- Supersedes: none
+- Superseded by: none
+
+## ADR-026: Phase 3 Consumes Phase 2 Task And Focus Facts Without Redefinition
+- Status: accepted
+- Date: 2026-04-09
+- Context: Phase 3 analytics and progression depend on task-completion, focus-session-completion, and calendar-context semantics that are already frozen in Phase 2. Reopening those definitions during Phase 3 would create contract drift.
+- Decision: `analytics-insights` and `player-progression-rewards` must consume the current Phase 2 task completion, focus-session completion, and calendar-context read models as their source of truth. They may add read models and reward logic on top, but they must not redefine upstream task or focus semantics.
+- Consequences: Task completion remains derived from persisted task status and `completedAt`; focus completion remains derived from completed focus sessions and rollups; analytics stays reporting-only; progression stays downstream of those source facts.
 - Supersedes: none
 - Superseded by: none

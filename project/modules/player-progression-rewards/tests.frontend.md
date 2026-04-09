@@ -1,7 +1,7 @@
 ---
 id: player-progression-rewards
 title: Player Progression and Rewards Frontend Tests
-status: draft
+status: ready
 phase: 3
 owners:
   - Product Manager
@@ -11,11 +11,13 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-06
+last_updated: 2026-04-09
 ---
 
 # Frontend Tests
 
+- `FE-DESIGN-PPR-001`: the progression profile matches Figma node `155:823` after plugin-based screenshot comparison.
+- `FE-DESIGN-PPR-002`: the unlock state matches Figma node `271:119` and the private share card matches node `155:946`.
 - `FE-UNIT-PPR-001`: task-completion reward UI shows deterministic XP or soft-currency gains with clear explanation text.
 - `FE-UNIT-PPR-002`: progression profile UI renders level, avatar archetype or class, equipped cosmetics, unlocked cosmetics, and empty or loading states without blocking task workflows.
 - `FE-UNIT-PPR-003`: level-up, unlock, and reward-feed surfaces stay lightweight, dismissible, and explainable without shame or social pressure copy.

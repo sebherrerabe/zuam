@@ -219,7 +219,7 @@ describe("desktop shell layout", () => {
     if (!card) {
       throw new Error("Kanban task card was not draggable");
     }
-    const todoColumn = screen.getByRole("region", { name: /review/i });
+    const todoColumn = screen.getByRole("region", { name: /^Review$/i });
 
     fireEvent.dragStart(card, {
       dataTransfer: {
@@ -256,6 +256,34 @@ describe("desktop shell layout", () => {
 
     await screen.findByRole("button", { name: /ship nudge engine v1 \(level 0-2\)/i });
     expect(await screen.findByText(/best next slot/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-ANALYTICS-001: insights navigation renders the reflective analytics surface", async () => {
+    renderShell();
+
+    fireEvent.click(screen.getByRole("button", { name: /^Insights$/ }));
+
+    expect(await screen.findByRole("region", { name: /analytics dashboard/i })).toBeInTheDocument();
+    expect(await screen.findByText(/last 90 days/i)).toBeInTheDocument();
+    expect(screen.getByText(/heatmap/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-PROGRESSION-001: progression card opens the profile surface and supports equipping unlocked items", async () => {
+    renderShell();
+
+    fireEvent.click(screen.getByRole("button", { name: /progression card/i }));
+
+    expect(await screen.findByRole("region", { name: /progression profile/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /equip wayward cap/i })).toBeInTheDocument();
+    expect(screen.getByText(/private share card/i)).toBeInTheDocument();
+  });
+
+  it("FE-UNIT-PROGRESSION-002: task detail renders reward preview cards from progression data", async () => {
+    renderShell();
+
+    expect(await screen.findByRole("region", { name: /reward preview/i })).toBeInTheDocument();
+    expect(screen.getByText(/deep-work tag/i)).toBeInTheDocument();
+    expect(screen.getByText(/focus reward preview/i)).toBeInTheDocument();
   });
 
   it("FE-UNIT-TASK-VIEWS-003: loading, empty, and error states are explicit", () => {

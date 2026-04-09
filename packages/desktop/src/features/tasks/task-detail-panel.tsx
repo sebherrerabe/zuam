@@ -6,11 +6,18 @@ import type { TaskRecord } from "@zuam/shared";
 import {
   createSubtask,
   deleteTask,
+  fetchProgressionProfile,
+  fetchProgressionRewardHistory,
   fetchTaskDetail,
   setSubtaskCompleted,
   updateTaskDetail
 } from "../../lib/api/desktop-api";
+import type {
+  ProgressionProfileResponse,
+  RewardEvent
+} from "../../lib/api/desktop-api.types";
 import { useShellStore } from "../../lib/state/shell-store";
+import { buildTaskRewardPreview } from "../progression";
 import {
   buildTaskDetailPatch,
   cloneTaskDetailModel,
@@ -66,6 +73,16 @@ export function TaskDetailPanel({ taskId, taskSummary, focusCallToAction, calend
     enabled: Boolean(resolvedTaskId),
     staleTime: Number.POSITIVE_INFINITY
   });
+  const progressionProfileQuery = useQuery({
+    queryKey: ["desktop-progression-profile"],
+    queryFn: () => fetchProgressionProfile(),
+    staleTime: Number.POSITIVE_INFINITY
+  });
+  const rewardHistoryQuery = useQuery({
+    queryKey: ["desktop-progression-history"],
+    queryFn: () => fetchProgressionRewardHistory(),
+    staleTime: Number.POSITIVE_INFINITY
+  });
 
   if (!resolvedTaskId || !taskQuery.data) {
     return null;
@@ -79,6 +96,8 @@ export function TaskDetailPanel({ taskId, taskSummary, focusCallToAction, calend
       taskSummary={taskSummary}
       focusCallToAction={focusCallToAction}
       calendarHint={calendarHint}
+      progressionProfile={progressionProfileQuery.data}
+      rewardHistory={rewardHistoryQuery.data ?? []}
     />
   );
 }
@@ -88,13 +107,17 @@ function TaskDetailPanelContent({
   initialTask,
   taskSummary,
   focusCallToAction,
-  calendarHint
+  calendarHint,
+  progressionProfile,
+  rewardHistory
 }: {
   taskId: string;
   initialTask: TaskDetailModel;
   taskSummary?: TaskRecord | null;
   focusCallToAction?: TaskDetailPanelProps["focusCallToAction"];
   calendarHint?: TaskDetailPanelProps["calendarHint"];
+  progressionProfile?: ProgressionProfileResponse;
+  rewardHistory: RewardEvent[];
 }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<TaskDetailModel>(() => readTaskDetailDraft(taskId) ?? cloneTaskDetailModel(initialTask));
@@ -162,6 +185,10 @@ function TaskDetailPanelContent({
     { id: "nudge", label: "NUDGE", icon: "\u{1F514}", value: currentDraft.nudge.split("·")[0]?.trim() ?? currentDraft.nudge, tone: "nudge" },
     { id: "urgency", label: "URGENCY", icon: "\u{1F525}", value: currentDraft.urgency.replace(/\s+/g, ""), tone: "danger" }
   ] as const;
+  const rewardPreview = useMemo(
+    () => buildTaskRewardPreview(taskSummary, progressionProfile, rewardHistory),
+    [progressionProfile, rewardHistory, taskSummary]
+  );
 
   function commitDraft(nextDraft: TaskDetailModel, queryValue?: unknown) {
     const cloned = cloneTaskDetailModel(nextDraft);
@@ -444,12 +471,24 @@ function TaskDetailPanelContent({
         ) : null}
       </section>
 
-      <section className="task-detail-reward-panel" aria-label="task xp summary">
-        <div className="task-detail-reward-chip">
-          <strong>+35 XP</strong>
-          <span>on completion</span>
-        </div>
-        <p>Why: overdue + high resistance + deep work</p>
+      <section className="task-detail-reward-stack" aria-label="Reward preview">
+        <article className="task-detail-reward-panel">
+          <div className="task-detail-reward-chip">
+            <strong>{`+${rewardPreview.completionXp} XP`}</strong>
+            <span>on completion</span>
+          </div>
+          <p>{`Why: ${rewardPreview.reasons.join(" + ")}`}</p>
+        </article>
+        <article className="task-detail-reward-panel is-secondary">
+          <div className="task-detail-reward-chip is-focus">
+            <strong>{`+${rewardPreview.focusSessionXp} XP`}</strong>
+            <span>{rewardPreview.focusShards > 0 ? `+${rewardPreview.focusShards} focus shard` : "focus finish"}</span>
+          </div>
+          <p>{rewardPreview.milestoneCopy}</p>
+          {rewardPreview.recentRewardCopy ? (
+            <span className="task-detail-reward-footnote">{`Recent reward: ${rewardPreview.recentRewardCopy}`}</span>
+          ) : null}
+        </article>
       </section>
 
       {calendarHint ? (
@@ -468,7 +507,9 @@ function TaskDetailPanelContent({
         <button type="button" className="task-detail-cta" onClick={focusCallToAction?.onClick}>
           {focusCallToAction?.label ?? "Start 25-min Focus Session"}
         </button>
-        <p className="task-detail-focus-helper">+60 XP + 1 focus shard on session completion</p>
+        <p className="task-detail-focus-helper">
+          {`Focus reward preview: +${rewardPreview.focusSessionXp} XP${rewardPreview.focusShards > 0 ? ` + ${rewardPreview.focusShards} shard` : ""}`}
+        </p>
       </footer>
 
       <section className="task-detail-edit-grid">

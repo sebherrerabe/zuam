@@ -1,7 +1,17 @@
 import type { TaskGroupBy, TaskSortBy } from "@zuam/shared";
 import { create } from "zustand";
 
-export type ShellView = "today" | "next7days" | "assigned" | "inbox" | "list" | "tag" | "savedFilter" | "focusQueue";
+export type ShellView =
+  | "today"
+  | "next7days"
+  | "assigned"
+  | "inbox"
+  | "list"
+  | "tag"
+  | "savedFilter"
+  | "focusQueue"
+  | "insights"
+  | "progression";
 export type ShellPresentation = "list" | "kanban" | "matrix" | "calendar";
 
 type ShellState = {

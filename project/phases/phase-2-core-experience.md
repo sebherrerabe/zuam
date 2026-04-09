@@ -1,7 +1,7 @@
 ---
 id: phase-2-core-experience
 title: Phase 2 Core Experience
-status: draft
+status: ready
 phase: phase-2
 owners:
   - Product Manager
@@ -11,7 +11,7 @@ depends_on:
 parallel_group: phase-2
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-09
 ---
 
 # Phase 2 Core Experience
@@ -37,4 +37,12 @@ Expand the MVP into the primary day-to-day product experience with richer editin
 - Mobile shell scope for Phase 2 is frozen.
 
 ## Notes
-Phase 2 docs may remain lighter than Phase 1 until the project begins implementation, but they must still define interfaces, tests, and dependencies clearly enough to avoid architectural churn.
+- The desktop/non-mobile Phase 2 slices are complete in code and now serve as stable upstream inputs for Phase 3 analytics and progression work.
+- `mobile-shell-core` remains the only deferred Phase 2 module. Its design and implementation should proceed independently without blocking Phase 3 desktop work.
+- Phase 3 consumes the current task completion semantics, focus-session completion semantics, and Google Calendar read models from this phase as the source of truth.
+
+## Phase 2 Closure Checklist
+- Desktop visual QA is active and tied to approved warm-light baselines.
+- Calendar availability-state and suggestion metadata are frozen.
+- Task detail persistence is backend-backed.
+- Electron preload/runtime is the desktop path for privileged notification behavior.

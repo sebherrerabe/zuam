@@ -1,7 +1,7 @@
 ---
 id: player-progression-rewards
 title: Player Progression and Rewards Contracts
-status: draft
+status: ready
 phase: 3
 owners:
   - Product Manager
@@ -11,7 +11,7 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-06
+last_updated: 2026-04-09
 ---
 
 # Contracts
@@ -24,6 +24,10 @@ last_updated: 2026-04-06
 - Invariants: no XP or cosmetic loss on missed days, equipped cosmetics must already be unlocked, snooze and postpone flows never grant progression rewards, randomized rewards must not be required for baseline progression, and reward grants must prefer terminal meaningful actions over interaction volume such as task splitting or bookkeeping churn.
 
 ## API Contract
+- `GET /progression/profile` returns the current `ProgressionProfile`, the next milestone preview, and lightweight scene metadata for optional animated rendering.
+- `GET /progression/reward-history` returns explainable `RewardEvent` rows in reverse chronological order.
+- `PATCH /progression/profile/equipment` updates equipped cosmetics only when the requested items are already unlocked.
+- `GET /progression/share-card` returns a private share-card payload that excludes task-level private data.
 - Progression read surfaces expose the current `ProgressionProfile` plus the next milestone preview and explanation metadata.
 - Reward-history read surfaces return `RewardEvent` records in reverse-chronological order with explanation text and source references.
 - Avatar equip or update surfaces accept only unlocked cosmetics and valid archetype choices.
@@ -55,3 +59,4 @@ last_updated: 2026-04-06
 - `progression:updated` carries the new level, total XP, and last reward explanation.
 - `progression:level-up` fires only when a level threshold is crossed.
 - `progression:unlock-earned` carries unlockable id, type, and threshold metadata.
+- Task and focus completion remain upstream source events. Progression listens to them; it must not redefine their meaning.

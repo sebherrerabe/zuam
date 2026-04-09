@@ -1,7 +1,7 @@
 ---
 id: player-progression-rewards
 title: Player Progression and Rewards
-status: draft
+status: ready
 phase: 3
 owners:
   - Product Manager
@@ -11,12 +11,18 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-06
+last_updated: 2026-04-09
 ---
 
 # Player Progression and Rewards
 
 This module defines Zuam's positive-only pixel-RPG progression layer: avatar growth, deterministic XP, cosmetic unlocks, and explainable reward history. It exists to make completed work feel satisfying without turning failure into punishment or allowing the game loop to overtake the task system. The pixel-art direction is a presentation choice for identity and delight, not an evidence-backed therapeutic mechanism on its own.
+
+## Authoritative Desktop References
+- `155:823` `Progression Profile (light)` is the canonical progression surface.
+- `271:119` `Level Up + Unlock (light)` is the canonical celebratory and unlock-state surface.
+- `155:946` `Progress Share Card (light)` is the canonical private share export surface.
+- `155:233` `Detail Panel` is the canonical host frame for Phase 3 reward explanation and focus reward preview cards.
 
 ## Scope In
 - Deterministic, immediate, fixed reward grants for task completion and focus-session completion (`BE-UNIT-PPR-001`, `BE-UNIT-PPR-002`).
@@ -25,6 +31,7 @@ This module defines Zuam's positive-only pixel-RPG progression layer: avatar gro
 - Optional initiation bonus rules only when they stay small, documented, non-farmable, and secondary to terminal actions (`BE-UNIT-PPR-005`).
 - Pixel-art avatar rendering, sprite-sheet packaging, and the asset-authoring workflow for progression surfaces (`FE-UNIT-PPR-004`, `FE-E2E-PPR-003`).
 - Private progression share-card export and a lightweight `Share Progress` affordance for the progression surface (`FE-UNIT-PPR-005`, `FE-E2E-PPR-004`).
+- Feature-flagged reward explanation and focus reward preview cards in task detail, following ADR-014.
 
 ## Scope Out
 - Pet or companion-first loops.
@@ -46,3 +53,4 @@ This module defines Zuam's positive-only pixel-RPG progression layer: avatar gro
 
 ## Implementation Gate
 - This slice is ready when a user can complete tasks or focus sessions, see deterministic avatar progress, and inspect exactly why a reward was granted without any punitive or social mechanic being required (`BE-E2E-PPR-001`).
+- This slice must remain optional and must not become a dependency for completing, editing, snoozing, or re-prioritizing tasks.

@@ -5,9 +5,11 @@ import type { NudgeEvent } from "@zuam/shared";
 
 import { acknowledgeNudge, snoozeTask } from "../../lib/api/desktop-api";
 import { useShellStore, type ShellPresentation, type ShellView } from "../../lib/state/shell-store";
+import { AnalyticsSurface } from "../analytics";
 import { NudgeBlockingModal, NudgeNotificationSurface } from "../nudges";
 import { FocusBreakOverlay, FocusSessionPanel } from "../focus/focus-session-panel";
 import { useFocusSession } from "../focus/use-focus-session";
+import { ProgressionSurface } from "../progression";
 import { useSyncStatus } from "../system";
 import { TaskDetailPanel } from "../tasks/task-detail-panel";
 import { TaskViews } from "../views/task-views";
@@ -24,7 +26,8 @@ const smartNavItems: Array<{ id: ShellView; label: string; smartList?: SmartList
   { id: "next7days", label: "Next 7 Days", smartList: "next7days", icon: "\u{1F4C6}" },
   { id: "assigned", label: "Assigned to Me", icon: "\u{1F464}" },
   { id: "inbox", label: "Inbox", smartList: "inbox", icon: "\u{1F4E5}" },
-  { id: "focusQueue", label: "Focus Queue", icon: "\u{1F3AF}" }
+  { id: "focusQueue", label: "Focus Queue", icon: "\u{1F3AF}" },
+  { id: "insights", label: "Insights", icon: "\u{1F4CA}" }
 ];
 
 const presentationTabs: ShellPresentation[] = ["list", "kanban", "matrix", "calendar"];
@@ -109,6 +112,7 @@ export function DesktopShell() {
     sortBy
   );
   const activeDateLabel = resolveDateLabel(activeView, workspace.taskQuery.data?.items ?? []);
+  const isTaskWorkspaceView = activeView !== "insights" && activeView !== "progression";
 
   const focusCallToAction = (() => {
     if (focus.currentSession && focus.currentSession.taskId === selectedTaskId) {
@@ -176,6 +180,10 @@ export function DesktopShell() {
       return;
     }
 
+    if (view === "insights" || view === "progression") {
+      return;
+    }
+
     applyPresentationDefaults(activePresentation, setGroupBy, setSortBy);
   }
 
@@ -235,7 +243,12 @@ export function DesktopShell() {
           <p>Seb H.</p>
         </div>
 
-        <section className="sidebar-progression-card" aria-label="progression card">
+        <button
+          type="button"
+          className={`sidebar-progression-card${activeView === "progression" ? " is-active" : ""}`}
+          aria-label="progression card"
+          onClick={() => selectSmartView("progression")}
+        >
           <div className="sidebar-progression-avatar" aria-hidden="true">
             <span />
             <span />
@@ -253,7 +266,7 @@ export function DesktopShell() {
             <span />
           </div>
           <p className="sidebar-progression-meta">1,240 / 1,500 XP</p>
-        </section>
+        </button>
 
         <div className="sidebar-search-wrap">
           <button type="button" className="sidebar-search-trigger" onClick={openQuickCapture}>
@@ -276,7 +289,9 @@ export function DesktopShell() {
                 {item.icon}
               </span>
               <span className="sidebar-nav-label">{item.label}</span>
-              <span className="sidebar-nav-count">{sidebarCounts.find((row) => row.key === (item.smartList ?? item.id))?.count ?? 0}</span>
+              <span className="sidebar-nav-count">
+                {item.smartList ? sidebarCounts.find((row) => row.key === item.smartList)?.count ?? 0 : ""}
+              </span>
             </button>
           ))}
         </nav>
@@ -370,18 +385,22 @@ export function DesktopShell() {
           </div>
 
           <div className="desktop-main-header-actions">
-            <div className="desktop-view-switcher" role="tablist" aria-label="View mode">
-              {presentationTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={`desktop-view-chip${activePresentation === tab ? " is-active" : ""}`}
-                  onClick={() => selectPresentation(tab)}
-                >
-                  {tab === "list" ? "List" : tab === "kanban" ? "Kanban" : tab === "matrix" ? "Matrix" : "Calendar"}
-                </button>
-              ))}
-            </div>
+            {isTaskWorkspaceView ? (
+              <div className="desktop-view-switcher" role="tablist" aria-label="View mode">
+                {presentationTabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={`desktop-view-chip${activePresentation === tab ? " is-active" : ""}`}
+                    onClick={() => selectPresentation(tab)}
+                  >
+                    {tab === "list" ? "List" : tab === "kanban" ? "Kanban" : tab === "matrix" ? "Matrix" : "Calendar"}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="desktop-phase-badge">Phase 3</span>
+            )}
 
             <button type="button" className="desktop-main-more" aria-label="More actions">
               ...
@@ -407,18 +426,30 @@ export function DesktopShell() {
         </div>
 
         <div className="desktop-main-content">
-          <TaskViews
-            activeView={activeView}
-            activePresentation={activePresentation}
-            selectedTaskId={selectedTaskId}
-            taskQuery={workspace.taskQuery.data}
-            focusRecommendation={workspace.focusQueueQuery.data}
-            calendarContext={workspace.calendarContextQuery.data}
-            calendarSuggestions={workspace.calendarSuggestionsQuery.data?.suggestions ?? []}
-            onSelectTask={setSelectedTaskId}
-            onMoveTask={(taskId, input) => workspace.moveTask.mutate({ taskId, ...input })}
-            onSetTaskStatus={(taskId, status) => workspace.setTaskStatus.mutate({ taskId, status })}
-          />
+          {activeView === "insights" ? (
+            <AnalyticsSurface
+              onOpenProgression={() => selectSmartView("progression")}
+              onOpenTask={(taskId) => {
+                setSelectedTaskId(taskId);
+                setActiveView("today");
+              }}
+            />
+          ) : activeView === "progression" ? (
+            <ProgressionSurface onReturnToToday={() => selectSmartView("today")} />
+          ) : (
+            <TaskViews
+              activeView={activeView}
+              activePresentation={activePresentation}
+              selectedTaskId={selectedTaskId}
+              taskQuery={workspace.taskQuery.data}
+              focusRecommendation={workspace.focusQueueQuery.data}
+              calendarContext={workspace.calendarContextQuery.data}
+              calendarSuggestions={workspace.calendarSuggestionsQuery.data?.suggestions ?? []}
+              onSelectTask={setSelectedTaskId}
+              onMoveTask={(taskId, input) => workspace.moveTask.mutate({ taskId, ...input })}
+              onSetTaskStatus={(taskId, status) => workspace.setTaskStatus.mutate({ taskId, status })}
+            />
+          )}
         </div>
 
         <footer className="desktop-quick-add-wrap">
@@ -571,6 +602,10 @@ function resolveHeading(
   savedFilters: Array<{ id: string; name: string }>
 ) {
   switch (activeView) {
+    case "insights":
+      return "Insights";
+    case "progression":
+      return "Progression";
     case "next7days":
       return "Next 7 Days";
     case "assigned":
@@ -599,6 +634,14 @@ function resolveSubtitle(
   groupBy: TaskGroupBy,
   sortBy: TaskSortBy
 ) {
+  if (activeView === "insights") {
+    return "Reflective analytics over stable task and focus facts.";
+  }
+
+  if (activeView === "progression") {
+    return "Optional rewards, unlocks, and private shareables.";
+  }
+
   if (activeView === "focusQueue") {
     return `${totalCount} supporting tasks - recommendation-first queue`;
   }
@@ -683,6 +726,14 @@ function formatDuration(totalSeconds: number) {
 }
 
 function resolveDateLabel(activeView: ShellView, items: Array<{ dueDate?: string | null }>) {
+  if (activeView === "insights") {
+    return "Phase 3 dashboard";
+  }
+
+  if (activeView === "progression") {
+    return "Warm-light profile";
+  }
+
   if (activeView !== "today") {
     return "Warm light mode baseline";
   }

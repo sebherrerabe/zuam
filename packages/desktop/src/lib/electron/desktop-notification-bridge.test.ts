@@ -81,6 +81,7 @@ describe("desktop notification bridge", () => {
       platform: "win32"
     }));
     const show = vi.fn(async () => ({ delivered: true }));
+    const exportProgressCard = vi.fn(async () => ({ saved: true }));
 
     window.zuamDesktop = {
       platform: "win32",
@@ -88,6 +89,9 @@ describe("desktop notification bridge", () => {
         getState,
         requestPermission,
         show
+      },
+      sharing: {
+        exportProgressCard
       }
     };
 
@@ -120,10 +124,14 @@ describe("desktop notification bridge", () => {
       })),
       show: vi.fn(async () => ({ delivered: true }))
     };
+    const sharing = {
+      exportProgressCard: vi.fn(async () => ({ saved: true }))
+    };
 
     const runtime = createDesktopRuntimeBridge({
       platform: "win32",
-      notifications
+      notifications,
+      sharing
     });
 
     window.zuamDesktop = runtime;

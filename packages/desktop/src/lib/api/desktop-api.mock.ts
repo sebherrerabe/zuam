@@ -1,15 +1,22 @@
 import type { ListDto, SmartListId, TaskGroupBy, TaskRecord, TaskSortBy } from "@zuam/shared";
 
 import type {
+  AnalyticsHeatmapResponse,
+  AnalyticsSummaryResponse,
+  AnalyticsWindow,
   CalendarSuggestionsResponse,
   CreateSubtaskInput,
   DesktopWorkspaceBootstrap,
+  EquipProgressionItemInput,
   FocusQueueRecommendation,
   FocusSession,
   FocusSessionSnapshot,
   GoogleCalendarContextSnapshot,
+  ProgressionProfileResponse,
+  RewardEvent,
   SavedFilterRecord,
   ScheduleSuggestion,
+  ShareProgressCardPayload,
   SidebarCountRow,
   StartFocusSessionInput,
   TagRecord,
@@ -35,6 +42,8 @@ type FallbackStore = {
   focusSessions: FocusSession[];
   taskRollups: FocusSessionSnapshot["taskRollups"];
   calendarContext: GoogleCalendarContextSnapshot;
+  progressionProfile: ProgressionProfileResponse;
+  rewardHistory: RewardEvent[];
 };
 
 const seedTasks: Array<
@@ -327,6 +336,54 @@ function createTag(id: string, slug: string, name: string, sortOrder: number): T
   };
 }
 
+function createProgressionProfile(): ProgressionProfileResponse {
+  return {
+    profile: {
+      userId: FALLBACK_USER_ID,
+      level: 7,
+      totalXp: 1240,
+      currentAvatarArchetype: "Pathfinder",
+      equippedCosmetics: ["cosmetic-flame-cloak"],
+      unlockedCosmetics: ["cosmetic-flame-cloak", "cosmetic-wayward-cap"],
+      updatedAt: FALLBACK_NOW
+    },
+    unlockables: [
+      {
+        id: "cosmetic-flame-cloak",
+        type: "cloak",
+        unlockThreshold: 720,
+        visualAssetRef: "atlas://cloak/flame",
+        displayName: "Flame Cloak"
+      },
+      {
+        id: "cosmetic-wayward-cap",
+        type: "hat",
+        unlockThreshold: 1240,
+        visualAssetRef: "atlas://hat/wayward-cap",
+        displayName: "Wayward Cap"
+      },
+      {
+        id: "cosmetic-suntrail-cape",
+        type: "cloak",
+        unlockThreshold: 1500,
+        visualAssetRef: "atlas://cloak/suntrail-cape",
+        displayName: "Suntrail Cape"
+      }
+    ],
+    milestonePreview: {
+      nextLevel: 8,
+      xpRemaining: 260,
+      nextUnlock: {
+        id: "cosmetic-suntrail-cape",
+        type: "cloak",
+        unlockThreshold: 1500,
+        visualAssetRef: "atlas://cloak/suntrail-cape",
+        displayName: "Suntrail Cape"
+      }
+    }
+  };
+}
+
 function buildInitialStore(): FallbackStore {
   return {
     lists: [
@@ -433,7 +490,43 @@ function buildInitialStore(): FallbackStore {
       planningWindowStart: "2026-04-07T14:00:00.000Z",
       planningWindowEnd: "2026-04-07T20:00:00.000Z",
       nextSyncToken: "calendar-token-1"
-    }
+    },
+    progressionProfile: createProgressionProfile(),
+    rewardHistory: [
+      {
+        id: "reward-1",
+        userId: FALLBACK_USER_ID,
+        source: "TASK_COMPLETION",
+        sourceId: "task-7",
+        xpGranted: 56,
+        softCurrencyGranted: null,
+        timestamp: "2026-04-06T18:05:00.000Z",
+        explanationText: "high priority + dread resistance + overdue recovery",
+        thresholdCrossed: null
+      },
+      {
+        id: "reward-2",
+        userId: FALLBACK_USER_ID,
+        source: "FOCUS_SESSION_COMPLETION",
+        sourceId: "focus-1",
+        xpGranted: 75,
+        softCurrencyGranted: null,
+        timestamp: "2026-04-06T14:20:00.000Z",
+        explanationText: "35 focus mins + 10 extra mins",
+        thresholdCrossed: null
+      },
+      {
+        id: "reward-3",
+        userId: FALLBACK_USER_ID,
+        source: "TASK_COMPLETION",
+        sourceId: "task-1",
+        xpGranted: 48,
+        softCurrencyGranted: null,
+        timestamp: "2026-04-05T20:15:00.000Z",
+        explanationText: "high priority + high resistance",
+        thresholdCrossed: 1240
+      }
+    ]
   };
 }
 
@@ -1118,6 +1211,224 @@ export async function fetchMockCalendarSuggestions(taskId: string): Promise<Cale
     return { suggestions: [] };
   }
   return { suggestions: buildSuggestions(task) };
+}
+
+function buildAnalyticsSummary(window: Exclude<AnalyticsWindow, "last-90-days">): AnalyticsSummaryResponse {
+  const summaries: Record<Exclude<AnalyticsWindow, "last-90-days">, AnalyticsSummaryResponse> = {
+    "this-week": {
+      generatedAt: FALLBACK_NOW,
+      timezone: "Europe/Brussels",
+      window,
+      streakSummary: {
+        currentStreak: 5,
+        bestStreak: 8,
+        lastActiveDate: "2026-04-08",
+        timezone: "Europe/Brussels",
+        gracePolicy: "Consistency is reflective here. Missing a day does not remove rewards or punish the progression track."
+      },
+      weeklySummary: {
+        window,
+        windowStart: "2026-04-07T00:00:00.000Z",
+        windowEnd: "2026-04-13T23:59:59.999Z",
+        completedTaskCount: 14,
+        completedFocusSessionCount: 6,
+        focusMinutes: 310,
+        activeDays: 5
+      },
+      hardestTaskHighlight: {
+        taskId: "task-7",
+        title: "File Q1 taxes",
+        completedAt: "2026-04-06T18:05:00.000Z",
+        effortScore: 42,
+        focusMinutes: 35,
+        explanation: "overdue recovery + high priority + dread resistance + 35 focus mins",
+        explanationRefs: [
+          {
+            source: "task-completion",
+            sourceId: "task-7",
+            label: "File Q1 taxes",
+            timestamp: "2026-04-06T18:05:00.000Z"
+          }
+        ]
+      },
+      explanationRefs: [
+        {
+          source: "task-completion",
+          sourceId: "task-7",
+          label: "File Q1 taxes",
+          timestamp: "2026-04-06T18:05:00.000Z"
+        },
+        {
+          source: "focus-session",
+          sourceId: "focus-1",
+          label: "Protected focus block",
+          timestamp: "2026-04-06T14:20:00.000Z"
+        }
+      ]
+    },
+    "last-28-days": {
+      generatedAt: FALLBACK_NOW,
+      timezone: "Europe/Brussels",
+      window,
+      streakSummary: {
+        currentStreak: 5,
+        bestStreak: 11,
+        lastActiveDate: "2026-04-08",
+        timezone: "Europe/Brussels",
+        gracePolicy: "The last month shows consistency, even with a few softer recovery days in the middle."
+      },
+      weeklySummary: {
+        window,
+        windowStart: "2026-03-12T00:00:00.000Z",
+        windowEnd: "2026-04-08T23:59:59.999Z",
+        completedTaskCount: 49,
+        completedFocusSessionCount: 21,
+        focusMinutes: 1180,
+        activeDays: 19
+      },
+      hardestTaskHighlight: {
+        taskId: "task-1",
+        title: "Ship nudge engine v1 (Level 0-2)",
+        completedAt: "2026-03-28T16:20:00.000Z",
+        effortScore: 46,
+        focusMinutes: 42,
+        explanation: "The month's strongest finish was a high-resistance engineering slice with a clean focus completion.",
+        explanationRefs: [
+          {
+            source: "task-completion",
+            sourceId: "task-1",
+            label: "Ship nudge engine v1 (Level 0-2)",
+            timestamp: "2026-03-28T16:20:00.000Z"
+          },
+          {
+            source: "focus-session",
+            sourceId: "focus-9",
+            label: "Protected focus block",
+            timestamp: "2026-03-28T15:10:00.000Z"
+          }
+        ]
+      },
+      explanationRefs: [
+        {
+          source: "task-completion",
+          sourceId: "task-1",
+          label: "Ship nudge engine v1 (Level 0-2)",
+          timestamp: "2026-03-28T16:20:00.000Z"
+        },
+        {
+          source: "focus-session",
+          sourceId: "focus-9",
+          label: "Protected focus block",
+          timestamp: "2026-03-28T15:10:00.000Z"
+        }
+      ]
+    }
+  };
+
+  return summaries[window];
+}
+
+function buildAnalyticsHeatmap(window: AnalyticsWindow): AnalyticsHeatmapResponse {
+  const totalDays = window === "this-week" ? 7 : window === "last-28-days" ? 28 : 90;
+  const buckets = Array.from({ length: totalDays }, (_, index) => {
+    const day = new Date("2026-01-10T12:00:00.000Z");
+    day.setUTCDate(day.getUTCDate() + index);
+    const completions = index % 9 === 0 ? 0 : (index % 4) + 1;
+    const focusMinutes = completions === 0 ? 0 : 25 * ((index % 3) + 1);
+    const intensity = Math.min(4, completions + (focusMinutes >= 75 ? 1 : 0)) as 0 | 1 | 2 | 3 | 4;
+
+    return {
+      date: day.toISOString().slice(0, 10),
+      completedTaskCount: completions,
+      focusSessionCount: completions === 0 ? 0 : Math.max(1, Math.ceil(focusMinutes / 45)),
+      focusMinutes,
+      intensity,
+      explanationRefs:
+        completions === 0
+          ? []
+          : [
+              {
+                source: "task-completion" as const,
+                sourceId: `task-${(index % 8) + 1}`,
+                label: "Daily completion cluster",
+                timestamp: `${day.toISOString().slice(0, 10)}T18:00:00.000Z`
+              }
+            ]
+    };
+  });
+
+  return {
+    generatedAt: FALLBACK_NOW,
+    timezone: "Europe/Brussels",
+    window,
+    buckets
+  };
+}
+
+function buildShareCard(profile: ProgressionProfileResponse): ShareProgressCardPayload {
+  return {
+    userName: "Seb H.",
+    level: profile.profile.level,
+    totalXp: profile.profile.totalXp,
+    nextLevelXp: profile.profile.totalXp + profile.milestonePreview.xpRemaining,
+    archetype: profile.profile.currentAvatarArchetype,
+    equippedCosmetics: [...profile.profile.equippedCosmetics],
+    unlockedCosmetics: [...profile.profile.unlockedCosmetics],
+    weeklyActiveDays: 5,
+    shareMessage: "Steady momentum, warm light, and no punishment loops."
+  };
+}
+
+export async function fetchMockAnalyticsSummary(
+  window: Exclude<AnalyticsWindow, "last-90-days"> = "this-week"
+): Promise<AnalyticsSummaryResponse> {
+  return buildAnalyticsSummary(window);
+}
+
+export async function fetchMockAnalyticsHeatmap(window: AnalyticsWindow = "last-90-days"): Promise<AnalyticsHeatmapResponse> {
+  return buildAnalyticsHeatmap(window);
+}
+
+export async function fetchMockProgressionProfile(): Promise<ProgressionProfileResponse> {
+  return store.progressionProfile;
+}
+
+export async function fetchMockProgressionRewardHistory(): Promise<RewardEvent[]> {
+  return [...store.rewardHistory].sort((left, right) => right.timestamp.localeCompare(left.timestamp));
+}
+
+export async function equipMockProgressionItem(input: EquipProgressionItemInput): Promise<ProgressionProfileResponse> {
+  const unlockable = store.progressionProfile.unlockables.find((item) => item.id === input.unlockableId);
+  if (!unlockable) {
+    throw new Error(`Unknown unlockable: ${input.unlockableId}`);
+  }
+
+  if (!store.progressionProfile.profile.unlockedCosmetics.includes(input.unlockableId)) {
+    throw new Error(`Locked unlockable: ${input.unlockableId}`);
+  }
+
+  store.progressionProfile = {
+    ...store.progressionProfile,
+    profile: {
+      ...store.progressionProfile.profile,
+      equippedCosmetics: [
+        ...new Set([
+          ...store.progressionProfile.profile.equippedCosmetics.filter((equippedId) => {
+            const equippedUnlockable = store.progressionProfile.unlockables.find((item) => item.id === equippedId);
+            return equippedUnlockable?.type !== unlockable.type;
+          }),
+          input.unlockableId
+        ])
+      ],
+      updatedAt: nowIso()
+    }
+  };
+
+  return store.progressionProfile;
+}
+
+export async function fetchMockProgressionShareCard(): Promise<ShareProgressCardPayload> {
+  return buildShareCard(store.progressionProfile);
 }
 
 function formatTimeRange(start: string, end: string) {

@@ -1,7 +1,7 @@
 ---
 id: player-progression-rewards
 title: Player Progression and Rewards Work Packet
-status: draft
+status: ready
 phase: 3
 owners:
   - Product Manager
@@ -11,7 +11,7 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-06
+last_updated: 2026-04-09
 ---
 
 # Work Packet
@@ -41,6 +41,7 @@ Document the minimum positive-only pixel-RPG progression system that can ship wi
 ## Blockers / Dependencies
 - Requires stable task completion semantics and focus-session completion outputs.
 - Depends on analytics shapes being frozen so reporting and progression responsibilities do not overlap.
+- Requires the Phase 3 Figma registry to remain anchored to `155:823`, `271:119`, `155:946`, and `155:233`.
 
 ## Parallel-Safe Boundaries
 - Can be planned in parallel with analytics-insights once the shared source completion and focus data are stable.
@@ -48,6 +49,7 @@ Document the minimum positive-only pixel-RPG progression system that can ship wi
 
 ## Completion Signals
 - A user can complete a task or focus session, see deterministic avatar progress rendered from curated sprite assets, inspect why a reward was granted, and continue working without any punitive state.
+- The private share card and optional celebratory state are validated against the approved Phase 3 warm-light mockups.
 
 ## Non-Goals
 - No leaderboards, parties, or social quests.
