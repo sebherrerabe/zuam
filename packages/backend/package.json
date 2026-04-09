@@ -6,7 +6,7 @@
     "dev": "pnpm --filter @zuam/shared build && pnpm run dev:raw",
     "dev:raw": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "pnpm --filter @zuam/shared build && tsc -p tsconfig.json --noEmit",
     "lint": "eslint src test --ext .ts",
     "test": "jest --config ./jest.config.cjs --runInBand"
   },
