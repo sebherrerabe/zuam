@@ -51,7 +51,7 @@ function main(env = process.env) {
     );
   }
 
-  if (persisted.event.type !== "desktop.release.published") {
+  if (persisted.event.type !== "desktop.release.packaged") {
     throw new Error(`Desktop packaging smoke check failed: unexpected release event ${persisted.event.type}`);
   }
 

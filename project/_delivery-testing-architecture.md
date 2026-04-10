@@ -62,7 +62,7 @@ Use GitHub Actions with separate concerns:
 - desktop tests
 - desktop build + package smoke checks
 - mobile tests as mobile work deepens
-- desktop packaging only on release/tag workflows
+- Windows desktop installer generation only on release/tag workflows, with workflow-artifact upload on manual dispatch
 
 ## Release Baseline
 - Backend hosting target: Railway
@@ -73,6 +73,9 @@ Use GitHub Actions with separate concerns:
   - built client entry exists
   - Electron `main` and `preload` bundles exist
   - release metadata/event files can be generated from CI env inputs
+- Tagged desktop releases must produce real Windows installer artifacts (`nsis` installer and portable Windows package) plus provenance metadata, then publish them to the matching GitHub Release entry.
+- Release workflows must run on a Windows runner when the artifact target is a Windows desktop installer.
+- The critical packaging step should call `electron-builder` directly from the desktop package; metadata writing and GitHub Release upload happen as follow-up steps, not inside the builder invocation.
 
 ## Observability Baseline
 - structured backend logging

@@ -11,11 +11,13 @@ permissions:
 
 jobs:
   release-desktop:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 45
+    env:
+      ZUAM_RELEASE_OUTPUT_DIR: .release/artifacts-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
-      - name: install
+      - name: checkout
         uses: actions/checkout@v4
 
       - name: setup-node
@@ -52,7 +54,12 @@ jobs:
           GITHUB_WORKFLOW: ${{ github.workflow }}
 
       - name: package
-        run: pnpm --filter @zuam/desktop package:ci
+        run: pnpm --filter @zuam/desktop make:win:ci
+        env:
+          ZUAM_ARTIFACT_STEM: zuam-desktop-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: write-release-metadata
+        run: node tooling/release/package-desktop-release.cjs
         env:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
@@ -61,9 +68,19 @@ jobs:
           GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
           GITHUB_WORKFLOW: ${{ github.workflow }}
 
+      - name: upload-packaged-artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zuam-desktop-release-${{ github.sha }}
+          path: |
+            packages/desktop/${{ env.ZUAM_RELEASE_OUTPUT_DIR }}
+            packages/desktop/dist/release-metadata.json
+            packages/desktop/dist/release-event.json
+
       - name: publish
         run: node tooling/release/publish-desktop-release.cjs
         env:
+          GH_TOKEN: ${{ github.token }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_REF_TYPE: ${{ github.ref_type }}
@@ -78,6 +95,7 @@ jobs:
             echo "workflow: ${GITHUB_WORKFLOW}"
             echo "package: @zuam/desktop"
             echo "failing stage: ${JOB_STATUS}"
+            echo "release target: windows-installer"
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           JOB_STATUS: ${{ job.status }}

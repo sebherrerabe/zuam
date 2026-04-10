@@ -24,8 +24,9 @@ describe("infra-release-observability", () => {
 
     expect(workflow.name).toBe("release-desktop");
     expect(workflow.jobs["release-desktop"]).toBeDefined();
+    expect(workflow.jobs["release-desktop"]["runs-on"]).toBe("windows-latest");
     expect(workflow.jobs["release-desktop"].steps.map((step) => step.name)).toEqual([
-      "install",
+      "checkout",
       "setup-node",
       "enable-corepack",
       "install dependencies",
@@ -35,6 +36,8 @@ describe("infra-release-observability", () => {
       "build",
       "package-smoke",
       "package",
+      "write-release-metadata",
+      "upload-packaged-artifacts",
       "publish",
       "summary"
     ]);
@@ -56,7 +59,8 @@ describe("infra-release-observability", () => {
       version: "0.1.0",
       gitSha: "abcdef1234567890",
       workflowRunId: "123",
-      packageChannel: "stable"
+      packageChannel: "stable",
+      artifactStem: "zuam-desktop-0.1.0-abcdef1"
     });
 
     expect(() =>
@@ -89,9 +93,10 @@ describe("infra-release-observability", () => {
     expect(files.metadata).toMatchObject({
       version: "0.1.0",
       gitSha: "abcdef1234567890",
-      packageChannel: "development"
+      packageChannel: "development",
+      artifacts: []
     });
-    expect(files.event.type).toBe("desktop.release.published");
+    expect(files.event.type).toBe("desktop.release.packaged");
 
     fs.rmSync(paths.desktopDistPath, { recursive: true, force: true });
   });
@@ -112,6 +117,7 @@ describe("infra-release-observability", () => {
     expect(summary).toContain("workflow: release-desktop");
     expect(summary).toContain("package: @zuam/desktop");
     expect(summary).toContain("failing stage: none");
+    expect(summary).toContain("artifact count: 0");
 
     fs.rmSync(summaryPath, { force: true });
   });

@@ -11,16 +11,18 @@ export class AnalyticsInsightsController {
   @Get("summary")
   getSummary(
     @Headers("x-zuam-user-id") userId: string | undefined,
-    @Query("window") window?: AnalyticsWindow
+    @Query("window") window?: AnalyticsWindow,
+    @Query("at") at?: string
   ) {
-    return this.analyticsInsightsService.getSummary(ensureUserId(userId), window);
+    return this.analyticsInsightsService.getSummary(ensureUserId(userId), window, at);
   }
 
   @Get("heatmap")
   getHeatmap(
     @Headers("x-zuam-user-id") userId: string | undefined,
-    @Query("window") window?: AnalyticsWindow
+    @Query("window") window?: AnalyticsWindow,
+    @Query("at") at?: string
   ) {
-    return this.analyticsInsightsService.getHeatmap(ensureUserId(userId), window ?? "last-28-days");
+    return this.analyticsInsightsService.getHeatmap(ensureUserId(userId), window ?? "last-28-days", at);
   }
 }

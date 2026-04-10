@@ -9,7 +9,7 @@ depends_on:
   - monorepo-platform
 parallel_group: foundation
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-06
+last_updated: 2026-04-09
 ---
 
 # Infra Release and Observability
@@ -21,6 +21,8 @@ This module defines how Zuam is built, packaged, released, and monitored at the 
 - Artifact naming, version stamping, and release provenance (`BE-UNIT-INFRA-002`).
 - CI summary and failure-reporting conventions for build/test/release jobs (`BE-UNIT-INFRA-003`).
 - Baseline observability hooks for build logs, workflow status, and release metadata (`FE-UNIT-INFRA-001`).
+- Windows desktop installer generation and GitHub Release asset publication for tagged builds (`BE-E2E-INFRA-001`).
+- Direct `electron-builder` packaging from the desktop package, with release metadata written only after packaging succeeds.
 
 ## Scope Out
 - Full production observability stack.
@@ -29,3 +31,4 @@ This module defines how Zuam is built, packaged, released, and monitored at the 
 
 ## Implementation Gate
 - The repo is release-ready only when a tagged build can be traced from commit SHA to artifact to published release without ambiguity (`BE-E2E-INFRA-001`).
+- Desktop release hardening is not complete on metadata stubs alone; tagged CI must emit real installer assets and attach them to the matching GitHub Release.

@@ -98,6 +98,7 @@ last_updated: 2026-04-09
 - Non-mobile Phase 2 is complete in code: task views, focus sessions, Google Calendar context, task-detail persistence, Electron runtime bridging, and desktop visual gates are all live.
 - `mobile-shell-core` remains intentionally deferred while mobile mockups and contracts harden.
 - Phase 3 consumes the current task completion, focus completion, and calendar-context contracts as-is and must not redefine those Phase 2 semantics.
+- Desktop release hardening is now beyond smoke-only validation: Windows installer packaging and GitHub Release publication are the active baseline tracked under `infra-release-observability`.
 
 ## LLM Usage Pattern
 - Read the phase doc for sequence.

@@ -2,8 +2,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
+const desktopPackageDir = path.join(repoRoot, "packages", "desktop");
 const desktopPackagePath = path.join(repoRoot, "packages", "desktop", "package.json");
 const desktopDistPath = path.join(repoRoot, "packages", "desktop", "dist");
+const desktopReleasePath = path.join(repoRoot, "packages", "desktop", ".release");
+const desktopReleaseArtifactsPath = process.env.ZUAM_RELEASE_OUTPUT_DIR
+  ? path.resolve(desktopPackageDir, process.env.ZUAM_RELEASE_OUTPUT_DIR)
+  : path.join(desktopReleasePath, "artifacts");
+const desktopBuilderConfigPath = path.join(desktopPackageDir, "electron-builder.config.cjs");
 const metadataPath = path.join(desktopDistPath, "release-metadata.json");
 const eventPath = path.join(desktopDistPath, "release-event.json");
 
@@ -30,7 +36,7 @@ function buildDesktopReleaseMetadata(env, packageVersion) {
   const refName = env.GITHUB_REF_NAME || "development";
   const buildTimestamp = new Date().toISOString();
   const packageChannel = refType === "tag" ? "stable" : "development";
-  const artifactName = `zuam-desktop-${version}-${gitSha.slice(0, 7)}.zip`;
+  const artifactStem = `zuam-desktop-${version}-${gitSha.slice(0, 7)}`;
 
   if (refType === "tag" && refName !== `v${version}`) {
     throw new Error(
@@ -49,34 +55,48 @@ function buildDesktopReleaseMetadata(env, packageVersion) {
     refName,
     buildTimestamp,
     packageChannel,
-    artifactName
+    artifactStem,
+    artifactName: `${artifactStem}-x64-nsis.exe`,
+    artifacts: []
   };
 }
 
-function writeDesktopReleaseFiles(metadata) {
+function writeDesktopReleaseFiles(
+  metadata,
+  artifacts = metadata.artifacts ?? [],
+  eventType = "desktop.release.packaged",
+  publishedRelease = null
+) {
   fs.mkdirSync(desktopDistPath, { recursive: true });
 
-  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+  const normalizedMetadata = {
+    ...metadata,
+    artifacts
+  };
+
+  fs.writeFileSync(metadataPath, JSON.stringify(normalizedMetadata, null, 2));
   fs.writeFileSync(
     eventPath,
     JSON.stringify(
       {
-        type: "desktop.release.published",
-        workflow: metadata.workflow,
-        packageName: metadata.packageName,
-        version: metadata.version,
-        gitSha: metadata.gitSha,
-        workflowRunId: metadata.workflowRunId,
-        artifactName: metadata.artifactName,
-        packageChannel: metadata.packageChannel,
-        buildTimestamp: metadata.buildTimestamp
+        type: eventType,
+        workflow: normalizedMetadata.workflow,
+        packageName: normalizedMetadata.packageName,
+        version: normalizedMetadata.version,
+        gitSha: normalizedMetadata.gitSha,
+        workflowRunId: normalizedMetadata.workflowRunId,
+        artifactName: normalizedMetadata.artifactName,
+        packageChannel: normalizedMetadata.packageChannel,
+        buildTimestamp: normalizedMetadata.buildTimestamp,
+        artifacts,
+        publishedRelease
       },
       null,
       2
     )
   );
 
-  return { metadataPath, eventPath, metadata };
+  return { metadataPath, eventPath, metadata: normalizedMetadata };
 }
 
 function readDesktopReleaseFiles() {
@@ -97,6 +117,7 @@ function emitSummary(summaryPath, metadata, event, failingStage) {
     `failing stage: ${failingStage}`,
     `commit: ${metadata.gitSha}`,
     `artifact: ${metadata.artifactName}`,
+    `artifact count: ${metadata.artifacts?.length ?? 0}`,
     `release event: ${event.type}`
   ];
 
@@ -110,7 +131,11 @@ module.exports = {
   readDesktopReleaseFiles,
   writeDesktopReleaseFiles,
   paths: {
+    desktopPackageDir,
     desktopDistPath,
+    desktopReleasePath,
+    desktopReleaseArtifactsPath,
+    desktopBuilderConfigPath,
     metadataPath,
     eventPath
   }

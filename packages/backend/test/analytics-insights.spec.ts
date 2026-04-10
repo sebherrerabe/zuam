@@ -74,7 +74,7 @@ describe("analytics-insights backend flows", () => {
       status: "completed"
     });
 
-    const summary = harness.analyticsController.getSummary("user-a", "this-week");
+    const summary = harness.analyticsController.getSummary("user-a", "this-week", "2026-04-08T18:00:00.000Z");
 
     expect(summary.streakSummary).toEqual(
       expect.objectContaining({
@@ -133,7 +133,7 @@ describe("analytics-insights backend flows", () => {
     });
     harness.focusController.end("user-a", started.id, { at: "2026-04-07T09:05:00.000Z" });
 
-    const summary = harness.analyticsController.getSummary("user-a", "this-week");
+    const summary = harness.analyticsController.getSummary("user-a", "this-week", "2026-04-08T18:00:00.000Z");
 
     expect(summary.weeklySummary).toEqual(
       expect.objectContaining({
@@ -175,7 +175,7 @@ describe("analytics-insights backend flows", () => {
     harness.focusController.end("user-a", started.id, { at: "2026-04-06T09:32:00.000Z" });
 
     const beforeTaskState = harness.tasksController.get("user-a", task.id);
-    const heatmap = harness.analyticsController.getHeatmap("user-a", "last-28-days");
+    const heatmap = harness.analyticsController.getHeatmap("user-a", "last-28-days", "2026-04-08T18:00:00.000Z");
     const afterTaskState = harness.tasksController.get("user-a", task.id);
     const bucket = heatmap.buckets.find((entry: { date: string }) => entry.date === "2026-04-06");
 

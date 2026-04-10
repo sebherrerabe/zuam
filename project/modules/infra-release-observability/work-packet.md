@@ -9,7 +9,7 @@ depends_on:
   - monorepo-platform
 parallel_group: foundation
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-09
 ---
 
 # Work Packet
@@ -27,6 +27,7 @@ Define the release pipeline and minimum observability contract so desktop builds
 - Artifact provenance contract.
 - CI summary contract.
 - Runtime build-metadata contract.
+- Direct package-builder invocation contract for Windows releases.
 
 ## Tests To Create First
 - `BE-UNIT-INFRA-001`, `BE-UNIT-INFRA-002`, `BE-UNIT-INFRA-003`.
@@ -40,6 +41,7 @@ Define the release pipeline and minimum observability contract so desktop builds
 
 ## Completion Signals
 - A tagged build can be traced end-to-end from commit to artifact to release entry.
+- Tagged release automation emits real Windows installer artifacts, not metadata-only placeholders.
 
 ## Non-Goals
 - No production telemetry backend.

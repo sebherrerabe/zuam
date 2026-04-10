@@ -9,7 +9,7 @@ depends_on:
   - monorepo-platform
 parallel_group: foundation
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-09
 ---
 
 # Backend Tests
@@ -20,3 +20,4 @@ last_updated: 2026-04-04
 - `BE-UNIT-INFRA-004`: workflow summary contains the failing stage and package name when a job fails.
 - `BE-UNIT-INFRA-005`: provenance trace test can link a release back to a commit SHA and workflow run ID.
 - `BE-E2E-INFRA-001`: a tagged commit can be traced from workflow run to artifact to published release entry using only documented metadata.
+- `BE-E2E-INFRA-002`: tagged desktop packaging emits both installer and portable Windows artifacts before publish.
