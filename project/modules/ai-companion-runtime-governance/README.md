@@ -15,13 +15,17 @@ source_of_truth:
   - PRD_Zuam_v0.3.md
   - AI Companion for ADHD Task App.md
   - deep-research-report-ai.md
-last_updated: 2026-04-07
+last_updated: 2026-04-10
 ---
 
 # AI Companion Runtime Governance
 
 ## Objective
 Define the provider, tool, memory, permission, and audit boundaries that make Zuamy safe enough to plan and execute user-approved actions.
+
+## Shipping-First Status
+- This module is explicitly deferred from the shipping bar.
+- Governance work may stay documented, but it must not outrank the real auth/data/sync/calendar/focus/nudge runtime.
 
 ## User Value
 - Preserve privacy and agency while still allowing useful AI-assisted organization.

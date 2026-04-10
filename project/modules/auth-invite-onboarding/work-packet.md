@@ -9,13 +9,13 @@ owners:
 depends_on: []
 parallel_group: phase1-auth
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-04"
+last_updated: "2026-04-10"
 ---
 
 # Work Packet
 
 ## Objective
-Ship Google OAuth plus single-use invite gating and the first-login access gate.
+Ship Google OAuth plus single-use invite gating and the first-login access gate on the real backend runtime.
 
 ## Files and Packages Expected To Change
 - `packages/backend/src/auth/*`
@@ -28,8 +28,11 @@ Ship Google OAuth plus single-use invite gating and the first-login access gate.
 - Invite token validation endpoint.
 - Session refresh and logout behavior.
 - Auth-gated route guard and shell handoff.
+- `AuthDao`, `InvitesDao`, `SessionsDao`, and `GoogleOAuthProvider` boundaries.
 
 ## Tests To Create First
+- `BE-INT-AUTH-001`
+- `BE-INT-AUTH-002`
 - `BE-E2E-AUTH-001` through `BE-E2E-AUTH-005`.
 - `FE-UNIT-AUTH-001` through `FE-UNIT-AUTH-004`.
 
@@ -39,11 +42,12 @@ Ship Google OAuth plus single-use invite gating and the first-login access gate.
 
 ## Parallel-Safe Boundaries
 - Backend OAuth and invite logic can be built independently from the desktop gate UI once DTOs are fixed.
-- The auth screen can be implemented against mocked endpoint contracts before the real backend is complete.
+- The auth screen can be implemented against mocked endpoint contracts before the real backend is complete, but that scaffold does not satisfy module completion.
 
 ## Completion Signals
 - A new user cannot reach the app shell without a valid invite token.
 - A returning user can re-authenticate and refresh without duplicate records.
+- Invite consumption and session persistence survive backend restart on disposable Postgres.
 
 ## Non-Goals
 - No password auth.

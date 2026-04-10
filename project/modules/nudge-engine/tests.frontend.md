@@ -11,7 +11,7 @@ depends_on:
   - core-data-model-crud
 parallel_group: phase1-nudge
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-08"
+last_updated: "2026-04-10"
 ---
 
 # Frontend Test Spec
@@ -40,3 +40,4 @@ last_updated: "2026-04-08"
 ## `NUDGE-FE-VIS-001`
 - Compare the implemented level 1 and level 2 nudge surfaces against the fetched shell/detail screenshots for nodes `155:3` and `155:233`.
 - Verify color, typography, density, and action hierarchy feel visually native to the light-mode shell, and document overlay-specific styling as an intentional inference.
+- The primary CTA must stay in the same warm-light action family as the detail-panel focus button; legacy blue/teal gradient CTAs should fail visual review.

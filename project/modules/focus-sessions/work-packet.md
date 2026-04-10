@@ -12,13 +12,13 @@ depends_on:
   - nudge-engine
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Work Packet
 
 ## Objective
-Ship a reliable focus timer flow that can survive pauses, breaks, and app relaunches.
+Ship a reliable focus timer flow that can survive pauses, breaks, app relaunches, and backend restart.
 
 ## Inputs
 - Task selection.
@@ -29,8 +29,10 @@ Ship a reliable focus timer flow that can survive pauses, breaks, and app relaun
 - Timer UI and lifecycle actions.
 - Session history and task time rollups.
 - Break overlay behavior.
+- Durable active-session and completed-session records.
 
 ## Tests To Create First
+- `BE-INT-FCS-001`
 - `BE-UNIT-FCS-001`
 - `FE-UNIT-FCS-001`
 - `FE-E2E-FCS-001`
@@ -41,11 +43,12 @@ Ship a reliable focus timer flow that can survive pauses, breaks, and app relaun
 - Needs nudge overlay interaction rules to avoid competing modal surfaces.
 
 ## Parallel-Safe Boundaries
-- Timer UI can be built while backend persistence is stubbed if event contracts stay fixed.
+- Timer UI can be built against temporary scaffold persistence if event contracts stay fixed, but scaffold persistence is not a completion signal.
 
 ## Completion Signals
 - Focus sessions resume correctly after pause, break, and reload.
 - Logged time matches persisted task totals.
+- Active-session recovery and completed-session history survive backend restart on disposable Postgres.
 
 ## Non-Goals
 - No gamification dashboard.

@@ -11,7 +11,7 @@ depends_on:
   - nudge-engine
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Contracts
@@ -35,3 +35,15 @@ last_updated: 2026-04-08
 - `FocusSession` includes `id`, `userId`, `taskId`, `status`, `startedAt`, `pausedAt`, `resumedAt`, `endedAt`, `durationMinutes`, `breakDurationMinutes`, `elapsedWorkMinutes`, `elapsedBreakMinutes`, `extraMinutes`, and `lastSyncedAt`.
 - Ending a session updates the linked task with `actualMinutes`, `focusSessionCount`, and `lastFocusedAt`.
 - Deferred nudge delivery is tracked separately from the session record so reconnect can resume the timer without replaying dismissed overlays.
+
+## Backend Interface Contract
+- `FocusSessionsDao`
+  - responsibilities: create/start session, persist pauses/resumes/end state, fetch active session, persist break transitions, write history rollups
+- `TasksDao`
+  - responsibilities: apply focus-derived task rollups without exposing persistence details to the focus service
+- `NudgesDao`
+  - responsibilities: mark deferred nudges during active focus and release them after pause/break/end
+
+## Runtime Notes
+- Persistent recovery after backend restart is part of the contract.
+- A purely in-memory timer/session store is scaffold-only and cannot satisfy completion.

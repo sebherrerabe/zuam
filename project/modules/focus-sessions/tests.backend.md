@@ -9,10 +9,14 @@ depends_on:
   - core-data-model-crud
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-focus
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Backend Test Specs
+
+## `BE-INT-FCS-001`
+- Persist active and completed focus sessions through `FocusSessionsDao` on disposable Postgres.
+- Assert active-session recovery, pause state, and completed history survive backend restart.
 
 ## `BE-UNIT-FCS-001`
 - Covers `FCS-REQ-1`.
@@ -33,3 +37,7 @@ last_updated: 2026-04-08
 ## `BE-E2E-FCS-002`
 - Covers `FCS-REQ-4`.
 - Assert pause/break transitions survive reconnect and resume from persisted state.
+
+## `BE-E2E-FCS-003`
+- Covers `FCS-REQ-5`.
+- Assert active focus defers nudges, break state releases only the allowed nudges, and end-of-session logging is persisted before deferred nudge release.

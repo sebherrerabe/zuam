@@ -9,7 +9,7 @@ owners:
 depends_on: []
 parallel_group: phase1-auth
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-04"
+last_updated: "2026-04-10"
 ---
 
 # Contracts
@@ -51,9 +51,20 @@ last_updated: "2026-04-04"
 ## Data Contracts
 - `User`: stable `id`, `googleSubject`, `email`, `name`, `avatarUrl`, `createdAt`, `updatedAt`.
 - `InviteToken`: `token`, `createdAt`, `expiresAt`, `usedAt`, `usedByUserId`.
-- `Session`: `userId`, `refreshTokenHash`, `revokedAt`, `expiresAt`.
+- `UserSession`: `id`, `userId`, `refreshTokenHash`, `createdAt`, `lastUsedAt`, `revokedAt`, `expiresAt`, `userAgent`, `ipAddress`.
 - Invariants: a token is single-use, a Google subject maps to at most one user, and invite consumption is transactional.
 - Tests: `BE-E2E-AUTH-002`, `BE-E2E-AUTH-003`, `BE-E2E-AUTH-004`.
+
+## Backend Interface Contract
+- `AuthDao`
+  - responsibilities: upsert user identity, fetch by Google subject/email, and expose transactional access for first-login creation
+- `InvitesDao`
+  - responsibilities: fetch invite by token, atomically consume invite, record `usedByUserId`
+- `SessionsDao`
+  - responsibilities: create session, rotate refresh credentials, revoke session, revoke all for user, fetch active session
+- `GoogleOAuthProvider`
+  - responsibilities: build auth URL, validate callback state, exchange code for Google identity payload
+- Services may depend on these interfaces only; Prisma and provider SDKs stay behind DAO/adapter implementations.
 
 ## Frontend Contract
 - Entry screen shows one primary Google sign-in button and one invite token field.
@@ -66,3 +77,7 @@ last_updated: "2026-04-04"
 - `auth:session-updated`: emitted when session state changes so the desktop shell can refresh route guards and user chrome.
 - Payload: `{ userId, authenticated, inviteRequired }`.
 - Tests: `BE-E2E-AUTH-004`, `FE-UNIT-AUTH-004`.
+
+## Runtime Notes
+- Prisma/Postgres-backed DAO implementations are the authoritative runtime path.
+- In-memory auth/session stores are scaffold-only and cannot satisfy this module's completion gate.

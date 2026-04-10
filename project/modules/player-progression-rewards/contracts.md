@@ -11,10 +11,14 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Contracts
+
+## Shipping-First Status
+- This module is downstream of the shipped core runtime and remains non-blocking until that runtime is real.
+- It must not introduce new core-backend requirements ahead of auth/data/sync/calendar/focus/nudge completion.
 
 ## Data Contract
 - `ProgressionProfile`: `userId`, `level`, `totalXp`, `currentAvatarArchetype`, `equippedCosmetics[]`, `unlockedCosmetics[]`, `updatedAt`.

@@ -10,10 +10,14 @@ depends_on:
   - focus-sessions
 parallel_group: metrics
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Work Packet
+
+## Shipping-First Status
+- This packet is non-blocking until the shipping-track desktop runtime is real.
+- Planning may continue, but implementation must not outrank auth/data/sync/calendar/focus/nudge closeout.
 
 ## Objective
 Document the minimum explainable motivation analytics that can ship without becoming the reward layer itself.

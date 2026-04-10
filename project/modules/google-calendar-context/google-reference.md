@@ -11,12 +11,12 @@ parallel_group: calendar-context
 source_of_truth:
   - project/modules/google-calendar-context/README.md
   - PRD_Zuam_v0.3.md
-last_updated: "2026-04-08"
+last_updated: "2026-04-10"
 ---
 
 # Google Calendar API Reference
 
-This file captures the Google Calendar behaviors that matter for Zuam's calendar-context module, especially the tradeoffs between free/busy reads, full event sync, sync tokens, and push channels.
+This file captures the Google Calendar behaviors that matter for Zuam's calendar-context module, especially the tradeoffs between free/busy reads, full event sync, sync tokens, and push channels. Even though the module keeps its Phase 2 numbering, it is part of the active shipping track.
 
 ## Official Docs Reviewed
 - Calendar scopes: https://developers.google.com/workspace/calendar/api/auth

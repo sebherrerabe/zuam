@@ -10,10 +10,14 @@ depends_on:
   - task-views
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-mobile
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Work Packet
+
+## Shipping-First Status
+- This packet is explicitly non-blocking until the desktop shipping bar is complete.
+- Mobile work consumes the shipped auth/data contracts; it must not drive backend scope before the desktop core runtime is real.
 
 ## Objective
 Create the Android-first shell that exposes Today, Inbox, task detail, and the shared draft composer while preserving permission recovery and narrow-screen accessibility.

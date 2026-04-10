@@ -11,12 +11,12 @@ parallel_group: phase1-sync
 source_of_truth:
   - project/modules/google-tasks-sync/README.md
   - PRD_Zuam_v0.3.md
-last_updated: "2026-04-05"
+last_updated: "2026-04-10"
 ---
 
 # Google Tasks API Reference
 
-This file translates the current public Google Tasks docs into implementation decisions for Zuam's sync layer.
+This file translates the current public Google Tasks docs into implementation decisions for Zuam's shipping-track sync layer.
 
 ## Official Docs Reviewed
 - Tasks scopes: https://developers.google.com/workspace/tasks/auth
@@ -38,6 +38,7 @@ Reviewed on 2026-04-05.
 - Zuam should implement Google Tasks sync as polling plus immediate local push.
 - Inference from the currently published Tasks guides and reference: unlike Calendar, the public Tasks docs reviewed here do not expose a `watch` or push-notification path.
 - Therefore polling is the canonical remote-change detection mechanism for Zuam.
+- Any extra trigger endpoint in Zuam is an internal scheduler/runtime signal only, not a Google push callback contract.
 
 ### 2. Full import starts with task lists, then tasks per list
 - Full import flow:

@@ -14,7 +14,7 @@ last_updated: 2026-04-10
 
 # Infra Release and Observability
 
-This module defines how Zuam is built, packaged, released, and monitored at the repository level. It is phase-1 ready because desktop release automation and basic observability contracts are prerequisites for the first usable build.
+This module defines how Zuam is built, packaged, released, and monitored at the repository level. It is on the shipping track because desktop release automation and backend runtime verification are prerequisites for the first usable build.
 
 ## Scope In
 - GitHub Actions workflow shape for desktop release builds (`BE-UNIT-INFRA-001`).
@@ -24,6 +24,7 @@ This module defines how Zuam is built, packaged, released, and monitored at the 
 - Windows desktop installer generation and GitHub Release asset publication for tagged builds (`BE-E2E-INFRA-001`).
 - Direct `electron-builder` packaging from the desktop package, with release metadata written only after packaging succeeds.
 - Checked-in Windows app and installer branding assets derived from `Logo svg.svg` and the authoritative warm-light Figma branding nodes `155:5` / `155:7`.
+- CI enforcement for the shipping-track backend runtime tests on disposable Postgres.
 
 ## Scope Out
 - Full production observability stack.
@@ -33,3 +34,4 @@ This module defines how Zuam is built, packaged, released, and monitored at the 
 ## Implementation Gate
 - The repo is release-ready only when a tagged build can be traced from commit SHA to artifact to published release without ambiguity (`BE-E2E-INFRA-001`).
 - Desktop release hardening is not complete on metadata stubs alone; tagged CI must emit real installer assets and attach them to the matching GitHub Release.
+- The shipping bar also requires CI to prove the real backend runtime path for auth, CRUD, sync, calendar context, focus logging, and nudge scheduling before those modules remain marked complete.

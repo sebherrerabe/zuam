@@ -11,7 +11,7 @@ depends_on:
 parallel_group: phase-3
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Phase 3 Polish And Intelligence
@@ -44,3 +44,4 @@ Add explainable insights, positive-only player progression, share-safe celebrati
 - Progression is optional, positive-only, and deterministic.
 - Share export is private-only in Phase 3. Public URLs remain Phase 4 work.
 - PixiJS is reserved for animated avatar and progression scenes, not ordinary layout UI.
+- Phase 3 remains explicitly deferred from the shipping bar. It must not consume backend priority until the real shipping-track runtime is working end to end.

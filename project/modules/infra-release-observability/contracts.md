@@ -22,6 +22,7 @@ last_updated: 2026-04-10
 - Release publication must upload the packaged artifacts plus release metadata/event files to the matching GitHub Release entry (`BE-E2E-INFRA-001`).
 - Desktop packaging must treat `electron-builder` as the primary packager and keep metadata/provenance generation in a separate post-package step (`BE-UNIT-INFRA-001`).
 - Windows packaging assets (`icon.ico`, installer header, installer sidebar) must be checked into the desktop package and regenerated only from `Logo svg.svg` plus the authoritative Figma brand nodes `155:5` and `155:7` (`BE-UNIT-INFRA-001`).
+- CI must run the shipping-track backend integration/e2e suites against disposable Postgres before release packaging can proceed (`BE-UNIT-INFRA-004`, `BE-E2E-INFRA-003`).
 
 ## Observability Contract
 - Every CI job must emit a summary that names the workflow, package, and failing stage (`BE-UNIT-INFRA-003`).
@@ -32,3 +33,4 @@ last_updated: 2026-04-10
 
 ## Integration Contract
 - A successful release trace must connect commit SHA, workflow run, artifact name, and published release entry (`BE-E2E-INFRA-001`).
+- The documented release path must prove the real shipping runtime was validated, not only that desktop artifacts were built (`BE-E2E-INFRA-003`).

@@ -10,13 +10,13 @@ depends_on:
   - google-tasks-sync
 parallel_group: calendar-context
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Work Packet
 
 ## Objective
-Define a deterministic calendar-context read model that downstream scheduling and task surfaces can trust.
+Define a deterministic calendar-context read model that downstream scheduling and task surfaces can trust on the real backend runtime.
 
 ## Files / Packages Expected To Change
 - Calendar sync and suggestion contracts.
@@ -26,8 +26,11 @@ Define a deterministic calendar-context read model that downstream scheduling an
 - Busy-block normalization.
 - Free-window derivation.
 - Suggestion rationale contract.
+- `GoogleCalendarClient` and `GoogleCalendarContextDao` boundaries with persisted snapshot state.
 
 ## Tests To Create First
+- `BE-INT-GCAL-001`
+- `BE-INT-GCAL-002`
 - `BE-UNIT-GCAL-001`, `BE-UNIT-GCAL-003`, `BE-UNIT-GCAL-004`.
 - `FE-UNIT-GCAL-001`, `FE-UNIT-GCAL-002`, `FE-E2E-GCAL-001`.
 
@@ -39,6 +42,7 @@ Define a deterministic calendar-context read model that downstream scheduling an
 
 ## Completion Signals
 - The app can explain why a slot is suggested without exposing raw Google API objects.
+- The latest persisted calendar snapshot survives restart and stale/partial states remain explicit.
 
 ## Non-Goals
 - No event editing.

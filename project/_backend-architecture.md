@@ -13,7 +13,7 @@ parallel_group: foundation
 source_of_truth:
   - AGENTS.md
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-07
+last_updated: 2026-04-10
 ---
 
 # Backend Architecture Baseline
@@ -75,10 +75,30 @@ Recommended NestJS modules by product slice:
 - `publicProfiles`
 
 ## Persistence Layer Rules
-- Create one shared Prisma bootstrap module under a common database package or folder.
+- Create one shared Prisma/Postgres bootstrap module under a common database package or folder.
 - Export Prisma-backed DAO implementations, not Prisma itself, to feature services.
-- Use DAO interfaces where service tests need mocking stability.
+- Use explicit DAO interfaces for shipping-track services: `AuthDao`, `ListsDao`, `SectionsDao`, `TasksDao`, `FocusSessionsDao`, `GoogleTasksSyncDao`, `GoogleCalendarContextDao`, and `NudgesDao`.
 - Keep persistence mapping close to each DAO instead of leaking Prisma models through service contracts.
+- Treat in-memory DAO implementations as test-only or prototype-only scaffolding; the canonical runtime path is Prisma-backed.
+
+## Durable Shipping Records
+The shared Prisma/Postgres runtime must durably represent at least:
+- `User`
+- `InviteToken`
+- `UserSession`
+- `List`
+- `Section`
+- `Task`
+- `TaskSyncState`
+- `FocusSession`
+- `CalendarContextSnapshot`
+- `NudgeSchedule` and delivery history records
+
+## Provider Adapter Rules
+- External integrations must be expressed behind provider interfaces.
+- Shipping-track provider interfaces include `GoogleOAuthProvider`, `GoogleTasksClient`, and `GoogleCalendarClient`.
+- Fake or stub provider implementations are test-only. They do not satisfy module completion for a `ready` runtime path.
+- Services orchestrate adapters plus DAOs; adapters do not reach into service logic.
 
 ## Transactions
 - Transaction coordination must remain below the service boundary.
@@ -89,15 +109,22 @@ Recommended NestJS modules by product slice:
 - Services may request transactional execution, but still call DAOs inside that scope.
 
 ## Integration Rules
-- Google Tasks and Calendar clients live in dedicated provider modules.
+- Google OAuth, Tasks, and Calendar clients live in dedicated provider modules.
 - Sync logic belongs in services, not DAOs.
 - Conflict resolution belongs in services, not DAOs.
 - WebSocket gateways should push invalidation, progress, focus, and nudge events; they should not own domain logic.
+
+## Scheduler And Locking Rules
+- Polling or scheduler-driven features must run through `@nestjs/schedule` or an equivalent scheduler boundary.
+- Google Tasks sync, Google Calendar refresh, and nudge scheduling must persist lock or lease state durable enough to prevent duplicate runs after restart.
+- Trigger handling must be idempotent so webhook, manual trigger, and poller signals can converge on one safe execution path.
+- Restart recovery behavior must be documented in the module contracts and tested at integration/e2e level.
 
 ## Testing Expectations
 - Controller tests mock services.
 - Service unit tests mock DAO interfaces.
 - DAO integration tests hit a real disposable Postgres database.
+- Shipping-track API e2e tests boot the real Nest app against disposable Postgres with external providers mocked only at the adapter seam.
 - Sync and conflict-resolution tests live at service/integration level, not DAO level.
 
 ## Phase Preview

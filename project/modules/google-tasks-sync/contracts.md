@@ -10,7 +10,7 @@ depends_on:
   - core-data-model-crud
 parallel_group: phase1-sync
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-04"
+last_updated: "2026-04-10"
 ---
 
 # Contracts
@@ -28,23 +28,32 @@ last_updated: "2026-04-04"
 - Response: `{ googleTasksLastSyncAt, googleTasksStatus, lastError }`.
 - Tests: `BE-E2E-SYNC-001`, `FE-UNIT-SYNC-001`.
 
-### `POST /sync/google/tasks/webhook`
-- Purpose: accept a Google push notification or provider webhook signal and enqueue a polling pass.
+### `POST /sync/google/tasks/trigger`
+- Purpose: accept an internal freshness signal from the scheduler or other trusted runtime path and enqueue a polling pass.
 - Response: `202 Accepted`.
-- Errors: `400` invalid provider signature or payload.
+- Errors: `400` invalid trigger payload.
 - Tests: `BE-E2E-SYNC-002`.
 
 ## Data Contracts
-- `GoogleSyncState`: `userId`, `googleTasksCursor`, `googleTasksLastSyncAt`, `googleTasksStatus`, `googleTasksLastError`.
+- `TaskSyncState`: `userId`, `googleTasksCursor`, `googleTasksLastSyncAt`, `googleTasksStatus`, `googleTasksLastError`, `activeRunId`, `lockExpiresAt`.
 - `Task` mapping fields: `googleTaskId`, `googleTaskListId`, `title`, `notes`, `dueDate`, `completed`, `completedAt`.
 - Invariants: `googleTaskId` uniquely identifies a remote task, and app-only fields are not mutated by Google sync.
 - Tests: `BE-E2E-SYNC-003`, `BE-E2E-SYNC-004`.
+
+## Backend Interface Contract
+- `GoogleTasksClient`
+  - responsibilities: fetch lists/tasks, fetch incremental changes, create/update/complete remote tasks, normalize provider failures
+- `GoogleTasksSyncDao`
+  - responsibilities: store cursors and run state, acquire/release durable sync lock, persist failure metadata, map remote IDs to local records
+- `TasksDao`, `ListsDao`, and `SectionsDao`
+  - responsibilities: apply canonical local mutations during sync without exposing Prisma or raw queries to services
 
 ## Sync Rules
 - Full sync imports all remote lists and tasks before incremental sync begins.
 - Incremental sync only re-fetches changes after the last known cursor or timestamp.
 - Local writes are sent to Google immediately after successful local persistence.
 - If the same synced field changes on both sides, Google wins.
+- Manual trigger, poller trigger, and other trusted runtime freshness signals converge on one idempotent sync path guarded by a durable single-run lock.
 - Tests: `BE-E2E-SYNC-001`, `BE-E2E-SYNC-002`, `BE-E2E-SYNC-003`.
 
 ## Frontend Contract
@@ -57,3 +66,7 @@ last_updated: "2026-04-04"
 - `sync:started`, `sync:completed`, `sync:failed`, `task:updated`.
 - Payloads must include the sync scope, user id, and affected entity ids.
 - Tests: `BE-E2E-SYNC-002`, `BE-E2E-SYNC-003`, `FE-UNIT-SYNC-001`.
+
+## Runtime Notes
+- The real Google Tasks adapter is the authoritative runtime path.
+- Fake Google Tasks providers are test-only and do not satisfy this module's completion gate.

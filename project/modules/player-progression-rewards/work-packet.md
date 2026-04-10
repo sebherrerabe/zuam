@@ -11,10 +11,14 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Work Packet
+
+## Shipping-First Status
+- This packet is non-blocking until the shipping-track desktop runtime is real.
+- Planning may continue, but it must not outrank completion of the real core backend path.
 
 ## Objective
 Document the minimum positive-only pixel-RPG progression system that can ship without introducing punishment, social pressure, or opaque reward logic.

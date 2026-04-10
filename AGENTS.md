@@ -8,7 +8,7 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Copilot, Cu
 
 Zuam is an ADHD-optimized task management app with psychologically-informed nudges that escalate until you act. Bidirectional Google Tasks/Calendar sync, Notion-like block editor, Kanban/Eisenhower views, Pomodoro focus sessions. "Zuam" is Mapudungun for will/intention/desire.
 
-**Status**: Spec-driven, pre-implementation repository. The canonical planning layer now lives in `project/`. The PRD remains important, but implementation work should start from the `project/` docs, not from the PRD alone.
+**Status**: Spec-driven repository with active implementation. The canonical planning layer lives in `project/`, and `ready` now means a slice can land on a real runtime path. Mock-backed, in-memory, or fake-provider code paths are temporary scaffolding for UI or contract work only and do not satisfy module completion on their own.
 
 ## Canonical Sources Of Truth
 
@@ -113,6 +113,7 @@ For frontend work backed by mockups:
 - Implementation should begin by writing or materializing the documented failing tests for the slice.
 - Backend and frontend success criteria live in the module test docs, not only in prose.
 - If implementation reveals an ambiguity, update the relevant `project/` docs before or alongside code.
+- For shipping-bar backend modules, completion requires real persistence and real runtime behavior backed by disposable-Postgres integration/e2e coverage; mocks remain limited to explicit seams around external providers such as Google APIs.
 
 ## Parallelization Rules
 
@@ -123,20 +124,22 @@ For frontend work backed by mockups:
 
 ## Phase Status Expectations
 
-- Phase 1 modules are the deepest and should be treated as implementation-ready.
-- Later-phase modules may be lighter and marked `draft`; if you implement them, deepen their specs first.
-- A module marked `ready` should be implementable without asking product or architecture follow-up questions.
+- Phase numbering remains useful for sequencing, but the active delivery priority is the Shipping Track overlay in `project/_index.md`.
+- A module marked `ready` should be implementable on a production-backed path without asking product or architecture follow-up questions.
+- A `ready` module cannot rely on stub-only, in-memory-only, or fake-provider-only primary runtime paths.
+- Later-phase modules may remain documented while being explicitly non-blocking for the shipping bar; do not let them outrank real core runtime work.
 
-## Current Phase 1 Critical Path
+## Current Shipping Track Critical Path
 
 1. `monorepo-platform`
 2. `auth-invite-onboarding`
 3. `core-data-model-crud`
-4. `desktop-shell-layout`
+4. `desktop-shell-layout` and `task-detail-basic-editor` as frontend dependencies on the real backend path
 5. `google-tasks-sync`
-6. `task-detail-basic-editor`
-7. `nudge-engine`
-8. `infra-release-observability`
+6. `google-calendar-context`
+7. `focus-sessions`
+8. `nudge-engine`
+9. `infra-release-observability`
 
 ## Tech Stack
 

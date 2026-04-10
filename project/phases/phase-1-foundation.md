@@ -13,13 +13,13 @@ depends_on:
 parallel_group: phase-1
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-04
+last_updated: 2026-04-10
 ---
 
 # Phase 1 Foundation
 
 ## Goal
-Deliver the first implementation-ready desktop-centered MVP: monorepo setup, backend auth and CRUD, initial Google Tasks sync, desktop shell, basic task detail editing, Level 1-2 desktop nudges, and release foundations.
+Deliver the first desktop-centered shipping substrate: monorepo setup, real backend auth and CRUD, initial real Google Tasks sync, desktop shell, basic task detail editing, Level 1-2 desktop nudges, and release foundations.
 
 ## Included Modules
 - `monorepo-platform`
@@ -36,12 +36,16 @@ Deliver the first implementation-ready desktop-centered MVP: monorepo setup, bac
 
 ## Exit Criteria
 - Monorepo package and local dev rules are frozen.
-- Google OAuth plus invite-gated auth contracts are ready.
-- Prisma data model and core CRUD contracts are ready.
+- Google OAuth plus invite-gated auth contracts are ready for real runtime implementation.
+- Prisma data model and core CRUD contracts are ready for real Postgres-backed implementation.
 - Desktop shell and basic task-detail editor contracts are ready.
-- Google Tasks sync ownership and reconciliation rules are ready.
-- Level 1-2 desktop nudge behavior is ready.
+- Google Tasks sync ownership and reconciliation rules are ready for the real provider path.
+- Level 1-2 desktop nudge behavior is ready with durable scheduling expectations.
 - CI and release expectations for desktop and backend are ready.
+
+## Shipping-First Note
+- Phase 1 remains the architectural foundation, but the shipping overlay now extends into Phase 2 for `google-calendar-context` and `focus-sessions`.
+- Phase 1 docs must not describe in-memory or fake-provider-only runtime paths as sufficient for completion.
 
 ## Parallelization Notes
 - `monorepo-platform` unblocks every other Phase 1 module.

@@ -1,13 +1,13 @@
 .nudge-root {
-  color: #1d1d1f;
+  color: #1e1612;
   font-family: Inter, "Segoe UI", sans-serif;
 }
 
 .nudge-notification,
 .nudge-modal {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 18px 48px rgba(15, 30, 54, 0.16);
+  background: #fffcf7;
+  border: 1px solid rgba(183, 118, 75, 0.14);
+  box-shadow: 0 18px 48px rgba(64, 51, 38, 0.14);
 }
 
 .nudge-notification {
@@ -42,7 +42,7 @@
 
 .nudge-kicker {
   margin: 0;
-  color: #5b6af0;
+  color: #b7764b;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -58,13 +58,13 @@
 
 .nudge-copy {
   margin: 0;
-  color: #6e6e73;
+  color: #61574f;
   font-size: 13px;
   line-height: 1.5;
 }
 
 .nudge-copy--compact {
-  color: #6e6e73;
+  color: #948b82;
 }
 
 .nudge-meta-row {
@@ -78,19 +78,19 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #dbe3ef;
+  border: 1px solid #ebded1;
   border-radius: 999px;
-  background: #eef2f6;
-  color: #6e6e73;
+  background: #f7f0e8;
+  color: #61574f;
   font-size: 11px;
   font-weight: 600;
   padding: 6px 10px;
 }
 
 .nudge-chip--accent {
-  border-color: rgba(0, 184, 152, 0.2);
-  background: rgba(0, 184, 152, 0.12);
-  color: #00875f;
+  border-color: rgba(123, 175, 110, 0.24);
+  background: rgba(123, 175, 110, 0.12);
+  color: #678f5d;
 }
 
 .nudge-avatar {
@@ -100,28 +100,28 @@
   width: 42px;
   height: 42px;
   padding: 5px;
-  border: 1px solid #dbe3ef;
+  border: 1px solid rgba(183, 118, 75, 0.16);
   border-radius: 12px;
-  background: #eef2f6;
+  background: #f7f0e8;
   flex: none;
 }
 
 .nudge-avatar__pixel {
   border-radius: 1px;
-  background: #5b6af0;
+  background: #b7764b;
 }
 
 .nudge-avatar__pixel[data-tone="light"] {
-  background: #d7ddff;
+  background: #f7d8bf;
 }
 
 .nudge-avatar__pixel[data-tone="dark"] {
-  background: #00b898;
+  background: #8f5f3d;
 }
 
 .nudge-divider {
   border: 0;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #ebded1;
   margin: 0;
 }
 
@@ -133,10 +133,10 @@
 
 .nudge-button {
   appearance: none;
-  border: 1px solid #dbe3ef;
+  border: 1px solid #ebded1;
   border-radius: 999px;
-  background: #fff;
-  color: #1d1d1f;
+  background: #fffdfa;
+  color: #1e1612;
   cursor: pointer;
   font-size: 13px;
   font-weight: 650;
@@ -150,12 +150,12 @@
 }
 
 .nudge-button:hover {
-  background: #f5f8fc;
-  border-color: #cfd9e8;
+  background: #f7f0e8;
+  border-color: #d9c8b8;
 }
 
 .nudge-button:focus-visible {
-  outline: 3px solid rgba(91, 106, 240, 0.2);
+  outline: 3px solid rgba(183, 118, 75, 0.16);
   outline-offset: 2px;
 }
 
@@ -164,28 +164,31 @@
 }
 
 .nudge-button--primary {
-  background: linear-gradient(90deg, #00d4ab 0%, #5c6bf0 100%);
+  border-color: rgba(143, 95, 61, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #b7764b 0%, #9a643d 100%);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 10px 24px rgba(91, 106, 240, 0.2);
+  box-shadow: 0 12px 22px rgba(143, 95, 61, 0.18);
 }
 
 .nudge-button--primary:hover {
-  background: linear-gradient(90deg, #14d7b1 0%, #6876f3 100%);
+  background: linear-gradient(180deg, #bf7f52 0%, #a56a40 100%);
   border-color: transparent;
 }
 
 .nudge-button--ghost {
   background: transparent;
+  color: #61574f;
 }
 
 .nudge-button--ghost:hover {
-  background: rgba(238, 242, 246, 0.92);
+  background: rgba(247, 240, 232, 0.92);
 }
 
 .nudge-button--danger {
-  border-color: rgba(255, 107, 107, 0.24);
-  color: #c94646;
+  border-color: rgba(175, 79, 61, 0.18);
+  color: #af4f3d;
 }
 
 .nudge-layout {
@@ -204,7 +207,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(15, 30, 54, 0.52);
+  background: rgba(76, 60, 46, 0.32);
 }
 
 .nudge-modal {
@@ -239,14 +242,14 @@
 .nudge-detail-card {
   display: grid;
   gap: 4px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #ebded1;
   border-radius: 18px;
-  background: #fff;
+  background: #fffcf7;
   padding: 14px 16px;
 }
 
 .nudge-detail-card__label {
-  color: #6e6e73;
+  color: #948b82;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -254,7 +257,7 @@
 }
 
 .nudge-detail-card__value {
-  color: #1d1d1f;
+  color: #1e1612;
   font-size: 14px;
   line-height: 1.45;
   white-space: pre-line;
@@ -268,9 +271,9 @@
 .nudge-state-panel {
   display: grid;
   gap: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #ebded1;
   border-radius: 22px;
-  background: #f7fbff;
+  background: #f7f0e8;
   padding: 18px;
 }
 
@@ -282,7 +285,7 @@
 
 .nudge-state-panel__copy {
   margin: 0;
-  color: #6e6e73;
+  color: #61574f;
   font-size: 13px;
   line-height: 1.5;
 }

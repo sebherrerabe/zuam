@@ -11,7 +11,7 @@ depends_on:
   - core-data-model-crud
 parallel_group: phase1-nudge
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-04"
+last_updated: "2026-04-10"
 ---
 
 # Contracts
@@ -37,9 +37,16 @@ last_updated: "2026-04-04"
 ## Data Contracts
 - `Task.nudgeStrategy`, `Task.nudgeFrequencyMin`, `Task.nudgeEscalation`, `Task.snoozedUntil`, `Task.timesPostponed`, `Task.timesNudged`.
 - `NudgeEvent`: `id`, `taskId`, `level`, `message`, `scheduledAt`, `deliveredAt`, `acknowledgedAt`, `snoozedUntil`.
+- `NudgeSchedule`: `id`, `taskId`, `nextTriggerAt`, `lockOwner`, `lockExpiresAt`, `lastEvaluatedAt`, `suppressedByFocusSessionId`.
 - `UserPreferences`: default nudge strategy, frequency, escalation preference, and sound toggle.
 - Invariants: level 2 nudges require explicit dismissal, and snooze state suppresses the next scheduled trigger.
 - Tests: `NUDGE-BE-001`, `NUDGE-BE-002`, `NUDGE-BE-003`.
+
+## Backend Interface Contract
+- `NudgesDao`
+  - responsibilities: persist and query `NudgeSchedule`, record `NudgeEvent` delivery/acknowledgement, acquire/release scheduler locks, mark focus-session suppression
+- `TasksDao`
+  - responsibilities: expose task state needed for eligibility and apply snooze/postpone side effects through the canonical task boundary
 
 ## Frontend Contract
 - Level 1 renders as a desktop notification with concise copy and an action to open the task.
@@ -51,3 +58,7 @@ last_updated: "2026-04-04"
 - `nudge:trigger`, `nudge:acknowledge`, `nudge:snooze`.
 - Payloads include task id, level, copy id, and timing metadata.
 - Tests: `NUDGE-BE-002`, `NUDGE-BE-003`, `NUDGE-FE-003`.
+
+## Runtime Notes
+- Persistent scheduling on the shared Postgres runtime is the authoritative completion path.
+- Mock nudge emitters or in-memory schedulers may support UI work, but they do not satisfy shipping completion.

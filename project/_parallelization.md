@@ -12,7 +12,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-07
+last_updated: 2026-04-10
 ---
 
 # Parallelization Strategy
@@ -36,27 +36,29 @@ The default unit of parallel execution is one module work packet. A module may b
 6. `project-decision-log`
 7. `project-index`
 
-### Stream B: Phase 1 Critical Path
+### Stream B: Shipping Track Critical Path
 1. `monorepo-platform`
 2. `auth-invite-onboarding`
 3. `core-data-model-crud`
 4. `desktop-shell-layout`
-5. `google-tasks-sync`
-6. `task-detail-basic-editor`
-7. `nudge-engine`
-8. `infra-release-observability`
+5. `task-detail-basic-editor`
+6. `google-tasks-sync`
+7. `google-calendar-context`
+8. `focus-sessions`
+9. `nudge-engine`
+10. `infra-release-observability`
 
-### Stream C: Parallel Phase 1 Opportunities
+### Stream C: Parallel Shipping Opportunities
 - `desktop-shell-layout` starts after `monorepo-platform`
 - `core-data-model-crud` runs in parallel with `auth-invite-onboarding`
-- `google-tasks-sync` starts after initial data ownership is defined
 - `task-detail-basic-editor` starts after desktop shell states are frozen
+- `google-tasks-sync` starts after initial data ownership and session persistence are defined
+- `google-calendar-context` starts after task/sync identity and provider adapter boundaries are frozen
+- `focus-sessions` may proceed in parallel with calendar-context once task persistence and nudge precedence are stable
 - `infra-release-observability` starts after workspace and release boundaries are frozen
 
-### Stream D: Later-Phase Seed Specs
+### Stream D: Deferred Or Downstream Specs
 - `task-views`
-- `focus-sessions`
-- `google-calendar-context`
 - `mobile-shell-core`
 - `tags-filters-smart-lists`
 - `analytics-insights`
@@ -69,9 +71,11 @@ The default unit of parallel execution is one module work packet. A module may b
 - A module may depend only on frozen upstream contracts, not on undocumented intent.
 - Cross-module dependencies must be listed in frontmatter and repeated in the module README.
 - Modules that consume the same shared types must freeze those types in the producing module contracts.
+- Later-phase or deferred modules must not demand backend priority ahead of shipping-track runtime substrate work.
 
 ## LLM Coordination Rules
 - Assign one owner per module.
 - Define expected write paths before implementation.
 - Put all first-test targets in the work packet.
 - If a worker needs a new cross-cutting decision, capture it in `_decision-log.md` before continuing.
+- Prototype or scaffold-only work should be labeled explicitly and kept off the authoritative completion path for shipping-track modules.

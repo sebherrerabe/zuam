@@ -11,7 +11,7 @@ depends_on:
 parallel_group: phase-4
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-07
+last_updated: 2026-04-10
 ---
 
 # Phase 4 Advanced
@@ -26,6 +26,7 @@ Cover advanced capabilities such as AI companion assistance, habits, adaptive nu
 
 ## Entry Dependencies
 - Earlier phases are stable enough that advanced feature work will not destabilize core product flows.
+- The shipping-track desktop runtime is already real: auth/session persistence, CRUD, Google Tasks sync, Google Calendar context, focus logging, nudge scheduling, and release baseline are all in place.
 
 ## Exit Criteria
 - Advanced features are decomposed into new modules with contracts and tests.
@@ -38,3 +39,7 @@ Cover advanced capabilities such as AI companion assistance, habits, adaptive nu
 - Adaptive reward personalization.
 - High-salience randomized loot or retention mechanics.
 - Public progression profile URLs and privacy-gated profile pages.
+
+## Shipping-First Note
+- Phase 4 is explicitly outside the shipping bar.
+- AI and public-sharing work may remain documented, but they must not outrank the real desktop core runtime.

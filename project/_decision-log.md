@@ -253,3 +253,12 @@ last_updated: 2026-04-09
 - Consequences: Task completion remains derived from persisted task status and `completedAt`; focus completion remains derived from completed focus sessions and rollups; analytics stays reporting-only; progression stays downstream of those source facts.
 - Supersedes: none
 - Superseded by: none
+
+## ADR-027: Shipping-First Runtime Baseline
+- Status: accepted
+- Date: 2026-04-10
+- Context: The planning system still allowed modules to read as implementation-ready even when their primary runtime path was mock-backed, in-memory, or fake-provider-only. That was good enough for scaffolding and UI iteration, but it blurred the line between local prototype progress and a shippable desktop app with a real backend runtime.
+- Decision: Rebaseline planning around a shipping-first runtime bar. A `ready` shipping-track backend module must be implementable on the real NestJS + Prisma + Postgres runtime with durable state, real auth/session storage, real Google provider adapters, and tested restart/idempotency behavior. Later-phase features such as analytics, progression, AI, and mobile may remain documented, but they are explicitly non-blocking until the real core runtime path works end to end.
+- Consequences: The active delivery priority becomes the Shipping Track overlay instead of raw phase number alone. Mock-backed or in-memory paths remain temporary scaffold/prototype aids for local UI work only. Quality gates, backend architecture, test strategy, delivery docs, and affected module packets must all describe the real runtime path as the authoritative completion target.
+- Supersedes: none
+- Superseded by: none

@@ -9,10 +9,17 @@ owners:
 depends_on: []
 parallel_group: phase1-auth
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-04"
+last_updated: "2026-04-10"
 ---
 
 # Backend Test Spec
+
+## `BE-INT-AUTH-001` Invite and session persistence on disposable Postgres
+- Persist user, invite, and session records through Prisma-backed DAOs.
+- Assert invite consumption, session rotation, and session revocation survive backend restart and fresh DAO construction.
+
+## `BE-INT-AUTH-002` Transactional first-login creation
+- Given concurrent first-login callbacks for the same Google subject and invite token, assert only one user record and one invite consumption commit.
 
 ## `BE-E2E-AUTH-001` Google OAuth happy path
 - Given a configured Google provider and a valid `returnTo`, when the user completes callback successfully, then the API issues a session and returns the authenticated user payload.
@@ -33,3 +40,6 @@ last_updated: "2026-04-04"
 ## `BE-E2E-AUTH-005` OAuth failure surfaces
 - Given provider errors or bad callback state, when the callback endpoint is hit, then the API returns a safe, non-leaking error response.
 - Assert no user or session record is created on failure.
+
+## `BE-E2E-AUTH-006` Expired or revoked session recovery
+- Given an expired or revoked persisted session, when the client attempts refresh or authenticated access after restart, then the API rejects the session deterministically and requires re-auth.

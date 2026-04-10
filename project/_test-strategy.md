@@ -11,7 +11,7 @@ depends_on:
 parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Test Strategy
@@ -50,7 +50,9 @@ Each module must define tests for:
 
 ## Environment Rules
 - Use a disposable PostgreSQL database for backend integration and e2e.
-- Mock Google Tasks and Calendar APIs in automated tests unless a later module explicitly defines contract tests against sandbox accounts.
+- Shipping-bar backend modules must include DAO integration tests and API e2e coverage against that disposable Postgres runtime.
+- Mock Google Tasks and Calendar APIs only at the provider seam in automated tests unless a later module explicitly defines contract tests against sandbox accounts.
+- Fake or in-memory persistence is allowed only for targeted unit tests and local scaffolding; it is not an acceptable substitute for integration/e2e coverage.
 - Use deterministic clocks for time-sensitive features such as nudges, deadlines, polling, and focus sessions.
 - Use fixture factories rather than hand-written JSON blobs once implementation begins.
 
@@ -67,6 +69,7 @@ Each module must define tests for:
 - Every test doc must cite requirement IDs.
 - Work packets must list the first failing tests to create.
 - A module cannot be marked `ready` if test docs do not cover its primary flows and failure modes.
+- Shipping-bar backend modules must cover restart recovery, durable persistence, and failure-path handling in addition to happy-path API behavior.
 
 ## Planning-System Validation
 The planning layer itself must satisfy:
@@ -78,3 +81,4 @@ The planning layer itself must satisfy:
 - `DOC-UNIT-004`: every test ID is unique and scoped to one module.
 - `DOC-UNIT-005`: every dependency resolves to a real phase or module ID.
 - `DOC-UNIT-006`: no `ready` module has unresolved open questions.
+- `DOC-UNIT-007`: no `ready` shipping-track module documents its primary runtime as in-memory, stub-only, or fake-provider-only.

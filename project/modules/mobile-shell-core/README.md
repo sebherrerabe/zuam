@@ -11,13 +11,17 @@ depends_on:
   - task-views
 source_of_truth: PRD_Zuam_v0.3.md
 parallel_group: phase-2-mobile
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Mobile Shell Core
 
 ## Objective
 Define the Android-first app shell that exposes Zuam's core task surfaces and entry points without re-designing desktop behavior from scratch. This module should reuse the task taxonomy, focus, and detail contracts that already exist on desktop while adapting them to a narrow-screen navigation model.
+
+## Shipping-First Status
+- This module is explicitly deferred from the shipping bar.
+- Mobile planning may continue, but it must not consume backend priority ahead of the real desktop core runtime.
 
 ## Scope In
 - Authenticated mobile navigation for Today, Inbox, and task detail.

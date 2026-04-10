@@ -11,12 +11,16 @@ depends_on:
   - analytics-insights
 parallel_group: progression
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Player Progression and Rewards
 
 This module defines Zuam's positive-only pixel-RPG progression layer: avatar growth, deterministic XP, cosmetic unlocks, and explainable reward history. It exists to make completed work feel satisfying without turning failure into punishment or allowing the game loop to overtake the task system. The pixel-art direction is a presentation choice for identity and delight, not an evidence-backed therapeutic mechanism on its own.
+
+## Shipping-First Status
+- This module is explicitly deferred from the shipping bar.
+- It remains downstream of the real task, focus, and calendar runtime and must not consume backend priority until that core runtime is working end to end.
 
 ## Authoritative Desktop References
 - `155:823` `Progression Profile (light)` is the canonical progression surface.

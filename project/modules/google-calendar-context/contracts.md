@@ -10,16 +10,22 @@ depends_on:
   - google-tasks-sync
 parallel_group: calendar-context
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-08
+last_updated: 2026-04-10
 ---
 
 # Contracts
 
 ## Data Contract
-- `CalendarContextState` tracks `fresh`, `stale`, `partial`, or `unknown` availability, plus `lastSyncedAt`, `sourceCalendarCount`, and `syncTokenState`.
+- `CalendarContextSnapshot` tracks `fresh`, `stale`, `partial`, or `unknown` availability, plus `lastSyncedAt`, `sourceCalendarCount`, `syncTokenState`, `activeRefreshId`, and `lockExpiresAt`.
 - `BusyBlock` captures `id`, `calendarId`, `calendarName`, `startAt`, `endAt`, `allDay`, `source`, and `confidence`.
 - `FreeWindow` is derived from busy blocks and user work hours, not stored as raw Google state. It captures `startAt`, `endAt`, `durationMinutes`, and `confidence`.
 - `ScheduleSuggestion` records `taskId`, `candidateStartAt`, `candidateEndAt`, `rationale`, `blockingBusyBlocks`, `confidence`, and `generatedAt`.
+
+## Backend Interface Contract
+- `GoogleCalendarClient`
+  - responsibilities: fetch calendar list, fetch busy/free data or normalized event windows, expose partial-failure metadata
+- `GoogleCalendarContextDao`
+  - responsibilities: persist `CalendarContextSnapshot`, store refresh cursor/token state, acquire/release durable refresh lock, load latest snapshot for reads
 
 ## API Contract
 - `GET /sync/google/calendar` or an equivalent sync read path returns normalized busy blocks and refresh metadata (`BE-UNIT-GCAL-003`).
@@ -33,3 +39,7 @@ last_updated: 2026-04-08
 ## Event Contract
 - `calendar:refreshed` and `schedule:suggested` events notify the client when context changes or a new slot is computed (`BE-UNIT-GCAL-003`).
 - Refresh events carry the current availability state so the frontend can distinguish fresh, stale, and partial results.
+
+## Runtime Notes
+- The shipping runtime path uses a real Google Calendar adapter plus persisted calendar snapshots.
+- Stub-only calendar context providers are acceptable for targeted tests, not for module completion.

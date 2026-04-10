@@ -10,12 +10,16 @@ depends_on:
   - focus-sessions
 parallel_group: metrics
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Analytics Insights
 
 This module defines Zuam's explainable motivation reporting layer: consistency metrics, summaries, heatmaps, and reflective highlights. It stays non-gamey on purpose so users can inspect patterns without confusing reporting with the reward loop.
+
+## Shipping-First Status
+- This module is explicitly deferred from the shipping bar.
+- It may stay documented and `ready` as a downstream consumer contract, but it must not consume backend priority until the real desktop core runtime is working end to end.
 
 ## Authoritative Desktop Reference
 - `271:2` `Analytics Dashboard (light)` on the `v3 — Warm Light Mode` page is the canonical Phase 3 analytics reference.

@@ -30,9 +30,11 @@ Define the release pipeline and minimum observability contract so desktop builds
 - Runtime build-metadata contract.
 - Direct package-builder invocation contract for Windows releases.
 - Checked-in packaging-brand-asset contract for Windows releases.
+- Shipping-track backend runtime verification gate.
 
 ## Tests To Create First
 - `BE-UNIT-INFRA-001`, `BE-UNIT-INFRA-002`, `BE-UNIT-INFRA-003`.
+- `BE-UNIT-INFRA-004`
 - `FE-UNIT-INFRA-001`, `FE-UNIT-INFRA-003`.
 
 ## Blockers / Dependencies
@@ -44,6 +46,7 @@ Define the release pipeline and minimum observability contract so desktop builds
 ## Completion Signals
 - A tagged build can be traced end-to-end from commit to artifact to release entry.
 - Tagged release automation emits real Windows installer artifacts, not metadata-only placeholders.
+- Release automation proves the shipping-track backend runtime suites passed before packaging and publish.
 
 ## Non-Goals
 - No production telemetry backend.

@@ -12,12 +12,12 @@ parallel_group: phase1-auth
 source_of_truth:
   - project/modules/auth-invite-onboarding/README.md
   - PRD_Zuam_v0.3.md
-last_updated: "2026-04-05"
+last_updated: "2026-04-10"
 ---
 
 # Google Auth Reference
 
-This file captures the Google-specific implementation decisions for Zuam auth so future agents do not need to re-read the Google Identity docs before building Phase 1 and Phase 2 auth flows.
+This file captures the Google-specific implementation decisions for Zuam auth so future agents do not need to re-read the Google Identity docs before building the shipping-track auth flows.
 
 ## Official Docs Reviewed
 - OAuth 2.0 for web server apps: https://developers.google.com/identity/protocols/oauth2/web-server
@@ -64,20 +64,20 @@ Reviewed on 2026-04-05.
 - Backend ID-token verification must validate signature, `aud`, `iss`, and `exp`.
 - If Zuam ever restricts access by Workspace domain, validate the `hd` claim explicitly.
 
-### 6. Scope rollout should be phased
-- Phase 1 auth bundle:
+### 6. Scope rollout should support the shipping track
+- Initial auth bundle:
   - `openid`
   - `email`
   - `profile`
   - `https://www.googleapis.com/auth/tasks`
-- Phase 2 calendar-read bundle:
-  - keep Phase 1 scopes
+- Shipping-track calendar context bundle:
+  - keep the initial auth scopes
   - add `https://www.googleapis.com/auth/calendar.calendarlist.readonly`
   - add `https://www.googleapis.com/auth/calendar.freebusy`
 - Only add `https://www.googleapis.com/auth/calendar.events.readonly` if the product actually needs event titles or event-level read models.
 - Only add `https://www.googleapis.com/auth/calendar.events` when Zuam starts creating or editing calendar events.
 
-This scope rollout is an inference from Google's scope docs plus Zuam's phase plan. It intentionally chooses the narrowest scope bundle that satisfies each phase.
+This scope rollout is an inference from Google's scope docs plus Zuam's shipping-first plan. It intentionally chooses the narrowest scope bundle that satisfies the real shipping bar while still allowing re-consent when the calendar bundle is added.
 
 ## Backend Implementation Notes
 - Authorized redirect URIs must match exactly, or Google returns `redirect_uri_mismatch`.
@@ -101,7 +101,7 @@ This scope rollout is an inference from Google's scope docs plus Zuam's phase pl
 ## Recommended Zuam Test Additions
 - Add one backend e2e test that fails when the callback is configured with a non-matching redirect URI.
 - Add one backend e2e test that proves the stored Google external identity key is `sub`, not email.
-- Add one backend e2e test for phased re-consent when calendar scopes are added after tasks-only authorization.
+- Add one backend e2e test for re-consent when the shipping-track calendar scopes are added after tasks-only authorization.
 
 ## Source Highlights
 - Google policy says each platform needs its own OAuth client.

@@ -38,6 +38,7 @@ This document translates the shared testing strategy into a concrete delivery ba
 - Prisma migrations for schema changes
 - environment loading through `@nestjs/config`
 - local desktop development through TanStack Start + Electron wrapper
+- local shipping-track backend flows should run against the shared Prisma/Postgres runtime; mock/stub providers are for isolated UI or unit work only
 
 ## Testing Baseline
 - Backend unit tests: Jest
@@ -45,6 +46,7 @@ This document translates the shared testing strategy into a concrete delivery ba
 - Desktop unit/component tests: Vitest + React Testing Library
 - Desktop e2e: Playwright
 - Mobile e2e: Maestro
+- Shipping-track backend slices must add DAO integration tests plus API e2e flows that exercise the real persistence/runtime path with external APIs mocked only at the adapter seam
 
 ## Architecture QA Gates
 - Service tests must mock DAO interfaces rather than Prisma.
@@ -63,16 +65,19 @@ Use GitHub Actions with separate concerns:
 - desktop build + package smoke checks
 - mobile tests as mobile work deepens
 - Windows desktop installer generation only on release/tag workflows, with workflow-artifact upload on manual dispatch
+- shipping-track backend suites must fail the pipeline if disposable-Postgres integration/e2e coverage for auth, CRUD, sync state, calendar context, focus logging, or nudge scheduling is missing or red
 
 ## Release Baseline
 - Backend hosting target: Railway
 - Database target: Railway Postgres
 - Desktop packaging target: Electron Builder + GitHub Releases
 - Mobile distribution remains later-phase and should not block desktop release readiness
+- The shipping bar is a desktop-first single-user app backed by the real backend runtime: real auth/session storage, real persistence, real Google Tasks sync, real Google Calendar context, real focus-session logging, and the minimal nudge/release baseline.
 - Desktop release readiness requires a smoke pass that verifies:
   - built client entry exists
   - Electron `main` and `preload` bundles exist
   - release metadata/event files can be generated from CI env inputs
+- Desktop release readiness also requires passing regression paths for invite validation, OAuth callback/session refresh/logout, CRUD after restart, initial plus incremental Google Tasks sync, calendar-context refresh and suggestion reads, focus-session logging, and nudge/focus precedence.
 - Tagged desktop releases must produce real Windows installer artifacts (`nsis` installer and portable Windows package) plus provenance metadata, then publish them to the matching GitHub Release entry.
 - Release workflows must run on a Windows runner when the artifact target is a Windows desktop installer.
 - The critical packaging step should call `electron-builder` directly from the desktop package; metadata writing and GitHub Release upload happen as follow-up steps, not inside the builder invocation.
@@ -82,6 +87,7 @@ Use GitHub Actions with separate concerns:
 - structured backend logging
 - request IDs and sync trace IDs
 - job summaries for Google sync loops
+- scheduler lock/idempotency logs for sync and nudge jobs
 - companion execution audit logging in Phase 4
 - release provenance from CI artifacts and tagged builds
 
@@ -95,3 +101,4 @@ Use GitHub Actions with separate concerns:
 - No production microservice deployment topology by default.
 - No release process that depends on manual file copying.
 - No skipping architecture gates for speed once DAO and companion safety boundaries are established.
+- No treating prototype or scaffold-only backend paths as shippable completion for shipping-track modules.

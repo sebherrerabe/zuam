@@ -1,8 +1,17 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { NudgeEvent } from "@zuam/shared";
 
 import { NudgeBlockingModal, NudgeNotificationSurface, NudgeSurfaceHarness } from "./nudge-surfaces";
+
+const stylesheetText = readFileSync(
+  resolve(dirname(fileURLToPath(import.meta.url)), "nudge-surfaces.css"),
+  "utf8"
+);
 
 const baseEvent: NudgeEvent = {
   id: "nudge-1",
@@ -89,5 +98,25 @@ describe("desktop nudge surfaces", () => {
     expect(screen.getByRole("button", { name: /acknowledge/i })).toBeVisible();
     expect(screen.getByRole("button", { name: /snooze 15 min/i })).toBeVisible();
     expect(screen.queryByText(/should have|guilty|lazy|bad/i)).not.toBeInTheDocument();
+  });
+
+  it("NUDGE-FE-VIS-001: uses the warm-light action hierarchy instead of the legacy blue-teal CTA palette", () => {
+    render(<NudgeBlockingModal event={baseEvent} />);
+
+    const primaryButton = screen.getByRole("button", { name: /acknowledge/i });
+    const detailCard = screen.getByText("Copy").closest(".nudge-detail-card");
+
+    if (!detailCard) {
+      throw new Error("Expected nudge detail card to be rendered");
+    }
+
+    expect(stylesheetText).toContain(".nudge-button--primary");
+    expect(stylesheetText).toContain("#b7764b");
+    expect(stylesheetText).not.toContain("#00d4ab");
+    expect(stylesheetText).toContain("border-radius: 12px;");
+    expect(stylesheetText).toContain(".nudge-detail-card");
+    expect(stylesheetText).toContain("background: #fffcf7;");
+    expect(primaryButton).toHaveClass("nudge-button--primary");
+    expect(detailCard).toHaveClass("nudge-detail-card");
   });
 });

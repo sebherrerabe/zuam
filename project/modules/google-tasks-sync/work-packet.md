@@ -10,13 +10,13 @@ depends_on:
   - core-data-model-crud
 parallel_group: phase1-sync
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: "2026-04-04"
+last_updated: "2026-04-10"
 ---
 
 # Work Packet
 
 ## Objective
-Import Google Tasks into the local model and keep synced fields aligned with low-latency bidirectional updates.
+Import Google Tasks into the local model and keep synced fields aligned with low-latency bidirectional updates on the real backend runtime.
 
 ## Files and Packages Expected To Change
 - `packages/backend/src/sync/*`
@@ -26,10 +26,13 @@ Import Google Tasks into the local model and keep synced fields aligned with low
 
 ## Contracts To Implement
 - Sync force endpoint and status endpoint.
-- Webhook or signal entrypoint for provider change notifications.
+- Trusted runtime trigger entrypoint for scheduler-driven freshness checks.
 - Merge rules for synced and app-only fields.
+- `GoogleTasksClient` and `GoogleTasksSyncDao` interfaces with durable cursor and lock behavior.
 
 ## Tests To Create First
+- `BE-INT-SYNC-001`
+- `BE-INT-SYNC-002`
 - `BE-E2E-SYNC-001` through `BE-E2E-SYNC-005`.
 - `FE-UNIT-SYNC-001` through `FE-UNIT-SYNC-004`.
 
@@ -39,11 +42,12 @@ Import Google Tasks into the local model and keep synced fields aligned with low
 
 ## Parallel-Safe Boundaries
 - Local merge logic can be developed against fixtures before the provider client is complete.
-- Desktop status UI can be built against mock sync state contracts.
+- Desktop status UI can be built against mock sync state contracts, but mock sync state is scaffold-only.
 
 ## Completion Signals
 - First login imports remote lists and tasks correctly.
 - Local changes propagate to Google without losing app-only fields.
+- Incremental sync resumes safely after restart and duplicate triggers do not run the same sync twice.
 
 ## Non-Goals
 - No calendar sync.

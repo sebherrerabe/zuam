@@ -10,10 +10,14 @@ depends_on:
   - focus-sessions
 parallel_group: metrics
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Contracts
+
+## Shipping-First Status
+- This module is a downstream consumer of shipped task, focus, and calendar facts.
+- It remains non-blocking until the shipping-track runtime is real end to end and must not introduce new core-backend requirements ahead of that work.
 
 ## Data Contract
 - `TaskCompletionFact`: derived from persisted task rows only, keyed by task id and completion timestamp, and carrying the task metadata needed for explainable analytics without becoming a mutation surface.

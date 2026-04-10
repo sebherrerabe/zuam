@@ -17,7 +17,7 @@ parallel_group: foundation
 source_of_truth:
   - PRD_Zuam_v0.3.md
   - AGENTS.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Project Planning Index
@@ -56,49 +56,85 @@ last_updated: 2026-04-09
 | Phase 3 | ready | intelligence, insights, progression, and polish | [phase-3-polish-intelligence.md](./phases/phase-3-polish-intelligence.md) |
 | Phase 4 | draft | advanced AI assistance, public sharing, and future modules | [phase-4-advanced.md](./phases/phase-4-advanced.md) |
 
-## Module Registry
-| Module | Phase | Status | Owner | Path |
-|---|---|---|---|---|
-| monorepo-platform | Phase 1 | ready | Infra / DevOps | [module](./modules/monorepo-platform/README.md) |
-| auth-invite-onboarding | Phase 1 | ready | Backend Engineer | [module](./modules/auth-invite-onboarding/README.md) |
-| core-data-model-crud | Phase 1 | ready | Backend Engineer | [module](./modules/core-data-model-crud/README.md) |
-| desktop-shell-layout | Phase 1 | ready | Frontend Engineer | [module](./modules/desktop-shell-layout/README.md) |
-| task-detail-basic-editor | Phase 1 | ready | Frontend Engineer | [module](./modules/task-detail-basic-editor/README.md) |
-| google-tasks-sync | Phase 1 | ready | Backend Engineer | [module](./modules/google-tasks-sync/README.md) |
-| nudge-engine | Phase 1 | ready | Backend Engineer | [module](./modules/nudge-engine/README.md) |
-| infra-release-observability | Phase 1 | ready | Infra / DevOps | [module](./modules/infra-release-observability/README.md) |
-| task-views | Phase 2 | ready | Frontend Engineer | [module](./modules/task-views/README.md) |
-| focus-sessions | Phase 2 | ready | Frontend Engineer | [module](./modules/focus-sessions/README.md) |
-| google-calendar-context | Phase 2 | ready | Backend Engineer | [module](./modules/google-calendar-context/README.md) |
-| mobile-shell-core | Phase 2 | draft | Frontend Engineer | [module](./modules/mobile-shell-core/README.md) |
-| tags-filters-smart-lists | Phase 2 | ready | Product Manager | [module](./modules/tags-filters-smart-lists/README.md) |
-| analytics-insights | Phase 3 | ready | Product Manager | [module](./modules/analytics-insights/README.md) |
-| player-progression-rewards | Phase 3 | ready | Product Manager | [module](./modules/player-progression-rewards/README.md) |
-| ai-companion-orchestrator | Phase 4 | draft | Product Manager | [module](./modules/ai-companion-orchestrator/README.md) |
-| ai-companion-runtime-governance | Phase 4 | draft | Backend Engineer | [module](./modules/ai-companion-runtime-governance/README.md) |
-| public-progression-profiles | Phase 4 | draft | Product Manager | [module](./modules/public-progression-profiles/README.md) |
+## Shipping Track Overlay
+Phase numbers stay intact, but active delivery priority is now judged against the shipping bar: a desktop-first, single-user app running on the real backend runtime.
 
-## Phase 1 Critical Path
+### Shipping Bar
+- real auth and durable session storage
+- real Postgres-backed persistence for lists, sections, tasks, sync state, focus sessions, calendar snapshots, and nudge scheduling
+- real Google Tasks sync and Google Calendar context adapters
+- real focus-session logging and nudge/focus precedence
+- release and observability coverage for the desktop shipping path
+
+### Active Shipping Track
+| Module | Phase | Shipping Priority | Notes |
+|---|---|---|---|
+| `monorepo-platform` | Phase 1 | foundational | workspace and runtime substrate |
+| `auth-invite-onboarding` | Phase 1 | active critical path | real OAuth, invite consumption, session persistence |
+| `core-data-model-crud` | Phase 1 | active critical path | real Prisma/Postgres CRUD runtime |
+| `desktop-shell-layout` | Phase 1 | frontend dependency | depends on real auth/data contracts |
+| `task-detail-basic-editor` | Phase 1 | frontend dependency | depends on real save/runtime contracts |
+| `google-tasks-sync` | Phase 1 | active critical path | real provider adapter, cursors, polling, idempotency |
+| `google-calendar-context` | Phase 2 | active critical path | real read model and calendar snapshot persistence |
+| `focus-sessions` | Phase 2 | active critical path | real session logging and nudge deferral |
+| `nudge-engine` | Phase 1 | active critical path | real schedule persistence and delivery coordination |
+| `infra-release-observability` | Phase 1 | active critical path | CI/release gates for the shipping runtime |
+
+### Explicitly Deferred From The Shipping Bar
+- `analytics-insights`
+- `player-progression-rewards`
+- `ai-companion-orchestrator`
+- `ai-companion-runtime-governance`
+- `mobile-shell-core`
+- `public-progression-profiles`
+
+These modules remain documented, but they must not outrank the work required to make the core desktop runtime real.
+
+## Module Registry
+| Module | Phase | Status | Shipping Track | Owner | Path |
+|---|---|---|---|---|---|
+| monorepo-platform | Phase 1 | ready | foundation | Infra / DevOps | [module](./modules/monorepo-platform/README.md) |
+| auth-invite-onboarding | Phase 1 | ready | active | Backend Engineer | [module](./modules/auth-invite-onboarding/README.md) |
+| core-data-model-crud | Phase 1 | ready | active | Backend Engineer | [module](./modules/core-data-model-crud/README.md) |
+| desktop-shell-layout | Phase 1 | ready | dependency | Frontend Engineer | [module](./modules/desktop-shell-layout/README.md) |
+| task-detail-basic-editor | Phase 1 | ready | dependency | Frontend Engineer | [module](./modules/task-detail-basic-editor/README.md) |
+| google-tasks-sync | Phase 1 | ready | active | Backend Engineer | [module](./modules/google-tasks-sync/README.md) |
+| nudge-engine | Phase 1 | ready | active | Backend Engineer | [module](./modules/nudge-engine/README.md) |
+| infra-release-observability | Phase 1 | ready | active | Infra / DevOps | [module](./modules/infra-release-observability/README.md) |
+| task-views | Phase 2 | ready | downstream | Frontend Engineer | [module](./modules/task-views/README.md) |
+| focus-sessions | Phase 2 | ready | active | Frontend Engineer | [module](./modules/focus-sessions/README.md) |
+| google-calendar-context | Phase 2 | ready | active | Backend Engineer | [module](./modules/google-calendar-context/README.md) |
+| mobile-shell-core | Phase 2 | draft | deferred | Frontend Engineer | [module](./modules/mobile-shell-core/README.md) |
+| tags-filters-smart-lists | Phase 2 | ready | downstream | Product Manager | [module](./modules/tags-filters-smart-lists/README.md) |
+| analytics-insights | Phase 3 | ready | deferred | Product Manager | [module](./modules/analytics-insights/README.md) |
+| player-progression-rewards | Phase 3 | ready | deferred | Product Manager | [module](./modules/player-progression-rewards/README.md) |
+| ai-companion-orchestrator | Phase 4 | draft | deferred | Product Manager | [module](./modules/ai-companion-orchestrator/README.md) |
+| ai-companion-runtime-governance | Phase 4 | draft | deferred | Backend Engineer | [module](./modules/ai-companion-runtime-governance/README.md) |
+| public-progression-profiles | Phase 4 | draft | deferred | Product Manager | [module](./modules/public-progression-profiles/README.md) |
+
+## Shipping Track Critical Path
 1. [monorepo-platform](./modules/monorepo-platform/README.md)
 2. [auth-invite-onboarding](./modules/auth-invite-onboarding/README.md)
 3. [core-data-model-crud](./modules/core-data-model-crud/README.md)
 4. [desktop-shell-layout](./modules/desktop-shell-layout/README.md)
-5. [google-tasks-sync](./modules/google-tasks-sync/README.md)
-6. [task-detail-basic-editor](./modules/task-detail-basic-editor/README.md)
-7. [nudge-engine](./modules/nudge-engine/README.md)
-8. [infra-release-observability](./modules/infra-release-observability/README.md)
+5. [task-detail-basic-editor](./modules/task-detail-basic-editor/README.md)
+6. [google-tasks-sync](./modules/google-tasks-sync/README.md)
+7. [google-calendar-context](./modules/google-calendar-context/README.md)
+8. [focus-sessions](./modules/focus-sessions/README.md)
+9. [nudge-engine](./modules/nudge-engine/README.md)
+10. [infra-release-observability](./modules/infra-release-observability/README.md)
 
 ## What Makes A Module Ready
 - `README.md` defines objective, scope, requirements, dependencies, and readiness.
 - `contracts.md` defines public interfaces and invariants.
 - `tests.backend.md` and `tests.frontend.md` define the acceptance language.
 - `work-packet.md` defines the first tests to write and the safe implementation boundary.
+- For shipping-track backend modules, those docs must describe the real Prisma/Postgres and provider-adapter runtime path, not a scaffold-only substitute.
 
-## Phase 2 Closure Note
-- Non-mobile Phase 2 is complete in code: task views, focus sessions, Google Calendar context, task-detail persistence, Electron runtime bridging, and desktop visual gates are all live.
-- `mobile-shell-core` remains intentionally deferred while mobile mockups and contracts harden.
-- Phase 3 consumes the current task completion, focus completion, and calendar-context contracts as-is and must not redefine those Phase 2 semantics.
-- Desktop release hardening is now beyond smoke-only validation: Windows installer packaging and GitHub Release publication are the active baseline tracked under `infra-release-observability`.
+## Shipping Note
+- The shipping-first rebaseline does not renumber phases.
+- Phase 2 modules `google-calendar-context` and `focus-sessions` now sit on the active shipping path because calendar context and focus logging are part of the first real desktop shipping bar.
+- Later-phase analytics, progression, AI, and mobile work stay documented but non-blocking until the shipping-track runtime closes end to end.
 
 ## LLM Usage Pattern
 - Read the phase doc for sequence.

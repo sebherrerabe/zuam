@@ -16,13 +16,17 @@ source_of_truth:
   - PRD_Zuam_v0.3.md
   - AI Companion for ADHD Task App.md
   - deep-research-report-ai.md
-last_updated: 2026-04-07
+last_updated: 2026-04-10
 ---
 
 # AI Companion Orchestrator
 
 ## Objective
 Define the user-facing mixed-initiative planning experience for Zuamy: an invoke-only AI companion that turns conversation into reviewable task and calendar proposals without taking hidden action.
+
+## Shipping-First Status
+- This module is explicitly deferred from the shipping bar.
+- It remains downstream of the real task, focus, and calendar runtime and must not consume backend priority until the desktop core runtime is real.
 
 ## User Value
 - Reduce planning friction for ADHD users by converting brain dumps into structured next steps.

@@ -13,10 +13,14 @@ source_of_truth:
   - PRD_Zuam_v0.3.md
   - AI Companion for ADHD Task App.md
   - deep-research-report-ai.md
-last_updated: 2026-04-07
+last_updated: 2026-04-10
 ---
 
 # Contracts
+
+## Shipping-First Status
+- This module is explicitly downstream of the shipped core runtime.
+- Governance planning may continue, but it must not outrank auth, data, sync, calendar, focus, nudge, or release work while the shipping bar remains open.
 
 ## Provider Contract
 - `ProviderAdapter`: `id`, `kind`, `displayName`, `supportsLocalExecution`, `supportsCloudExecution`, `supportsStreaming`, `supportsToolCalling`, `supportsMemoryHooks`, `healthStatus`.
