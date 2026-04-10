@@ -9,7 +9,7 @@ depends_on:
   - monorepo-platform
 parallel_group: foundation
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Work Packet
@@ -21,6 +21,7 @@ Define the release pipeline and minimum observability contract so desktop builds
 - GitHub Actions workflow definitions.
 - Release metadata plumbing.
 - Desktop build-time version injection.
+- Desktop packaging brand assets and their generation script.
 
 ## Contracts To Implement First
 - Workflow step order contract.
@@ -28,6 +29,7 @@ Define the release pipeline and minimum observability contract so desktop builds
 - CI summary contract.
 - Runtime build-metadata contract.
 - Direct package-builder invocation contract for Windows releases.
+- Checked-in packaging-brand-asset contract for Windows releases.
 
 ## Tests To Create First
 - `BE-UNIT-INFRA-001`, `BE-UNIT-INFRA-002`, `BE-UNIT-INFRA-003`.

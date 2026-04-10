@@ -13,7 +13,7 @@ parallel_group: foundation
 source_of_truth:
   - AGENTS.md
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Frontend Architecture Baseline
@@ -85,6 +85,8 @@ electron/
 - If a slice has no exact Figma node yet, use the nearest host frame as the visual baseline and explicitly record that the styling is an inference.
 
 ## Current Light Mockup Registry
+- `155:5` `Logo Row`: canonical warm-light desktop brand row for packaged desktop app branding, installer chrome, and release assets.
+- `155:7` `LogoMark`: canonical Zuam mark treatment for packaged desktop icon generation.
 - `155:2` `v3 — Warm Light Mode`: authoritative current light-mode design-system canvas for desktop and mobile brand language.
 - `155:3` `Desktop Shell — Today (light)`: canonical current desktop shell reference for sidebar, progression card, quick capture, task list density, and shell tone.
 - `155:233` `Detail Panel`: canonical current task detail reference inside the warm-light system.

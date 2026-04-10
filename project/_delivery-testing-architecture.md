@@ -14,7 +14,7 @@ parallel_group: foundation
 source_of_truth:
   - AGENTS.md
   - PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Delivery, Testing, And Release Baseline
@@ -76,6 +76,7 @@ Use GitHub Actions with separate concerns:
 - Tagged desktop releases must produce real Windows installer artifacts (`nsis` installer and portable Windows package) plus provenance metadata, then publish them to the matching GitHub Release entry.
 - Release workflows must run on a Windows runner when the artifact target is a Windows desktop installer.
 - The critical packaging step should call `electron-builder` directly from the desktop package; metadata writing and GitHub Release upload happen as follow-up steps, not inside the builder invocation.
+- Checked-in Windows icon and installer chrome assets must be derived from the repo logo source (`Logo svg.svg`) and the authoritative warm-light Figma branding nodes `155:5` (`Logo Row`) and `155:7` (`LogoMark`), not ad hoc artwork.
 
 ## Observability Baseline
 - structured backend logging

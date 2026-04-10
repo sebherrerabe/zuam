@@ -9,7 +9,7 @@ depends_on:
   - monorepo-platform
 parallel_group: foundation
 source_of_truth: PRD_Zuam_v0.3.md
-last_updated: 2026-04-09
+last_updated: 2026-04-10
 ---
 
 # Contracts
@@ -21,6 +21,7 @@ last_updated: 2026-04-09
 - Tagged desktop releases must generate at least one installable Windows artifact and one portable Windows artifact before publish is allowed (`BE-E2E-INFRA-001`).
 - Release publication must upload the packaged artifacts plus release metadata/event files to the matching GitHub Release entry (`BE-E2E-INFRA-001`).
 - Desktop packaging must treat `electron-builder` as the primary packager and keep metadata/provenance generation in a separate post-package step (`BE-UNIT-INFRA-001`).
+- Windows packaging assets (`icon.ico`, installer header, installer sidebar) must be checked into the desktop package and regenerated only from `Logo svg.svg` plus the authoritative Figma brand nodes `155:5` and `155:7` (`BE-UNIT-INFRA-001`).
 
 ## Observability Contract
 - Every CI job must emit a summary that names the workflow, package, and failing stage (`BE-UNIT-INFRA-003`).
